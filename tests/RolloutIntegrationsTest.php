@@ -4,11 +4,11 @@ namespace ConfigCat;
 
 use PHPUnit\Framework\TestCase;
 
-final class RolloutIntegrationsTest extends TestCase
+class RolloutIntegrationsTest extends TestCase
 {
     public function testRolloutIntegration()
     {
-        $rows = $this->readCsv("testmatrix.csv");
+        $rows = self::readCsv("tests/testmatrix.csv");
         $settingKeys = array_slice($rows[0], 4);
         $client = new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A");
 
@@ -66,7 +66,7 @@ final class RolloutIntegrationsTest extends TestCase
         $this->assertEquals(0, count($errors));
     }
 
-    private function readCsv($file, $delimiter = ';')
+    private static function readCsv($file, $delimiter = ';')
     {
         $rows = [];
         if (($handle = fopen($file, "r")) !== false) {
