@@ -125,7 +125,7 @@ final class ConfigCatClient
         }
     }
 
-    private function evaluate($key, $json, $defaultValue, User $user)
+    private function evaluate($key, $json, $defaultValue, $user)
     {
         $evaluated = RolloutEvaluator::evaluate($key, $json, $user);
         return is_null($evaluated) ? $defaultValue : $evaluated;
