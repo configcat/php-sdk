@@ -1,2 +1,61 @@
-# php-sdk
-ConfigCat PHP SDK https://configcat.com
+# ConfigCat SDK for PHP
+
+ConfigCat SDK for PHP provides easy integration between ConfigCat service and applications using PHP.
+
+ConfigCat is a feature flag, feature toggle, and configuration management service. That lets you launch new features and change your software configuration remotely without actually (re)deploying code. ConfigCat even helps you do controlled roll-outs like canary releases and blue-green deployments.
+https://configcat.com
+
+## Getting started
+
+### 1. Install the package with [Composer](https://getcomposer.org/)
+```shell
+composer require configcat/configcat-client
+```
+
+### 2. <a href="https://configcat.com/Account/Login" target="_blank">Log in to ConfigCat Management Console</a> and go to your *Project* to get your *API Key*:
+![API-KEY](https://raw.githubusercontent.com/ConfigCat/java-sdk/master/media/readme01.png  "API-KEY")
+
+### 4. Create the *ConfigCat* client instance
+```php
+$client = new \ConfigCat\ConfigCatClient("#YOUR-API-KEY#");
+```
+
+### 5. Get your setting value:
+```php
+$isMyAwesomeFeatureEnabled = $client->getValue("isMyAwesomeFeatureEnabled", false);
+if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
+    doTheNewThing();
+} else {
+    doTheOldThing();
+}
+```
+
+## Getting user specific setting values with Targeting
+Using this feature, you will be able to get different setting values for different users in your application by passing a `User Object` to the `getValue()` function.
+
+Read more about [Targeting here](https://docs.configcat.com/docs/advanced/targeting/).
+
+
+## User object
+Percentage and targeted rollouts are calculated by the user object you can optionally pass to the configuration requests.
+The user object must be created with a **mandatory** identifier parameter which should uniquely identify each user:
+```php
+$user = new \ConfigCat\User("#USER-IDENTIFIER#"); // mandatory
+
+$isMyAwesomeFeatureEnabled = $client->getValue("isMyAwesomeFeatureEnabled", false, $user);
+if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
+    doTheNewThing();
+} else {
+    doTheOldThing();
+}
+```
+
+## Support
+If you need help how to use this SDK feel free to to contact the ConfigCat Staff on https://configcat.com. We're happy to help.
+
+## Contributing
+Contributions are welcome.
+
+## About ConfigCat
+- [Documentation](https://docs.configcat.com)
+- [Blog](https://blog.configcat.com)
