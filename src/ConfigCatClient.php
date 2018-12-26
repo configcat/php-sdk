@@ -5,9 +5,9 @@ namespace ConfigCat;
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
+use ConfigCat\Hash\Murmur;
 use Exception;
 use InvalidArgumentException;
-use lastguest\Murmur;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
