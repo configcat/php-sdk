@@ -66,15 +66,19 @@ class ConfigFetcherTest extends TestCase
         $this->assertNull($response->getBody());
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructNullApiKey()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
         new ConfigFetcher(null, new NullLogger());
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructEmptyApiKey()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
         new ConfigFetcher("", new NullLogger());
     }
 

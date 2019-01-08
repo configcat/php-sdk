@@ -2,33 +2,41 @@
 
 namespace ConfigCat;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
 {
-
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructNullIdentifier()
     {
-        $this->setExpectedException(\InvalidArgumentException::class);
         new User(null);
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructEmptyIdentifier()
     {
-        $this->setExpectedException(\InvalidArgumentException::class);
         new User("");
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testGetAttributeNullKey()
     {
-        $this->setExpectedException(\InvalidArgumentException::class);
         $user = new User("id");
         $user->getAttribute(null);
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testGetAttributeEmptyKey()
     {
-        $this->setExpectedException(\InvalidArgumentException::class);
         $user = new User("id");
         $user->getAttribute("");
     }

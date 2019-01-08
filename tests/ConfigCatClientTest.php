@@ -11,15 +11,19 @@ use Psr\Log\NullLogger;
 
 class ConfigCatClientTest extends TestCase
 {
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructNullApiKey()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
         new ConfigCatClient(null);
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructEmptyApiKey()
     {
-        $this->setExpectedException(InvalidArgumentException::class);
         new ConfigCatClient("");
     }
 
