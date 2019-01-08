@@ -96,7 +96,7 @@ final class ConfigCatClient
             if ($cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
                 $response = $this->fetcher->fetch($cacheItem->etag);
 
-                if($response->isFailed()) {
+                if($response->isFailed() && !empty($cacheItem->config)) {
                     return $this->evaluate($key, $cacheItem->config[$key], $defaultValue, $user);
                 }
 
@@ -125,7 +125,7 @@ final class ConfigCatClient
         }
     }
 
-    private function evaluate($key, $json, $defaultValue, $user)
+    private function evaluate($key, array $json, $defaultValue, User $user = null)
     {
         $evaluated = RolloutEvaluator::evaluate($key, $json, $user);
         return is_null($evaluated) ? $defaultValue : $evaluated;

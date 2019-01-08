@@ -50,10 +50,6 @@ final class ConfigFetcher
             throw new InvalidArgumentException("apiKey cannot be empty.");
         }
 
-        if(is_null($logger)) {
-            throw new InvalidArgumentException("logger cannot be null.");
-        }
-
         if (isset($options['connect-timeout']) && is_numeric($options['connect-timeout'])) {
             $this->connectTimeout = $options['connect-timeout'];
         }
@@ -102,7 +98,7 @@ final class ConfigFetcher
                 $body = json_decode($response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $this->logger->error(json_last_error_msg());
-                    return null;
+                    return new FetchResponse(FetchResponse::FAILED);
                 }
 
                 if($response->hasHeader(self::ETAG_HEADER)) {
