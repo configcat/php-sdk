@@ -96,7 +96,7 @@ final class ConfigCatClient
             if ($cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
                 $response = $this->fetcher->fetch($cacheItem->etag);
 
-                if($response->isFailed() && !empty($cacheItem->config)) {
+                if ($response->isFailed() && !empty($cacheItem->config)) {
                     return $this->evaluate($key, $cacheItem->config[$key], $defaultValue, $user);
                 }
 
@@ -118,7 +118,6 @@ final class ConfigCatClient
             }
 
             return $this->evaluate($key, $cacheItem->config[$key], $defaultValue, $user);
-
         } catch (Exception $exception) {
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;

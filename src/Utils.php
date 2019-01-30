@@ -15,7 +15,7 @@ final class Utils
      * @param string $needle The string we search.
      * @return bool True if the $haystack contains the $needle.
      */
-    public static function str_contains($haystack, $needle)
+    public static function strContains($haystack, $needle)
     {
         return strpos($haystack, $needle) !== false;
     }
@@ -27,8 +27,8 @@ final class Utils
      * @param string $delimiter The delimiter.
      * @return array The array of split items.
      */
-    public static function split_trim($text, $delimiter = ',')
+    public static function splitTrim($text, $delimiter = ',')
     {
-        return array_map('trim', explode($delimiter,  $text));
+        return array_map('trim', explode($delimiter, $text));
     }
 }

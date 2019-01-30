@@ -22,7 +22,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @param string $key Identifier for the cached value.
      * @return string|null Cached value for the given key, or null if it's missing.
      */
-    protected abstract function get($key);
+    abstract protected function get($key);
 
     /**
      * Writes the value identified by the given $key into the underlying cache.
@@ -30,7 +30,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      */
-    protected abstract function set($key, $value);
+    abstract protected function set($key, $value);
 
     /**
      * Writes the value identified by the given $key into the underlying cache.
@@ -71,7 +71,7 @@ abstract class ConfigCache implements LoggerAwareInterface
 
         try {
             $result = unserialize($this->get($key));
-            if($result instanceof CacheItem) {
+            if ($result instanceof CacheItem) {
                 return $result;
             }
         } catch (Exception $exception) {

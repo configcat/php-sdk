@@ -18,11 +18,11 @@ final class RolloutEvaluator
      */
     public static function evaluate($key, array $json, User $user = null)
     {
-        if(is_null($user)) {
+        if (is_null($user)) {
             return $json['Value'];
         }
 
-        if(isset($json['RolloutRules']) && !empty($json['RolloutRules'])) {
+        if (isset($json['RolloutRules']) && !empty($json['RolloutRules'])) {
             foreach ($json['RolloutRules'] as $rule) {
                 $comparisonAttribute = $rule['ComparisonAttribute'];
                 $comparisonValue = $rule['ComparisonValue'];
@@ -30,30 +30,30 @@ final class RolloutEvaluator
                 $value = $rule['Value'];
                 $userValue = $user->getAttribute($comparisonAttribute);
 
-                if(empty($comparisonValue) || empty($userValue)) {
+                if (empty($comparisonValue) || empty($userValue)) {
                     continue;
                 }
 
                 switch ($comparator) {
                     case 0:
-                        $split = Utils::split_trim($comparisonValue);
-                        if(in_array($userValue, $split, true)) {
+                        $split = Utils::splitTrim($comparisonValue);
+                        if (in_array($userValue, $split, true)) {
                             return $value;
                         }
                         break;
                     case 1:
-                        $split = Utils::split_trim($comparisonValue);
-                        if(!in_array($userValue, $split, true)) {
+                        $split = Utils::splitTrim($comparisonValue);
+                        if (!in_array($userValue, $split, true)) {
                             return $value;
                         }
                         break;
                     case 2:
-                        if(Utils::str_contains($userValue, $comparisonValue)) {
+                        if (Utils::strContains($userValue, $comparisonValue)) {
                             return $value;
                         }
                         break;
                     case 3:
-                        if(!Utils::str_contains($userValue, $comparisonValue)) {
+                        if (!Utils::strContains($userValue, $comparisonValue)) {
                             return $value;
                         }
                         break;
@@ -61,8 +61,8 @@ final class RolloutEvaluator
             }
         }
 
-        if(isset($json['RolloutPercentageItems']) && !empty($json['RolloutPercentageItems'])) {
-            $hashCandidate = $key.$user->getIdentifier();
+        if (isset($json['RolloutPercentageItems']) && !empty($json['RolloutPercentageItems'])) {
+            $hashCandidate = $key . $user->getIdentifier();
             $stringHash = substr(sha1($hashCandidate), 0, 7);
             $intHash = intval($stringHash, 16);
             $scale = $intHash % 100;
@@ -70,7 +70,7 @@ final class RolloutEvaluator
             $bucket = 0;
             foreach ($json['RolloutPercentageItems'] as $rule) {
                 $bucket += $rule['Percentage'];
-                if($scale < $bucket) {
+                if ($scale < $bucket) {
                     return $rule['Value'];
                 }
             }

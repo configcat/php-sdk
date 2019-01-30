@@ -20,7 +20,7 @@ class Murmur
      * @param  int $seed Positive integer only
      * @return number 32-bit positive integer hash
      */
-    public static function hash3_int($key, $seed = 0)
+    public static function hash3Int($key, $seed = 0)
     {
         $key = array_values(unpack('C*', $key));
         $klen = count($key);
@@ -69,6 +69,6 @@ class Murmur
      */
     public static function hash3($key, $seed = 0)
     {
-        return base_convert(sprintf("%u\n", self::hash3_int($key, $seed)), 10, 32);
+        return base_convert(sprintf("%u\n", self::hash3Int($key, $seed)), 10, 32);
     }
 }

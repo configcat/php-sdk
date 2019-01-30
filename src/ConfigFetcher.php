@@ -18,11 +18,11 @@ final class ConfigFetcher
     const BASE_URL = "https://cdn.configcat.com";
     const URL_FORMAT = "/configuration-files/%s/config_v2.json";
 
-    /** @var Client  */
+    /** @var Client */
     private $client;
     /** @var LoggerInterface */
     private $logger;
-    /** @var array  */
+    /** @var array */
     private $requestOptions;
     /** @var string */
     private $url;
@@ -46,7 +46,7 @@ final class ConfigFetcher
      */
     public function __construct($apiKey, LoggerInterface $logger, array $options = [])
     {
-        if(empty($apiKey)) {
+        if (empty($apiKey)) {
             throw new InvalidArgumentException("apiKey cannot be empty.");
         }
 
@@ -62,7 +62,7 @@ final class ConfigFetcher
         $this->url = sprintf(self::URL_FORMAT, $apiKey);
         $this->requestOptions = [
             'headers' => [
-                'X-ConfigCat-UserAgent' => "ConfigCat-PHP/". ConfigCatClient::SDK_VERSION
+                'X-ConfigCat-UserAgent' => "ConfigCat-PHP/" . ConfigCatClient::SDK_VERSION
             ],
             'timeout' => $this->requestTimeout,
             'connect_timeout' => $this->connectTimeout
@@ -84,7 +84,7 @@ final class ConfigFetcher
      */
     public function fetch($etag)
     {
-        if(!empty($etag)) {
+        if (!empty($etag)) {
             $this->requestOptions['headers']['If-None-Match'] = $etag;
         }
 
@@ -92,7 +92,7 @@ final class ConfigFetcher
             $response = $this->client->get($this->url, $this->requestOptions);
             $statusCode = $response->getStatusCode();
 
-            if($statusCode >= 200 && $statusCode < 300) {
+            if ($statusCode >= 200 && $statusCode < 300) {
                 $this->logger->info("Fetch was successful: new config fetched");
 
                 $body = json_decode($response->getBody(), true);
@@ -101,12 +101,11 @@ final class ConfigFetcher
                     return new FetchResponse(FetchResponse::FAILED);
                 }
 
-                if($response->hasHeader(self::ETAG_HEADER)) {
+                if ($response->hasHeader(self::ETAG_HEADER)) {
                     $etag = $response->getHeader(self::ETAG_HEADER)[0];
                 }
 
                 return new FetchResponse(FetchResponse::FETCHED, $etag, $body);
-
             } elseif ($statusCode === 304) {
                 $this->logger->info("Fetch was successful: config not modified");
                 return new FetchResponse(FetchResponse::NOT_MODIFIED);
@@ -114,7 +113,6 @@ final class ConfigFetcher
 
             $this->logger->warning("Non success status code: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
-
         } catch (Exception $exception) {
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);

@@ -13,26 +13,26 @@ class RolloutIntegrationsTest extends TestCase
         $client = new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A");
 
         $errors = [];
-        foreach (range(1, count($rows) -1) as $i) {
+        foreach (range(1, count($rows) - 1) as $i) {
             $testObjects = $rows[$i];
 
             $user = null;
-            if(!empty($testObjects[0]) && $testObjects[0] !== "##null##") {
+            if (!empty($testObjects[0]) && $testObjects[0] !== "##null##") {
                 $identifier = $testObjects[0];
 
                 $email = "";
                 $country = "";
 
-                if(!empty($testObjects[1]) && $testObjects[1] !== "##null##") {
+                if (!empty($testObjects[1]) && $testObjects[1] !== "##null##") {
                     $email = $testObjects[1];
                 }
 
-                if(!empty($testObjects[2]) && $testObjects[2] !== "##null##") {
+                if (!empty($testObjects[2]) && $testObjects[2] !== "##null##") {
                     $country = $testObjects[2];
                 }
 
                 $custom = [];
-                if(!empty($testObjects[3]) && $testObjects[3] !== "##null##") {
+                if (!empty($testObjects[3]) && $testObjects[3] !== "##null##") {
                     $custom['Custom1'] = $testObjects[3];
                 }
 
@@ -48,15 +48,15 @@ class RolloutIntegrationsTest extends TestCase
                     $actual = $actual ? "True" : "False";
                 }
 
-                if(is_int($actual)) {
+                if (is_int($actual)) {
                     $expected = intval($expected);
                 }
 
-                if(is_double($actual)) {
+                if (is_double($actual)) {
                     $expected = floatval($expected);
                 }
 
-                if($expected !== $actual) {
+                if ($expected !== $actual) {
                     array_push($errors, sprintf("Identifier: %s, SettingKey: %s, Expected: %s, Result: %s", $testObjects[0], $key, $expected, $actual));
                 }
                 $count++;
