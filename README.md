@@ -56,6 +56,9 @@ if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
 }
 ```
 
+## Sample/Demo app
+* [Sample Laravel app](https://github.com/ConfigCat/php-sdk/tree/master/samples/laravel)
+
 ## Support
 If you need help how to use this SDK feel free to to contact the ConfigCat Staff on https://configcat.com. We're happy to help.
 
