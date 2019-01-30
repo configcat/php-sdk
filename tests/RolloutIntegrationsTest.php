@@ -57,7 +57,12 @@ class RolloutIntegrationsTest extends TestCase
                 }
 
                 if ($expected !== $actual) {
-                    array_push($errors, sprintf("Identifier: %s, SettingKey: %s, Expected: %s, Result: %s", $testObjects[0], $key, $expected, $actual));
+                    array_push($errors,
+                        sprintf("Identifier: %s, SettingKey: %s, Expected: %s, Result: %s",
+                            $testObjects[0],
+                            $key,
+                            $expected,
+                            $actual));
                 }
                 $count++;
             }

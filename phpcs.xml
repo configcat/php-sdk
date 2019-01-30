@@ -10,4 +10,5 @@
     <exclude-pattern>*/src/Hash/*</exclude-pattern>
 
     <rule ref="PSR2"/>
+    <rule ref="Generic"/>
 </ruleset>
