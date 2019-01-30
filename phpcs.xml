@@ -8,4 +8,6 @@
     <exclude-pattern>*/samples/*</exclude-pattern>
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/src/Hash/*</exclude-pattern>
+
+    <rule ref="PSR2"/>
 </ruleset>
