@@ -21,12 +21,12 @@ composer require configcat/configcat-client
 ### 2. <a href="https://configcat.com/Account/Login" target="_blank">Log in to ConfigCat Management Console</a> and go to your *Project* to get your *API Key*:
 ![API-KEY](https://raw.githubusercontent.com/ConfigCat/java-sdk/master/media/readme01.png  "API-KEY")
 
-### 4. Create the *ConfigCat* client instance
+### 3. Create the *ConfigCat* client instance
 ```php
 $client = new \ConfigCat\ConfigCatClient("#YOUR-API-KEY#");
 ```
 
-### 5. Get your setting value:
+### 4. Get your setting value:
 ```php
 $isMyAwesomeFeatureEnabled = $client->getValue("isMyAwesomeFeatureEnabled", false);
 if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
