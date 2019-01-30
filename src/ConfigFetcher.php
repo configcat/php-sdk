@@ -69,9 +69,14 @@ final class ConfigFetcher
         ];
 
         if (isset($options['custom-handler']) && is_callable($options['custom-handler'])) {
-            $this->client = new Client(['base_uri' => self::BASE_URL, 'handler' => HandlerStack::create($options['custom-handler'])]);
+            $this->client = new Client([
+                'base_uri' => self::BASE_URL,
+                'handler' => HandlerStack::create($options['custom-handler'])
+            ]);
         } else {
-            $this->client = new Client(['base_uri' => self::BASE_URL]);
+            $this->client = new Client([
+                'base_uri' => self::BASE_URL
+            ]);
         }
     }
 

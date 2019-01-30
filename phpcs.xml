@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="PHP_CodeSniffer" xsi:noNamespaceSchemaLocation="phpcs.xsd">
+    <description>The coding standard for ConfigCat.</description>
+
+    <file>src</file>
+    <file>tests</file>
+
+    <exclude-pattern>*/samples/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/src/Hash/*</exclude-pattern>
+</ruleset>
