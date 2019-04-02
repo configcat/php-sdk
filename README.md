@@ -1,9 +1,9 @@
 # ConfigCat SDK for PHP
-
-ConfigCat SDK for PHP provides easy integration between ConfigCat service and applications using PHP.
-
-ConfigCat is a feature flag, feature toggle, and configuration management service. That lets you launch new features and change your software configuration remotely without actually (re)deploying code. ConfigCat even helps you do controlled roll-outs like canary releases and blue-green deployments.
 https://configcat.com
+
+ConfigCat SDK for PHP provides easy integration for your application to ConfigCat.
+
+ConfigCat is a feature flag and configuration management service that lets you separate releases from deployments. You can turn your features ON/OFF using <a href="http://app.configcat.com" target="_blank">ConfigCat Management Console</a> even after they are deployed. ConfigCat lets you target specific groups of users based on region, email or any other custom user attribute.
 
 [![Build Status](https://travis-ci.com/configcat/php-sdk.svg?branch=master)](https://travis-ci.com/configcat/php-sdk)
 [![Coverage Status](https://img.shields.io/codecov/c/github/ConfigCat/php-sdk.svg)](https://codecov.io/gh/ConfigCat/php-sdk)
@@ -18,8 +18,8 @@ https://configcat.com
 composer require configcat/configcat-client
 ```
 
-### 2. <a href="https://configcat.com/Account/Login" target="_blank">Log in to ConfigCat Management Console</a> and go to your *Project* to get your *API Key*:
-![API-KEY](https://raw.githubusercontent.com/ConfigCat/java-sdk/master/media/readme01.png  "API-KEY")
+### 2. Go to <a href="https://app.configcat.com/connect" target="_blank">Connect your application</a> tab to get your *API Key*:
+![API-KEY](https://raw.githubusercontent.com/ConfigCat/php-sdk/master/media/readme01.png  "API-KEY")
 
 ### 3. Create the *ConfigCat* client instance
 ```php
