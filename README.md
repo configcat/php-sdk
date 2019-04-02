@@ -66,5 +66,6 @@ If you need help how to use this SDK feel free to to contact the ConfigCat Staff
 Contributions are welcome.
 
 ## About ConfigCat
+- [Official ConfigCat SDK's for other platforms](https://github.com/configcat)
 - [Documentation](https://docs.configcat.com)
 - [Blog](https://blog.configcat.com)
