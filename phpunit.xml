@@ -5,7 +5,7 @@
         colors="true"
         convertErrorsToExceptions="true"
         convertNoticesToExceptions="true"
-        convertWarningsToExceptions="false"
+        convertWarningsToExceptions="true"
         beStrictAboutTestsThatDoNotTestAnything="true"
         beStrictAboutOutputDuringTests="true"
         processIsolation="false"
