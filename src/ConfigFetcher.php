@@ -15,7 +15,6 @@ use Psr\Log\LoggerInterface;
 final class ConfigFetcher
 {
     const ETAG_HEADER = "ETag";
-    const BASE_URL = "https://cdn.configcat.com";
     const URL_FORMAT = "/configuration-files/%s/config_v2.json";
 
     /** @var Client */
@@ -30,6 +29,8 @@ final class ConfigFetcher
     private $connectTimeout = 10;
     /** @var float */
     private $requestTimeout = 30;
+    /** @var string */
+    private $baseUrl = "https://cdn.configcat.com";
 
     /**
      * ConfigFetcher constructor.
@@ -40,6 +41,7 @@ final class ConfigFetcher
      *     - timeout: sets the http request timeout of the underlying http requests.
      *     - connect-timeout: sets the http connect timeout.
      *     - custom-handler: a custom callable Guzzle http handler.
+     *     - base-url: the base ConfigCat CDN url.
      *
      * @throws InvalidArgumentException
      *   When the $apiKey, the $logger or the $cache is not legal.
@@ -58,6 +60,10 @@ final class ConfigFetcher
             $this->requestTimeout = $options['timeout'];
         }
 
+        if (isset($options['base-url']) && !empty($options['base-url'])) {
+            $this->baseUrl = $options['base-url'];
+        }
+
         $this->logger = $logger;
         $this->url = sprintf(self::URL_FORMAT, $apiKey);
         $this->requestOptions = [
@@ -70,12 +76,12 @@ final class ConfigFetcher
 
         if (isset($options['custom-handler']) && is_callable($options['custom-handler'])) {
             $this->client = new Client([
-                'base_uri' => self::BASE_URL,
+                'base_uri' => $this->baseUrl,
                 'handler' => HandlerStack::create($options['custom-handler'])
             ]);
         } else {
             $this->client = new Client([
-                'base_uri' => self::BASE_URL
+                'base_uri' => $this->baseUrl
             ]);
         }
     }
