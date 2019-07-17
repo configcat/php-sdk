@@ -97,7 +97,7 @@ final class ConfigCatClient
                 $response = $this->fetcher->fetch($cacheItem->etag);
 
                 if ($response->isFailed()) {
-                    if(empty($cacheItem->config)) {
+                    if (empty($cacheItem->config)) {
                         return $defaultValue;
                     }
                     return $this->evaluate($key, $cacheItem->config[$key], $defaultValue, $user);
