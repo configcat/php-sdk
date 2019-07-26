@@ -64,4 +64,14 @@ class ConfigCatClientTest extends TestCase
         $value = $client->getValue("key", false);
         $this->assertFalse($value);
     }
+
+    public function testGetAllKeysFailedFetch()
+    {
+        $client = new ConfigCatClient("apiKey", ['custom-handler' => new MockHandler([
+            new Response(400)
+        ])]);
+
+        $keys = $client->getAllKeys();
+        $this->assertEmpty($keys);
+    }
 }

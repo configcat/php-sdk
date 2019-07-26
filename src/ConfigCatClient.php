@@ -18,7 +18,7 @@ use Psr\Log\NullLogger;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "1.1.0";
+    const SDK_VERSION = "1.1.1";
     /** @var string */
     const CACHE_KEY = "configcat-%s";
 
@@ -88,21 +88,51 @@ final class ConfigCatClient
     public function getValue($key, $defaultValue, User $user = null)
     {
         try {
-            $cacheItem = $this->cache->load($this->cacheKey);
-            if (is_null($cacheItem)) {
-                $cacheItem = new CacheItem();
+            $config = $this->getConfig();
+            if (empty($config)) {
+                return $defaultValue;
             }
 
-            if ($cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
-                $response = $this->fetcher->fetch($cacheItem->etag);
+            return $this->evaluate($key, $config[$key], $defaultValue, $user);
+        } catch (Exception $exception) {
+            $this->logger->error($exception->getMessage(), ['exception' => $exception]);
+            return $defaultValue;
+        }
+    }
 
-                if ($response->isFailed()) {
-                    if (empty($cacheItem->config)) {
-                        return $defaultValue;
-                    }
-                    return $this->evaluate($key, $cacheItem->config[$key], $defaultValue, $user);
-                }
+    /**
+     * Gets all keys from the configuration.
+     *
+     * @return array of keys.
+     */
+    public function getAllKeys()
+    {
+        try {
+            $config = $this->getConfig();
+            return array_keys($config);
+        } catch (Exception $exception) {
+            $this->logger->error($exception->getMessage(), ['exception' => $exception]);
+            return array();
+        }
+    }
 
+    private function evaluate($key, array $json, $defaultValue, User $user = null)
+    {
+        $evaluated = RolloutEvaluator::evaluate($key, $json, $user);
+        return is_null($evaluated) ? $defaultValue : $evaluated;
+    }
+
+    private function getConfig()
+    {
+        $cacheItem = $this->cache->load($this->cacheKey);
+        if (is_null($cacheItem)) {
+            $cacheItem = new CacheItem();
+        }
+
+        if ($cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
+            $response = $this->fetcher->fetch($cacheItem->etag);
+
+            if (!$response->isFailed()) {
                 if ($response->isFetched()) {
                     $cacheItem->lastRefreshed = time();
                     $cacheItem->config = $response->getBody();
@@ -115,21 +145,8 @@ final class ConfigCatClient
 
                 $this->cache->store($this->cacheKey, $cacheItem);
             }
-
-            if (empty($cacheItem->config)) {
-                return $defaultValue;
-            }
-
-            return $this->evaluate($key, $cacheItem->config[$key], $defaultValue, $user);
-        } catch (Exception $exception) {
-            $this->logger->error($exception->getMessage(), ['exception' => $exception]);
-            return $defaultValue;
         }
-    }
 
-    private function evaluate($key, array $json, $defaultValue, User $user = null)
-    {
-        $evaluated = RolloutEvaluator::evaluate($key, $json, $user);
-        return is_null($evaluated) ? $defaultValue : $evaluated;
+        return $cacheItem->config;
     }
 }

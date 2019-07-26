@@ -13,6 +13,16 @@ class RolloutIntegrationsTest extends TestCase
         $client = new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A");
 
         $errors = [];
+
+        $keys = $client->getAllKeys();
+        $diff = array_diff($settingKeys, $keys);
+        if (!empty($diff)) {
+            array_push($errors, sprintf("Not all keys are found, Expected: %s, Result: %s, Diff: %s",
+                print_r($settingKeys, true),
+                print_r($keys, true),
+                print_r($diff, true)));
+        }
+
         foreach (range(1, count($rows) - 1) as $i) {
             $testObjects = $rows[$i];
 
