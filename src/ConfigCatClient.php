@@ -18,7 +18,7 @@ use Psr\Log\NullLogger;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "1.1.1";
+    const SDK_VERSION = "1.2.0";
     /** @var string */
     const CACHE_KEY = "configcat-%s";
 
