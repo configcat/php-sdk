@@ -18,6 +18,7 @@ composer require configcat/configcat-client
 ```php
 <?php
 // ...
+use Illuminate\Support\Facades\Cache;
 use ConfigCat\Cache\LaravelCache;
 use ConfigCat\ConfigCatClient;
 // ....
