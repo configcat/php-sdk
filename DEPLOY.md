@@ -22,4 +22,4 @@
        ```
 - Via Github release 
 
-  Create a new [Github release](https://github.com/configcat/go-sdk/releases) with a new version tag and release notes.
+  Create a new [Github release](https://github.com/configcat/php-sdk/releases) with a new version tag and release notes.
