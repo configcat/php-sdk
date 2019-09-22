@@ -13,9 +13,9 @@
 - Via git tag
     1. Create a new version tag.
        ```bash
-       git tag v1.2.6
+       git tag v[MAJOR].[MINOR].[PATCH]
        ```
-
+       > Example: `git tag v1.3.5`
     2. Push the tag.
        ```bash
        git push origin --tags
