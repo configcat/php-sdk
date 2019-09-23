@@ -23,3 +23,6 @@
 - Via Github release 
 
   Create a new [Github release](https://github.com/configcat/php-sdk/releases) with a new version tag and release notes.
+
+## Packagist
+Make sure the new version is available on [Packagist](https://packagist.org/packages/configcat/configcat-client).
