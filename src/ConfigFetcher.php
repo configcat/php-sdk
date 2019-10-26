@@ -25,10 +25,6 @@ final class ConfigFetcher
     private $requestOptions;
     /** @var string */
     private $url;
-    /** @var float */
-    private $connectTimeout = 10;
-    /** @var float */
-    private $requestTimeout = 30;
     /** @var string */
     private $baseUrl = "https://cdn.configcat.com";
 
@@ -52,27 +48,31 @@ final class ConfigFetcher
             throw new InvalidArgumentException("apiKey cannot be empty.");
         }
 
-        if (isset($options['connect-timeout']) && is_numeric($options['connect-timeout'])) {
-            $this->connectTimeout = $options['connect-timeout'];
-        }
-
-        if (isset($options['timeout']) && is_numeric($options['timeout'])) {
-            $this->requestTimeout = $options['timeout'];
-        }
-
         if (isset($options['base-url']) && !empty($options['base-url'])) {
             $this->baseUrl = $options['base-url'];
         }
 
+        $additionalOptions = isset($options['request-options'])
+            && is_array($options['request-options'])
+            && !empty($options['request-options'])
+            ? $options['request-options']
+            : [];
+
+        if (!isset($additionalOptions['connect-timeout'])) {
+            $additionalOptions['connect-timeout'] = 10;
+        }
+
+        if (!isset($additionalOptions['timeout'])) {
+            $additionalOptions['timeout'] = 30;
+        }
+
         $this->logger = $logger;
         $this->url = sprintf(self::URL_FORMAT, $apiKey);
-        $this->requestOptions = [
+        $this->requestOptions = array_merge([
             'headers' => [
                 'X-ConfigCat-UserAgent' => "ConfigCat-PHP/" . ConfigCatClient::SDK_VERSION
             ],
-            'timeout' => $this->requestTimeout,
-            'connect_timeout' => $this->connectTimeout
-        ];
+        ], $additionalOptions);
 
         if (isset($options['custom-handler']) && is_callable($options['custom-handler'])) {
             $this->client = new Client([
@@ -130,5 +130,10 @@ final class ConfigFetcher
                 . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         }
+    }
+
+    public function getRequestOptions()
+    {
+        return $this->requestOptions;
     }
 }
