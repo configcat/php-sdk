@@ -3,6 +3,7 @@
 namespace ConfigCat;
 
 use ConfigCat\Cache\ArrayCache;
+use ConfigCat\Cache\ConfigCache;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
@@ -73,5 +74,17 @@ class ConfigCatClientTest extends TestCase
 
         $keys = $client->getAllKeys();
         $this->assertEmpty($keys);
+    }
+
+    public function testForceRefresh()
+    {
+        $cache = $this->getMockBuilder(ConfigCache::class)->getMock();
+        $client = new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA", ['cache' => $cache]);
+
+        $cache
+            ->expects(self::once())
+            ->method("store");
+
+        $client->forceRefresh();
     }
 }

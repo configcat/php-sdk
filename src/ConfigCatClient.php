@@ -32,6 +32,8 @@ final class ConfigCatClient
     private $cacheRefreshInterval = 60;
     /** @var string */
     private $cacheKey;
+    /** @var RolloutEvaluator */
+    private $evaluator;
 
     /**
      * Creates a new ConfigCatClient.
@@ -75,6 +77,7 @@ final class ConfigCatClient
 
         $this->cache->setLogger($this->logger);
         $this->fetcher = new ConfigFetcher($apiKey, $this->logger, $options);
+        $this->evaluator = new RolloutEvaluator($this->logger);
     }
 
     /**
@@ -95,7 +98,8 @@ final class ConfigCatClient
 
             return $this->evaluate($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
-            $this->logger->error($exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Evaluating getValue('". $key ."') failed. Returning default value. "
+                . $exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;
         }
     }
@@ -111,14 +115,28 @@ final class ConfigCatClient
             $config = $this->getConfig();
             return array_keys($config);
         } catch (Exception $exception) {
-            $this->logger->error($exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("An error occurred during the deserialization. Returning empty array. "
+                . $exception->getMessage(), ['exception' => $exception]);
             return array();
+        }
+    }
+
+    public function forceRefresh()
+    {
+        $response = $this->fetcher->fetch("");
+        if (!$response->isFailed()) {
+            $cacheItem = new CacheItem();
+            $cacheItem->lastRefreshed = time();
+            $cacheItem->config = $response->getBody();
+            $cacheItem->etag = $response->getETag();
+
+            $this->cache->store($this->cacheKey, $cacheItem);
         }
     }
 
     private function evaluate($key, array $json, $defaultValue, User $user = null)
     {
-        $evaluated = RolloutEvaluator::evaluate($key, $json, $user);
+        $evaluated = $this->evaluator->evaluate($key, $json, $user);
         return is_null($evaluated) ? $defaultValue : $evaluated;
     }
 

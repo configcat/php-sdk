@@ -41,7 +41,7 @@ if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
 ## Getting user specific setting values with Targeting
 Using this feature, you will be able to get different setting values for different users in your application by passing a `User Object` to the `getValue()` function.
 
-Read more about [Targeting here](https://docs.configcat.com/docs/advanced/targeting/).
+Read more about [Targeting here](https://configcat.com/docs/advanced/targeting/).
 
 
 ## User object
@@ -68,6 +68,6 @@ If you need help how to use this SDK feel free to to contact the ConfigCat Staff
 Contributions are welcome.
 
 ## About ConfigCat
-- [Official ConfigCat SDK's for other platforms](https://github.com/configcat)
-- [Documentation](https://docs.configcat.com)
-- [Blog](https://blog.configcat.com)
+- [Official ConfigCat SDKs for other platforms](https://github.com/configcat)
+- [Documentation](https://configcat.com/docs)
+- [Blog](https://configcat.com/blog)

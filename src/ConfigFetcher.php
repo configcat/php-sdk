@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigFetcher
 {
     const ETAG_HEADER = "ETag";
-    const URL_FORMAT = "/configuration-files/%s/config_v2.json";
+    const URL_FORMAT = "/configuration-files/%s/config_v3.json";
 
     /** @var Client */
     private $client;
@@ -104,7 +104,7 @@ final class ConfigFetcher
             $statusCode = $response->getStatusCode();
 
             if ($statusCode >= 200 && $statusCode < 300) {
-                $this->logger->info("Fetch was successful: new config fetched");
+                $this->logger->debug("Fetch was successful: new config fetched.");
 
                 $body = json_decode($response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -118,14 +118,16 @@ final class ConfigFetcher
 
                 return new FetchResponse(FetchResponse::FETCHED, $etag, $body);
             } elseif ($statusCode === 304) {
-                $this->logger->info("Fetch was successful: config not modified");
+                $this->logger->debug("Fetch was successful: config not modified.");
                 return new FetchResponse(FetchResponse::NOT_MODIFIED);
             }
 
-            $this->logger->warning("Non success status code: " . $statusCode);
+            $this->logger->error("Double-check your API KEY at https://app.configcat.com/apikey. 
+                Received unexpected response: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
-            $this->logger->error($exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Exception in ConfigFetcher.getConfigurationJsonStringAsync: "
+                . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         }
     }

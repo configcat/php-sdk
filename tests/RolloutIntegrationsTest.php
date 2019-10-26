@@ -6,11 +6,17 @@ use PHPUnit\Framework\TestCase;
 
 class RolloutIntegrationsTest extends TestCase
 {
-    public function testRolloutIntegration()
+    /**
+     * @param $file
+     * @param $apiKey
+     *
+     * @dataProvider rolloutTestData
+     */
+    public function testRolloutIntegration($file, $apiKey)
     {
-        $rows = self::readCsv("tests/testmatrix.csv");
+        $rows = self::readCsv("tests/" . $file);
         $settingKeys = array_slice($rows[0], 4);
-        $client = new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A");
+        $client = new ConfigCatClient($apiKey);
 
         $errors = [];
 
@@ -44,6 +50,8 @@ class RolloutIntegrationsTest extends TestCase
                 $custom = [];
                 if (!empty($testObjects[3]) && $testObjects[3] !== "##null##") {
                     $custom['Custom1'] = $testObjects[3];
+                } elseif (is_numeric($testObjects[3])) {
+                    $custom['Custom1'] = $testObjects[3];
                 }
 
                 $user = new User($identifier, $email, $country, $custom);
@@ -73,6 +81,10 @@ class RolloutIntegrationsTest extends TestCase
             }
         }
 
+        if(count($errors) > 0) {
+            var_dump($errors);
+        }
+
         $this->assertEquals(0, count($errors));
     }
 
@@ -87,5 +99,14 @@ class RolloutIntegrationsTest extends TestCase
         }
 
         return $rows;
+    }
+
+    public function rolloutTestData()
+    {
+        return [
+            ["testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A"],
+            ["testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA"],
+            ["testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw"],
+        ];
     }
 }
