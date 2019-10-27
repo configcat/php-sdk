@@ -2,9 +2,9 @@
 
 namespace ConfigCat;
 
+use PHLAK\SemVer\Exceptions\InvalidVersionException;
+use PHLAK\SemVer\Version;
 use Psr\Log\LoggerInterface;
-use Version\Version;
-use Version\Exception\InvalidVersionStringException;
 
 /**
  * Class RolloutEvaluator
@@ -109,17 +109,17 @@ final class RolloutEvaluator
                     case 5:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
                         try {
+                            $userVersion = $this->parseVersion($userValue);
                             $matched = false;
                             foreach ($split as $semVer) {
-                                $matched = Version::fromString($userValue)
-                                        ->isEqualTo(Version::fromString($semVer)) || $matched;
+                                $matched = $userVersion->eq($this->parseVersion($semVer)) || $matched;
                             }
 
                             if (($matched && $comparator == 4) || (!$matched && $comparator == 5)) {
                                 $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
                                 return $value;
                             }
-                        } catch (InvalidVersionStringException $exception) {
+                        } catch (InvalidVersionException $exception) {
                             $this->logFormatError($comparisonAttribute, $comparator, $comparisonValue, $exception);
                             continue;
                         }
@@ -130,19 +130,16 @@ final class RolloutEvaluator
                     case 8:
                     case 9:
                         try {
-                            $cmpVal = trim($comparisonValue);
-                            if (($comparator == 6 && Version::fromString($userValue)
-                                        ->isLessThan(Version::fromString($cmpVal))) ||
-                                ($comparator == 7 && Version::fromString($userValue)
-                                        ->isLessOrEqualTo(Version::fromString($cmpVal))) ||
-                                ($comparator == 8 && Version::fromString($userValue)
-                                        ->isGreaterThan(Version::fromString($cmpVal))) ||
-                                ($comparator == 9 && Version::fromString($userValue)
-                                        ->isGreaterOrEqualTo(Version::fromString($cmpVal)))) {
-                                $this->logMatch($comparisonAttribute, $comparator, $cmpVal, $value);
+                            $userVersion = $this->parseVersion($userValue);
+                            $cmpVersion = $this->parseVersion(trim($comparisonValue));
+                            if (($comparator == 6 && $userVersion->lt($cmpVersion)) ||
+                                ($comparator == 7 && $userVersion->lte($cmpVersion)) ||
+                                ($comparator == 8 && $userVersion->gt($cmpVersion)) ||
+                                ($comparator == 9 && $userVersion->gte($cmpVersion))) {
+                                $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
                                 return $value;
                             }
-                        } catch (InvalidVersionStringException $exception) {
+                        } catch (InvalidVersionException $exception) {
                             $this->logFormatError($comparisonAttribute, $comparator, $comparisonValue, $exception);
                             continue;
                         }
@@ -233,5 +230,17 @@ final class RolloutEvaluator
         $this->logger->warning("Evaluating rule: [". $comparisonAttribute . "] 
         [" . $this->comparatorTexts[$comparator] . "] 
         [" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . "");
+    }
+
+    /**
+     * @param $versionString
+     * @return Version
+     * @throws InvalidVersionException
+     */
+    private function parseVersion($versionString)
+    {
+        $version = new Version();
+        $version->setVersion($versionString);
+        return $version;
     }
 }
