@@ -87,4 +87,12 @@ class ConfigCatClientTest extends TestCase
 
         $client->forceRefresh();
     }
+
+    public function testKeyNotExist()
+    {
+        $client = new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA");
+        $value = $client->getValue("nonExistingKey", false);
+
+        $this->assertFalse($value);
+    }
 }

@@ -122,8 +122,8 @@ final class ConfigFetcher
                 return new FetchResponse(FetchResponse::NOT_MODIFIED);
             }
 
-            $this->logger->error("Double-check your API KEY at https://app.configcat.com/apikey. 
-                Received unexpected response: " . $statusCode);
+            $this->logger->error("Double-check your API KEY at https://app.configcat.com/apikey. " .
+                "Received unexpected response: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
             $this->logger->error("Exception in ConfigFetcher.getConfigurationJsonStringAsync: "

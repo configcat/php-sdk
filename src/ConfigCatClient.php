@@ -96,6 +96,14 @@ final class ConfigCatClient
                 return $defaultValue;
             }
 
+            if (!array_key_exists($key, $config)) {
+                $this->logger->error("Evaluating getValue('". $key ."') failed. " .
+                    "Value not found for key ". $key .". " .
+                    "Returning default value.");
+
+                return $defaultValue;
+            }
+
             return $this->evaluate($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
             $this->logger->error("Evaluating getValue('". $key ."') failed. Returning default value. "

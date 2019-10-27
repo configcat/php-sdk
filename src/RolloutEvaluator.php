@@ -55,9 +55,9 @@ final class RolloutEvaluator
     public function evaluate($key, array $json, User $user = null)
     {
         if (is_null($user)) {
-            $this->logger->warning("UserObject missing! You should pass a 
-            UserObject to getValue() in order to make targeting work properly. 
-            Read more: https://configcat.com/docs/advanced/user-object.");
+            $this->logger->warning("UserObject missing! You should pass a " .
+            "UserObject to getValue() in order to make targeting work properly. " .
+            "Read more: https://configcat.com/docs/advanced/user-object.");
             return $json['v'];
         }
 
@@ -210,26 +210,26 @@ final class RolloutEvaluator
 
     private function logMatch($comparisonAttribute, $comparator, $comparisonValue, $value)
     {
-        $this->logger->info("Evaluating rule: [". $comparisonAttribute . "] 
-        [" . $this->comparatorTexts[$comparator] . "] 
-        [" . $comparisonValue . "] => match, returning: " . $value. "");
+        $this->logger->info("Evaluating rule: [". $comparisonAttribute . "] " .
+        "[" . $this->comparatorTexts[$comparator] . "] " .
+        "[" . $comparisonValue . "] => match, returning: " . $value. "");
     }
 
     private function logFormatError($comparisonAttribute, $comparator, $comparisonValue, \Exception $exception)
     {
         $this->logger->warning(
-            "Evaluating rule: [". $comparisonAttribute . "] 
-        [" . $this->comparatorTexts[$comparator] . "] 
-        [" . $comparisonValue . "] => SKIP rule. Validation error: " . $exception->getMessage() . "",
+            "Evaluating rule: [". $comparisonAttribute . "] " .
+            "[" . $this->comparatorTexts[$comparator] . "] " .
+            "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $exception->getMessage() . "",
             ['exception' => $exception]
         );
     }
 
     private function logFormatErrorWithMessage($comparisonAttribute, $comparator, $comparisonValue, $message)
     {
-        $this->logger->warning("Evaluating rule: [". $comparisonAttribute . "] 
-        [" . $this->comparatorTexts[$comparator] . "] 
-        [" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . "");
+        $this->logger->warning("Evaluating rule: [". $comparisonAttribute . "] " .
+        "[" . $this->comparatorTexts[$comparator] . "] " .
+        "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . "");
     }
 
     /**
