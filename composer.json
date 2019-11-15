@@ -14,10 +14,10 @@
   ],
   "require": {
     "php": ">=5.5",
-    "guzzlehttp/guzzle": "6.3.3",
-    "psr/log": "1.1.0",
+    "guzzlehttp/guzzle": "^6.3",
+    "psr/log": "^1.1",
     "ext-json": "*",
-    "phlak/semver": "1.0.0"
+    "phlak/semver": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",
