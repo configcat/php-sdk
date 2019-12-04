@@ -8,8 +8,9 @@ use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Hash\Murmur;
 use Exception;
 use InvalidArgumentException;
+use Monolog\Handler\ErrorLogHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Class ConfigCatClient A client for handling configurations provided by ConfigCat.
@@ -18,7 +19,7 @@ use Psr\Log\NullLogger;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "1.2.0";
+    const SDK_VERSION = "2.0.1";
     /** @var string */
     const CACHE_KEY = "configcat-%s";
 
@@ -62,7 +63,7 @@ final class ConfigCatClient
         if (isset($options['logger']) && $options['logger'] instanceof LoggerInterface) {
             $this->logger = $options['logger'];
         } else {
-            $this->logger = new NullLogger();
+            $this->logger = new Logger("ConfigCat", [new ErrorLogHandler()]);
         }
 
         if (isset($options['cache']) && $options['cache'] instanceof ConfigCache) {

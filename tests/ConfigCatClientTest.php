@@ -7,6 +7,7 @@ use ConfigCat\Cache\ConfigCache;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
+use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -31,7 +32,7 @@ class ConfigCatClientTest extends TestCase
     public function testConstructDefaults()
     {
         $client = new ConfigCatClient("key");
-        $this->assertAttributeInstanceOf(NullLogger::class, "logger", $client);
+        $this->assertAttributeInstanceOf(Logger::class, "logger", $client);
         $this->assertAttributeInstanceOf(ArrayCache::class, "cache", $client);
         $this->assertAttributeEquals(60, "cacheRefreshInterval", $client);
     }
