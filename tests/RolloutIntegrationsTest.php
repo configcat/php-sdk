@@ -16,6 +16,7 @@ class RolloutIntegrationsTest extends TestCase
     {
         $rows = self::readCsv("tests/" . $file);
         $settingKeys = array_slice($rows[0], 4);
+        $customKey = $rows[0][3];
         $client = new ConfigCatClient($apiKey);
 
         $errors = [];
@@ -49,9 +50,9 @@ class RolloutIntegrationsTest extends TestCase
 
                 $custom = [];
                 if (!empty($testObjects[3]) && $testObjects[3] !== "##null##") {
-                    $custom['Custom1'] = $testObjects[3];
+                    $custom[$customKey] = $testObjects[3];
                 } elseif (is_numeric($testObjects[3])) {
-                    $custom['Custom1'] = $testObjects[3];
+                    $custom[$customKey] = $testObjects[3];
                 }
 
                 $user = new User($identifier, $email, $country, $custom);
@@ -75,7 +76,7 @@ class RolloutIntegrationsTest extends TestCase
                 }
 
                 if ($expected !== $actual) {
-                    array_push($errors, sprintf("Identifier: %s, SettingKey: %s, Expected: %s, Result: %s", $testObjects[0], $key, $expected, $actual));
+                    array_push($errors, sprintf("Identifier: %s, SettingKey: %s, UV: %s, Expected: %s, Result: %s", $testObjects[0], $key, $testObjects[3], $expected, $actual));
                 }
                 $count++;
             }
@@ -107,6 +108,7 @@ class RolloutIntegrationsTest extends TestCase
             ["testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A"],
             ["testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA"],
             ["testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw"],
+            ["testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w"],
         ];
     }
 }

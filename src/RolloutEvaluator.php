@@ -2,9 +2,9 @@
 
 namespace ConfigCat;
 
-use PHLAK\SemVer\Exceptions\InvalidVersionException;
-use PHLAK\SemVer\Version;
 use Psr\Log\LoggerInterface;
+use vierbergenlars\SemVer\SemVerException;
+use vierbergenlars\SemVer\version;
 
 /**
  * Class RolloutEvaluator
@@ -109,20 +109,20 @@ final class RolloutEvaluator
                     case 5:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
                         try {
-                            $userVersion = $this->parseVersion($userValue);
                             $matched = false;
                             foreach ($split as $semVer) {
-                                $matched = $userVersion->eq($this->parseVersion($semVer)) || $matched;
+                                $matched = version::eq($userValue, $semVer) || $matched;
                             }
 
                             if (($matched && $comparator == 4) || (!$matched && $comparator == 5)) {
                                 $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
                                 return $value;
                             }
-                        } catch (InvalidVersionException $exception) {
+                        } catch (\RuntimeException $exception) {
                             $this->logFormatError($comparisonAttribute, $comparator, $comparisonValue, $exception);
                             continue;
                         }
+
                         break;
                     //LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (SemVer)
                     case 6:
@@ -130,21 +130,33 @@ final class RolloutEvaluator
                     case 8:
                     case 9:
                         try {
-                            $userVersion = $this->parseVersion($userValue);
-                            $cmpVersion = $this->parseVersion(trim($comparisonValue));
-                            if (($comparator == 6 && $userVersion->lt($cmpVersion)) ||
-                                ($comparator == 7 && $userVersion->lte($cmpVersion)) ||
-                                ($comparator == 8 && $userVersion->gt($cmpVersion)) ||
-                                ($comparator == 9 && $userVersion->gte($cmpVersion))) {
+//                            $userVersion = $this->parseVersion($userValue);
+//                            $cmpVersion = $this->parseVersion(trim($comparisonValue));
+//                            if (($comparator == 6 && $userVersion->lt($cmpVersion)) ||
+//                                ($comparator == 7 && $userVersion->lte($cmpVersion)) ||
+//                                ($comparator == 8 && $userVersion->gt($cmpVersion)) ||
+//                                ($comparator == 9 && $userVersion->gte($cmpVersion))) {
+//                                $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
+//                                return $value;
+//                            }
+
+                            if (($comparator == 6 &&
+                                    version::lt($userValue, $comparisonValue)) ||
+                                ($comparator == 7 &&
+                                    version::lte($userValue, $comparisonValue)) ||
+                                ($comparator == 8 &&
+                                    version::gt($userValue, $comparisonValue)) ||
+                                ($comparator == 9 &&
+                                    version::gte($userValue, $comparisonValue))) {
                                 $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
                                 return $value;
                             }
-                        } catch (InvalidVersionException $exception) {
+                        } catch (\RuntimeException $exception) {
                             $this->logFormatError($comparisonAttribute, $comparator, $comparisonValue, $exception);
                             continue;
                         }
                         break;
-                    //LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (SemVer)
+                    //LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Number)
                     case 10:
                     case 11:
                     case 12:
@@ -230,17 +242,5 @@ final class RolloutEvaluator
         $this->logger->warning("Evaluating rule: [". $comparisonAttribute . "] " .
         "[" . $this->comparatorTexts[$comparator] . "] " .
         "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . "");
-    }
-
-    /**
-     * @param $versionString
-     * @return Version
-     * @throws InvalidVersionException
-     */
-    private function parseVersion($versionString)
-    {
-        $version = new Version();
-        $version->setVersion($versionString);
-        return $version;
     }
 }
