@@ -1,7 +1,8 @@
 <?php
 
-namespace ConfigCat;
+namespace ConfigCat\Tests;
 
+use ConfigCat\User;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 

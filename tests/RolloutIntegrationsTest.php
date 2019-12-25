@@ -1,7 +1,9 @@
 <?php
 
-namespace ConfigCat;
+namespace ConfigCat\Tests;
 
+use ConfigCat\ConfigCatClient;
+use ConfigCat\User;
 use PHPUnit\Framework\TestCase;
 
 class RolloutIntegrationsTest extends TestCase
@@ -80,10 +82,6 @@ class RolloutIntegrationsTest extends TestCase
                 }
                 $count++;
             }
-        }
-
-        if(count($errors) > 0) {
-            var_dump($errors);
         }
 
         $this->assertEquals(0, count($errors));

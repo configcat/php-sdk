@@ -1,7 +1,8 @@
 <?php
 
-namespace ConfigCat;
+namespace ConfigCat\Tests;
 
+use ConfigCat\ConfigFetcher;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;

@@ -3,8 +3,8 @@
 namespace ConfigCat;
 
 use Psr\Log\LoggerInterface;
-use vierbergenlars\SemVer\SemVerException;
-use vierbergenlars\SemVer\version;
+use z4kn4fein\SemVer\Version;
+use z4kn4fein\SemVer\VersionFormatException;
 
 /**
  * Class RolloutEvaluator
@@ -111,14 +111,14 @@ final class RolloutEvaluator
                         try {
                             $matched = false;
                             foreach ($split as $semVer) {
-                                $matched = version::eq($userValue, $semVer) || $matched;
+                                $matched = Version::equal($userValue, $semVer) || $matched;
                             }
 
                             if (($matched && $comparator == 4) || (!$matched && $comparator == 5)) {
                                 $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
                                 return $value;
                             }
-                        } catch (\RuntimeException $exception) {
+                        } catch (VersionFormatException $exception) {
                             $this->logFormatError($comparisonAttribute, $comparator, $comparisonValue, $exception);
                             continue;
                         }
@@ -130,28 +130,18 @@ final class RolloutEvaluator
                     case 8:
                     case 9:
                         try {
-//                            $userVersion = $this->parseVersion($userValue);
-//                            $cmpVersion = $this->parseVersion(trim($comparisonValue));
-//                            if (($comparator == 6 && $userVersion->lt($cmpVersion)) ||
-//                                ($comparator == 7 && $userVersion->lte($cmpVersion)) ||
-//                                ($comparator == 8 && $userVersion->gt($cmpVersion)) ||
-//                                ($comparator == 9 && $userVersion->gte($cmpVersion))) {
-//                                $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
-//                                return $value;
-//                            }
-
                             if (($comparator == 6 &&
-                                    version::lt($userValue, $comparisonValue)) ||
+                                    Version::lessThan($userValue, $comparisonValue)) ||
                                 ($comparator == 7 &&
-                                    version::lte($userValue, $comparisonValue)) ||
+                                    Version::lessThanOrEqual($userValue, $comparisonValue)) ||
                                 ($comparator == 8 &&
-                                    version::gt($userValue, $comparisonValue)) ||
+                                    Version::greaterThan($userValue, $comparisonValue)) ||
                                 ($comparator == 9 &&
-                                    version::gte($userValue, $comparisonValue))) {
+                                    Version::greaterThanOrEqual($userValue, $comparisonValue))) {
                                 $this->logMatch($comparisonAttribute, $comparator, $comparisonValue, $value);
                                 return $value;
                             }
-                        } catch (\RuntimeException $exception) {
+                        } catch (VersionFormatException $exception) {
                             $this->logFormatError($comparisonAttribute, $comparator, $comparisonValue, $exception);
                             continue;
                         }
