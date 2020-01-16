@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "2.0.2";
+    const SDK_VERSION = "2.0.3";
     /** @var string */
     const CACHE_KEY = "configcat-%s";
 
@@ -100,14 +100,16 @@ final class ConfigCatClient
             if (!array_key_exists($key, $config)) {
                 $this->logger->error("Evaluating getValue('". $key ."') failed. " .
                     "Value not found for key ". $key .". " .
-                    "Returning default value.");
+                    "Returning defaultValue: ". $defaultValue .". Here are the available keys: " .
+                    implode(", ", array_keys($config)));
 
                 return $defaultValue;
             }
 
             return $this->evaluate($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Evaluating getValue('". $key ."') failed. Returning default value. "
+            $this->logger->error("Evaluating getValue('". $key ."') failed. " .
+                "Returning defaultValue: ". $defaultValue .". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;
         }

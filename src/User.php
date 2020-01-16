@@ -75,4 +75,12 @@ final class User
         $lowerCaseKey = strtolower($key);
         return array_key_exists($lowerCaseKey, $this->attributes) ? $this->attributes[$lowerCaseKey] : null;
     }
+
+    /**
+     * @return string The string representation of the user.
+     */
+    public function __toString()
+    {
+        return json_encode($this->attributes);
+    }
 }

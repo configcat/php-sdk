@@ -4,6 +4,8 @@ namespace ConfigCat\Tests;
 
 use ConfigCat\ConfigCatClient;
 use ConfigCat\User;
+use Monolog\Handler\ErrorLogHandler;
+use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 
 class RolloutIntegrationsTest extends TestCase
@@ -19,7 +21,9 @@ class RolloutIntegrationsTest extends TestCase
         $rows = self::readCsv("tests/" . $file);
         $settingKeys = array_slice($rows[0], 4);
         $customKey = $rows[0][3];
-        $client = new ConfigCatClient($apiKey);
+        $client = new ConfigCatClient($apiKey, [
+            "logger" => new Logger("ConfigCat", [new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING)])
+        ]);
 
         $errors = [];
 
