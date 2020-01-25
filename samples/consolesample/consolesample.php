@@ -7,7 +7,7 @@ $client = new \ConfigCat\ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i
 ]);
 
 $user = new \ConfigCat\User("Some UserID",
-    "configcat@example.com", "Awesomnia", [ "version" => "1.0.0"]
+    "configcat@example.com", "Awesomnia", [ "version" => "1.0.0" ]
 );
 
 $value = $client->getValue('isPOCFeatureEnabled', false, $user);
