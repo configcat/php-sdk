@@ -7,7 +7,6 @@ php:
   - 7.0
   - 7.1
   - 7.4
-  - 8
   - nightly
 
 matrix:
