@@ -31,7 +31,9 @@ final class RolloutEvaluator
         "< (Number)",
         "<= (Number)",
         "> (Number)",
-        ">= (Number)"
+        ">= (Number)",
+        "IS ONE OF (Sensitive)",
+        "IS NOT ONE OF (Sensitive)"
     ];
 
     /**
@@ -245,6 +247,34 @@ final class RolloutEvaluator
                             ($comparator == 14 && $userDoubleValue > $comparisonDoubleValue) ||
                             ($comparator == 15 && $userDoubleValue >= $comparisonDoubleValue)) {
                             $this->logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value);
+                            return $value;
+                        }
+                        break;
+                    //IS ONE OF (Sensitive)
+                    case 16:
+                        $split = array_filter(Utils::splitTrim($comparisonValue));
+                        if (in_array(sha1($userValue), $split, true)) {
+                            $this->logMatch(
+                                $comparisonAttribute,
+                                $userValue,
+                                $comparator,
+                                $comparisonValue,
+                                $value
+                            );
+                            return $value;
+                        }
+                        break;
+                    //IS NOT ONE OF (Sensitive)
+                    case 17:
+                        $split = array_filter(Utils::splitTrim($comparisonValue));
+                        if (!in_array(sha1($userValue), $split, true)) {
+                            $this->logMatch(
+                                $comparisonAttribute,
+                                $userValue,
+                                $comparator,
+                                $comparisonValue,
+                                $value
+                            );
                             return $value;
                         }
                         break;
