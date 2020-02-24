@@ -28,3 +28,6 @@
 
 ## Packagist
 Make sure the new version is available on [Packagist](https://packagist.org/packages/configcat/configcat-client).
+
+## Update samples
+Update and test sample apps with the new SDK version.
