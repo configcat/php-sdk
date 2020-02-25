@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigFetcher
 {
     const ETAG_HEADER = "ETag";
-    const URL_FORMAT = "/configuration-files/%s/config_v3.json";
+    const URL_FORMAT = "/configuration-files/%s/config_v4.json";
 
     /** @var Client */
     private $client;
