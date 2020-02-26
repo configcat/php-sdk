@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "3.0.1";
+    const SDK_VERSION = "3.0.2";
     /** @var string */
     const CACHE_KEY = "configcat-%s";
 
