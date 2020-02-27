@@ -31,3 +31,11 @@ Make sure the new version is available on [Packagist](https://packagist.org/pack
 
 ## Update samples
 Update and test sample apps with the new SDK version.
+```bash
+composer update configcat/configcat-client
+```
+
+To validate installed package version
+```bash
+composer show
+```
