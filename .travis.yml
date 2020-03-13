@@ -24,6 +24,7 @@ before_script:
 
 script:
   - vendor/bin/phpcs .
+  - echo $?
   - phpunit --coverage-clover clover.xml
 
 after_success:
