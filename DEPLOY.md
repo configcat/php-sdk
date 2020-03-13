@@ -2,9 +2,9 @@
 ## Preparation
 1. Make sure the code is properly formatted.
    ```bash
-   vendor/bin/pretty
+   ./vendor/bin/phpcs
    ```
-   > If it shows formatting errors, then you can fix them with the `vendor/bin/pretty fix` command
+   > If it shows formatting errors, then you can fix them with the `./vendor/bin/phpcbf` command
 2. Run tests
    ```bash
    vendor/bin/phpunit tests
