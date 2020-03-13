@@ -23,8 +23,6 @@ before_script:
   - travis_retry composer install -n
 
 script:
-  - vendor/bin/phpcs -i
-  - vendor/bin/phpcs .
   - phpunit --coverage-clover clover.xml
 
 after_success:
