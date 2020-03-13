@@ -1,4 +1,3 @@
-dist: trusty
 language: php
 sudo: false
 php:
@@ -23,7 +22,7 @@ before_script:
   - travis_retry composer install -n
 
 script:
-  - vendor/bin/phpcs
+  - vendor/bin/phpcs .
   - phpunit --coverage-clover clover.xml
 
 after_success:
