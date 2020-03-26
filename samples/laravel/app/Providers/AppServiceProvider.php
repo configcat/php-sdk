@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('ConfigCat\ConfigCatClient', function () {
-            return new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", [
+            return new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ", [
                 'cache' => new LaravelCache(Cache::store()),
                 'cache-refresh-interval' => 5
             ]);

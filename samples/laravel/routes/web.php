@@ -12,7 +12,5 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('config');
 });
-
-Route::get('/config', 'ConfigController@index');

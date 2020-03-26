@@ -23,8 +23,13 @@ class ConfigController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function isAwesomeEnabled()
     {
-        return $this->configCatClient->getValue("keySampleText", null, new User("id"));
+        return response()->json($this->configCatClient->getValue("isAwesomeFeatureEnabled", false));
+    }
+
+    public function isPOCEnabled(Request $request)
+    {
+        return response()->json($this->configCatClient->getValue("isPOCFeatureEnabled", false, new User("#SOME-USER-ID#", $request->email)));
     }
 }
