@@ -7,7 +7,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <style>
         html, body {
-            color: #636b6f;
             font-family: 'Nunito', sans-serif;
             font-weight: 200;
         }
