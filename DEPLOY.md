@@ -1,16 +1,20 @@
 # Steps to deploy
 ## Preparation
-1. Make sure the code is properly formatted.
+1. Install dependencies
+   ```bash
+   composer install
+   ```
+2. Make sure the code is properly formatted.
    ```bash
    ./vendor/bin/phpcs
    ```
    > If it shows formatting errors, then you can fix them with the `./vendor/bin/phpcbf` command
-2. Run tests
+3. Run tests
    ```bash
    vendor/bin/phpunit tests
    ```
-3. Set SDK_VERSION constant in ConfigCatClient.php
-4. Commit & Push
+4. Set SDK_VERSION constant in ConfigCatClient.php
+5. Commit & Push
 ## Publish
 - Via git tag
     1. Create a new version tag.
