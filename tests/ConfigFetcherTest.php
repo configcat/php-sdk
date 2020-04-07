@@ -11,13 +11,13 @@ use Psr\Log\NullLogger;
 
 class ConfigFetcherTest extends TestCase
 {
-    private $mockApiKey = "testApiKey";
+    private $mockSdkKey = "testSdkKey";
     private $mockEtag = "testEtag";
     private $mockBody = "{\"key\": \"value\"}";
 
     public function testFetchOk()
     {
-        $fetcher = new ConfigFetcher($this->mockApiKey, new NullLogger(), ['custom-handler' => new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), ['custom-handler' => new MockHandler([
             new Response(200, [ConfigFetcher::ETAG_HEADER => $this->mockEtag], $this->mockBody)
         ])]);
 
@@ -30,7 +30,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchNotModified()
     {
-        $fetcher = new ConfigFetcher($this->mockApiKey, new NullLogger(), ['custom-handler' => new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), ['custom-handler' => new MockHandler([
             new Response(304, [ConfigFetcher::ETAG_HEADER => $this->mockEtag])
         ])]);
 
@@ -43,7 +43,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchFailed()
     {
-        $fetcher = new ConfigFetcher($this->mockApiKey, new NullLogger(), ['custom-handler' => new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), ['custom-handler' => new MockHandler([
             new Response(400)
         ])]);
 
@@ -56,7 +56,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchInvalidJson()
     {
-        $fetcher = new ConfigFetcher($this->mockApiKey, new NullLogger(), ['custom-handler' => new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), ['custom-handler' => new MockHandler([
             new Response(200, [], "{\"key\": value}")
         ])]);
 
@@ -70,7 +70,7 @@ class ConfigFetcherTest extends TestCase
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testConstructNullApiKey()
+    public function testConstructNullSdkKey()
     {
         new ConfigFetcher(null, new NullLogger());
     }
@@ -78,7 +78,7 @@ class ConfigFetcherTest extends TestCase
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testConstructEmptyApiKey()
+    public function testConstructEmptySdkKey()
     {
         new ConfigFetcher("", new NullLogger());
     }
