@@ -1,6 +1,6 @@
 {
     "require": {
-        "configcat/configcat-client": "^3.0",
+        "configcat/configcat-client": "^4.0",
         "monolog/monolog": "^1.0"
     }
 }
