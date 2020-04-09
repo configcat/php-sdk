@@ -20,12 +20,12 @@ ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature fl
 composer require configcat/configcat-client
 ```
 
-### 2. Go to <a href="https://app.configcat.com/connect" target="_blank">Connect your application</a> tab to get your *API Key*:
-![API-KEY](https://raw.githubusercontent.com/ConfigCat/php-sdk/master/media/readme01.png  "API-KEY")
+### 2. Go to <a href="https://app.configcat.com/sdkkey" target="_blank">Connect your application</a> tab to get your *SDK Key*:
+![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/php-sdk/master/media/readme01.png  "SDK-KEY")
 
 ### 3. Create the *ConfigCat* client instance
 ```php
-$client = new \ConfigCat\ConfigCatClient("#YOUR-API-KEY#");
+$client = new \ConfigCat\ConfigCatClient("#YOUR-SDK-KEY#");
 ```
 
 ### 4. Get your setting value:
@@ -61,8 +61,8 @@ if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
 ## Sample/Demo app
 * [Sample Laravel app](https://github.com/ConfigCat/php-sdk/tree/master/samples/laravel)
 
-## Support
-If you need help how to use this SDK feel free to to contact the ConfigCat Staff on https://configcat.com. We're happy to help.
+## Need help?
+https://configcat.com/support
 
 ## Contributing
 Contributions are welcome.

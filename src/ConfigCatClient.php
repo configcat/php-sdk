@@ -39,7 +39,7 @@ final class ConfigCatClient
     /**
      * Creates a new ConfigCatClient.
      *
-     * @param string $apiKey The api key used to communicate with the ConfigCat services.
+     * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param array $options The configuration options:
      *     - logger: a \Psr\Log\LoggerInterface implementation used for logging.
      *     - cache: a \ConfigCat\ConfigCache implementation used for caching.
@@ -49,15 +49,15 @@ final class ConfigCatClient
      *     - custom-handler: a custom callable Guzzle http handler.
      *
      * @throws InvalidArgumentException
-     *   When the $apiKey is not legal.
+     *   When the $sdkKey is not legal.
      */
-    public function __construct($apiKey, array $options = [])
+    public function __construct($sdkKey, array $options = [])
     {
-        if (empty($apiKey)) {
-            throw new InvalidArgumentException("apiKey cannot be empty.");
+        if (empty($sdkKey)) {
+            throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $hash = Murmur::hash3($apiKey);
+        $hash = Murmur::hash3($sdkKey);
         $this->cacheKey = sprintf(self::CACHE_KEY, $hash);
 
         if (isset($options['logger']) && $options['logger'] instanceof LoggerInterface) {
@@ -77,7 +77,7 @@ final class ConfigCatClient
         }
 
         $this->cache->setLogger($this->logger);
-        $this->fetcher = new ConfigFetcher($apiKey, $this->logger, $options);
+        $this->fetcher = new ConfigFetcher($sdkKey, $this->logger, $options);
         $this->evaluator = new RolloutEvaluator($this->logger);
     }
 

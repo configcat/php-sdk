@@ -12,16 +12,16 @@ class RolloutIntegrationsTest extends TestCase
 {
     /**
      * @param $file
-     * @param $apiKey
+     * @param $sdkKey
      *
      * @dataProvider rolloutTestData
      */
-    public function testRolloutIntegration($file, $apiKey)
+    public function testRolloutIntegration($file, $sdkKey)
     {
         $rows = self::readCsv("tests/" . $file);
         $settingKeys = array_slice($rows[0], 4);
         $customKey = $rows[0][3];
-        $client = new ConfigCatClient($apiKey, [
+        $client = new ConfigCatClient($sdkKey, [
             "logger" => new Logger("ConfigCat", [new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING)])
         ]);
 

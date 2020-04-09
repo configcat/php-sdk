@@ -17,7 +17,7 @@ class ConfigCatClientTest extends TestCase
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testConstructNullApiKey()
+    public function testConstructNullSdkKey()
     {
         new ConfigCatClient(null);
     }
@@ -25,7 +25,7 @@ class ConfigCatClientTest extends TestCase
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testConstructEmptyApiKey()
+    public function testConstructEmptySdkKey()
     {
         new ConfigCatClient("");
     }
@@ -60,7 +60,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetValueFailedFetch()
     {
-        $client = new ConfigCatClient("apiKey", ['custom-handler' => new MockHandler([
+        $client = new ConfigCatClient("sdkKey", ['custom-handler' => new MockHandler([
             new Response(400)
         ])]);
 
@@ -70,7 +70,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllKeysFailedFetch()
     {
-        $client = new ConfigCatClient("apiKey", ['custom-handler' => new MockHandler([
+        $client = new ConfigCatClient("sdkKey", ['custom-handler' => new MockHandler([
             new Response(400)
         ])]);
 

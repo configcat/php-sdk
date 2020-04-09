@@ -31,7 +31,7 @@ final class ConfigFetcher
     /**
      * ConfigFetcher constructor.
      *
-     * @param string $apiKey The api key used to communicate with the ConfigCat services.
+     * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param LoggerInterface $logger The logger instance.
      * @param array $options The http related configuration options:
      *     - timeout: sets the http request timeout of the underlying http requests.
@@ -40,12 +40,12 @@ final class ConfigFetcher
      *     - base-url: the base ConfigCat CDN url.
      *
      * @throws InvalidArgumentException
-     *   When the $apiKey, the $logger or the $cache is not legal.
+     *   When the $sdkKey, the $logger or the $cache is not legal.
      */
-    public function __construct($apiKey, LoggerInterface $logger, array $options = [])
+    public function __construct($sdkKey, LoggerInterface $logger, array $options = [])
     {
-        if (empty($apiKey)) {
-            throw new InvalidArgumentException("apiKey cannot be empty.");
+        if (empty($sdkKey)) {
+            throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
         if (isset($options['base-url']) && !empty($options['base-url'])) {
@@ -67,7 +67,7 @@ final class ConfigFetcher
         }
 
         $this->logger = $logger;
-        $this->url = sprintf(self::URL_FORMAT, $apiKey);
+        $this->url = sprintf(self::URL_FORMAT, $sdkKey);
         $this->requestOptions = array_merge([
             'headers' => [
                 'X-ConfigCat-UserAgent' => "ConfigCat-PHP/" . ConfigCatClient::SDK_VERSION
@@ -122,7 +122,7 @@ final class ConfigFetcher
                 return new FetchResponse(FetchResponse::NOT_MODIFIED);
             }
 
-            $this->logger->error("Double-check your API KEY at https://app.configcat.com/apikey. " .
+            $this->logger->error("Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
                 "Received unexpected response: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
