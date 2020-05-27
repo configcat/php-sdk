@@ -13,7 +13,7 @@
    ```bash
    vendor/bin/phpunit tests
    ```
-4. Set SDK_VERSION constant in ConfigCatClient.php
+4. Set `SDK_VERSION` constant in `ConfigCatClient.php`
 5. Commit & Push
 ## Publish
 - Via git tag
