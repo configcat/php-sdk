@@ -168,7 +168,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            continue;
+                            break;
                         }
 
                         break;
@@ -203,7 +203,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $exception
                             );
-                            continue;
+                            break;
                         }
                         break;
                     //LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Number)
@@ -223,7 +223,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $userDouble . "is not a valid number."
                             );
-                            continue;
+                            break;
                         }
 
                         if (!is_numeric($comparisonDouble)) {
@@ -234,7 +234,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $comparisonDouble . "is not a valid number."
                             );
-                            continue;
+                            break;
                         }
 
                         $userDoubleValue = floatval($userDouble);
