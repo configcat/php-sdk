@@ -124,7 +124,7 @@ final class ConfigCatClient
     {
         try {
             $config = $this->getConfig();
-            return array_keys($config);
+            return is_null($config) ? array() : array_keys($config);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during the deserialization. Returning empty array. "
                 . $exception->getMessage(), ['exception' => $exception]);
