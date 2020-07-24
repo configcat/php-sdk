@@ -2,12 +2,15 @@
 
 namespace ConfigCat\Cache;
 
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\InvalidArgumentException;
+
 class Psr6Cache extends ConfigCache
 {
-    /** @var \Psr\Cache\CacheItemPoolInterface */
+    /** @var CacheItemPoolInterface */
     private $cachePool;
 
-    public function __construct(\Psr\Cache\CacheItemPoolInterface $cachePool)
+    public function __construct(CacheItemPoolInterface $cachePool)
     {
         $this->cachePool = $cachePool;
     }
@@ -18,7 +21,7 @@ class Psr6Cache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @return string|null Cached value for the given key, or null if it's missing.
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException If the $key is not a legal value.
      */
     protected function get($key)
     {
@@ -32,7 +35,7 @@ class Psr6Cache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException If the $key is not a legal value.
      */
     protected function set($key, $value)
     {

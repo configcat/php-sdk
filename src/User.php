@@ -28,22 +28,18 @@ final class User
      */
     public function __construct($identifier, $email = "", $country = "", $custom = [])
     {
-        if (empty($identifier)) {
-            throw new InvalidArgumentException("identifier cannot be empty.");
-        }
-
-        $this->identifier = $this->attributes['identifier'] = $identifier;
+        $this->identifier = $this->attributes['Identifier'] = is_null($identifier) ? "" : $identifier;
 
         if (!empty($email)) {
-            $this->attributes['email'] = $email;
+            $this->attributes['Email'] = $email;
         }
 
         if (!empty($country)) {
-            $this->attributes['country'] = $country;
+            $this->attributes['Country'] = $country;
         }
 
         if (!empty($custom)) {
-            $this->attributes = array_merge($this->attributes, array_change_key_case($custom, CASE_LOWER));
+            $this->attributes = array_merge($this->attributes, $custom);
         }
     }
 
@@ -68,12 +64,11 @@ final class User
      */
     public function getAttribute($key)
     {
-        if (empty($key)) {
-            throw new InvalidArgumentException("key cannot be empty.");
+        if (is_null($key)) {
+            throw new InvalidArgumentException("key cannot be null.");
         }
 
-        $lowerCaseKey = strtolower($key);
-        return array_key_exists($lowerCaseKey, $this->attributes) ? $this->attributes[$lowerCaseKey] : null;
+        return array_key_exists($key, $this->attributes) ? $this->attributes[$key] : null;
     }
 
     /**

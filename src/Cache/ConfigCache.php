@@ -76,8 +76,9 @@ abstract class ConfigCache implements LoggerAwareInterface
             }
         } catch (Exception $exception) {
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
-            return null;
         }
+
+        return null;
     }
 
     /**

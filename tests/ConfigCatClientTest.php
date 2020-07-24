@@ -97,4 +97,64 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertFalse($value);
     }
+
+    public function testGetVariationId()
+    {
+        $client = $this->getTestClient();
+        $value = $client->getVariationId("second", null);
+
+        $this->assertEquals("fakeIdSecond", $value);
+    }
+
+    public function testGetVariationIdDefault()
+    {
+        $client = $this->getTestClient();
+        $value = $client->getVariationId("nonexisting", null);
+
+        $this->assertNull($value);
+    }
+
+    public function testGetAllVariationIds()
+    {
+        $client = $this->getTestClient();
+        $value = $client->getAllVariationIds();
+
+        $this->assertEquals(["fakeIdFirst", "fakeIdSecond"], $value);
+    }
+
+    public function testGetAllVariationIdsEmpty()
+    {
+        $client = new ConfigCatClient("fakeKey", ['custom-handler' => new MockHandler([
+            new Response(400)
+        ])]);
+        $value = $client->getAllVariationIds();
+
+        $this->assertEmpty($value);
+    }
+
+    public function testGetKeyAndValue()
+    {
+        $client = $this->getTestClient();
+        $value = $client->getKeyAndValue("fakeIdSecond");
+
+        $this->assertEquals("second", $value->getKey());
+        $this->assertTrue($value->getValue());
+    }
+
+    public function testGetKeyAndValueNull()
+    {
+        $client = $this->getTestClient();
+        $value = $client->getKeyAndValue("nonexisting");
+
+        $this->assertNull($value);
+    }
+
+    private function getTestClient()
+    {
+        return new ConfigCatClient("fakeKey", [
+            "custom-handler" => new MockHandler(
+                [new Response(200, [], "{ \"first\": { \"v\": false, \"p\": [], \"r\": [], \"i\":\"fakeIdFirst\" }, \"second\": { \"v\": true, \"p\": [], \"r\": [], \"i\":\"fakeIdSecond\" }}")]
+            ),
+        ]);
+    }
 }

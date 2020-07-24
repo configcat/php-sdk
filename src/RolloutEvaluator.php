@@ -2,6 +2,9 @@
 
 namespace ConfigCat;
 
+use ConfigCat\Attributes\PercentageAttributes;
+use ConfigCat\Attributes\RolloutAttributes;
+use ConfigCat\Attributes\SettingAttributes;
 use Psr\Log\LoggerInterface;
 use z4kn4fein\SemVer\Version;
 use z4kn4fein\SemVer\VersionFormatException;
@@ -52,32 +55,34 @@ final class RolloutEvaluator
      * @param string $key The key of the desired value.
      * @param array $json The decoded JSON configuration.
      * @param User|null $user Optional. The user to identify the caller.
-     * @return mixed The evaluated configuration value.
+     * @return Pair The evaluated configuration value and Variation ID.
      */
     public function evaluate($key, array $json, User $user = null)
     {
-        $this->logger->info("Evaluating getValue(" . $key . ").");
-
         if (is_null($user)) {
-            if (isset($json['r']) && !empty($json['r']) || isset($json['p']) && !empty($json['p'])) {
+            if (isset($json[SettingAttributes::ROLLOUT_RULES]) &&
+                !empty($json[SettingAttributes::ROLLOUT_RULES]) ||
+                isset($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS]) &&
+                !empty($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])) {
                 $this->logger->warning("UserObject missing! You should pass a " .
                     "UserObject to getValue() in order to make targeting work properly. " .
                     "Read more: https://configcat.com/docs/advanced/user-object.");
             }
 
-            $result = $json['v'];
+            $result = $json[SettingAttributes::VALUE];
+            $variationId = $json[SettingAttributes::VARIATION_ID];
             $this->logger->info("Returning ". $result .".");
-            return $result;
+            return new Pair($variationId, $result);
         }
 
         $this->logger->info("User object: " . $user);
-
-        if (isset($json['r']) && !empty($json['r'])) {
-            foreach ($json['r'] as $rule) {
-                $comparisonAttribute = $rule['a'];
-                $comparisonValue = $rule['c'];
-                $comparator = $rule['t'];
-                $value = $rule['v'];
+        if (isset($json[SettingAttributes::ROLLOUT_RULES]) && !empty($json[SettingAttributes::ROLLOUT_RULES])) {
+            foreach ($json[SettingAttributes::ROLLOUT_RULES] as $rule) {
+                $comparisonAttribute = $rule[RolloutAttributes::COMPARISON_ATTRIBUTE];
+                $comparisonValue = $rule[RolloutAttributes::COMPARISON_VALUE];
+                $comparator = $rule[RolloutAttributes::COMPARATOR];
+                $value = $rule[RolloutAttributes::VALUE];
+                $variationId = $rule[RolloutAttributes::VARIATION_ID];
                 $userValue = $user->getAttribute($comparisonAttribute);
 
                 if (empty($comparisonValue) || (!is_numeric($userValue) && empty($userValue))) {
@@ -97,7 +102,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                     //IS NOT ONE OF
@@ -111,7 +116,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                     //CONTAINS
@@ -124,7 +129,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                     //DOES NOT CONTAIN
@@ -137,7 +142,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                     //IS ONE OF, IS NOT ONE OF (SemVer)
@@ -158,7 +163,7 @@ final class RolloutEvaluator
                                     $comparisonValue,
                                     $value
                                 );
-                                return $value;
+                                return new Pair($variationId, $value);
                             }
                         } catch (VersionFormatException $exception) {
                             $this->logMatch(
@@ -193,7 +198,7 @@ final class RolloutEvaluator
                                     $comparisonValue,
                                     $value
                                 );
-                                return $value;
+                                return new Pair($variationId, $value);
                             }
                         } catch (VersionFormatException $exception) {
                             $this->logFormatError(
@@ -247,7 +252,7 @@ final class RolloutEvaluator
                             ($comparator == 14 && $userDoubleValue > $comparisonDoubleValue) ||
                             ($comparator == 15 && $userDoubleValue >= $comparisonDoubleValue)) {
                             $this->logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value);
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                     //IS ONE OF (Sensitive)
@@ -261,7 +266,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                     //IS NOT ONE OF (Sensitive)
@@ -275,7 +280,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             );
-                            return $value;
+                            return new Pair($variationId, $value);
                         }
                         break;
                 }
@@ -283,26 +288,29 @@ final class RolloutEvaluator
             }
         }
 
-        if (isset($json['p']) && !empty($json['p'])) {
+        if (isset($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS]) &&
+            !empty($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])) {
             $hashCandidate = $key . $user->getIdentifier();
             $stringHash = substr(sha1($hashCandidate), 0, 7);
             $intHash = intval($stringHash, 16);
             $scale = $intHash % 100;
 
             $bucket = 0;
-            foreach ($json['p'] as $rule) {
-                $bucket += $rule['p'];
+            foreach ($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS] as $rule) {
+                $bucket += $rule[PercentageAttributes::PERCENTAGE];
                 if ($scale < $bucket) {
-                    $result = $rule['v'];
+                    $result = $rule[PercentageAttributes::VALUE];
+                    $variationId = $rule[PercentageAttributes::VARIATION_ID];
                     $this->logger->info("Evaluating % options. Returning " . $result . ".");
-                    return $result;
+                    return new Pair($variationId, $result);
                 }
             }
         }
 
-        $result = $json['v'];
+        $result = $json[SettingAttributes::VALUE];
+        $variationId = $json[SettingAttributes::VARIATION_ID];
         $this->logger->info("Returning ". $result .".");
-        return $result;
+        return new Pair($variationId, $result);
     }
 
     private function logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value)

@@ -2,6 +2,9 @@
 
 namespace ConfigCat;
 
+use ConfigCat\Attributes\PercentageAttributes;
+use ConfigCat\Attributes\RolloutAttributes;
+use ConfigCat\Attributes\SettingAttributes;
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
@@ -19,7 +22,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "4.0.1";
+    const SDK_VERSION = "4.1.0";
     /** @var string */
     const CACHE_KEY = "configcat-%s";
 
@@ -86,7 +89,7 @@ final class ConfigCatClient
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
-     * @param User $user The user object to identify the caller.
+     * @param User|null $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
     public function getValue($key, $defaultValue, User $user = null)
@@ -106,12 +109,82 @@ final class ConfigCatClient
                 return $defaultValue;
             }
 
-            return $this->evaluate($key, $config[$key], $defaultValue, $user);
+            return $this->parseValue($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
             $this->logger->error("Evaluating getValue('". $key ."') failed. " .
                 "Returning defaultValue: ". $defaultValue .". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;
+        }
+    }
+
+    /**
+     * Gets the Variation ID (analytics) of a feature flag or setting by the given key.
+     *
+     * @param string $key The identifier of the configuration value.
+     * @param mixed $defaultVariationId In case of any failure, this value will be returned.
+     * @param User|null $user The user object to identify the caller.
+     * @return mixed The Variation ID identified by the given key.
+     */
+    public function getVariationId($key, $defaultVariationId, User $user = null)
+    {
+        try {
+            $config = $this->getConfig();
+            if (empty($config)) {
+                return $defaultVariationId;
+            }
+
+            if (!array_key_exists($key, $config)) {
+                $this->logger->error("Evaluating getVariationId('". $key ."') failed. " .
+                    "Value not found for key ". $key .". " .
+                    "Returning defaultVariationId: ". $defaultVariationId .". Here are the available keys: " .
+                    implode(", ", array_keys($config)));
+
+                return $defaultVariationId;
+            }
+
+            return $this->parseVariationId($key, $config[$key], $defaultVariationId, $user);
+        } catch (Exception $exception) {
+            $this->logger->error("Evaluating getVariationId('". $key ."') failed. " .
+                "Returning defaultVariationId: ". $defaultVariationId .". "
+                . $exception->getMessage(), ['exception' => $exception]);
+            return $defaultVariationId;
+        }
+    }
+
+    /**
+     * Gets the Variation IDs (analytics) of all feature flags or settings.
+     *
+     * @param User|null $user The user object to identify the caller.
+     * @return array of all Variation IDs.
+     */
+    public function getAllVariationIds(User $user = null)
+    {
+        try {
+            $config = $this->getConfig();
+            return is_null($config) ? [] : $this->parseVariationIds($config, $user);
+        } catch (Exception $exception) {
+            $this->logger->error("An error occurred during getting all the variation ids. Returning empty array. "
+                . $exception->getMessage(), ['exception' => $exception]);
+            return [];
+        }
+    }
+
+    /**
+     * Gets the key of a setting and its value identified by the given Variation ID (analytics).
+     *
+     * @param string $variationId The Variation ID.
+     * @return Pair|null of the key and value of a setting.
+     */
+    public function getKeyAndValue($variationId)
+    {
+        try {
+            $config = $this->getConfig();
+            return is_null($config) ? null : $this->parseKeyAndValue($config, $variationId);
+        } catch (Exception $exception) {
+            $this->logger->error("Could not find the setting for the given variation ID: " . $variationId . ". "
+                . $exception->getMessage(), ['exception' => $exception]);
+            return null;
         }
     }
 
@@ -124,11 +197,11 @@ final class ConfigCatClient
     {
         try {
             $config = $this->getConfig();
-            return is_null($config) ? array() : array_keys($config);
+            return is_null($config) ? [] : array_keys($config);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during the deserialization. Returning empty array. "
                 . $exception->getMessage(), ['exception' => $exception]);
-            return array();
+            return [];
         }
     }
 
@@ -145,10 +218,56 @@ final class ConfigCatClient
         }
     }
 
-    private function evaluate($key, array $json, $defaultValue, User $user = null)
+    private function parseValue($key, array $json, $defaultValue, User $user = null)
     {
+        $this->logger->info("Evaluating getValue(" . $key . ").");
         $evaluated = $this->evaluator->evaluate($key, $json, $user);
-        return is_null($evaluated) ? $defaultValue : $evaluated;
+        return is_null($evaluated) ? $defaultValue : $evaluated->getValue();
+    }
+
+    private function parseVariationId($key, array $json, $defaultValue, User $user = null)
+    {
+        $this->logger->info("Evaluating getVariationId(" . $key . ").");
+        $evaluated = $this->evaluator->evaluate($key, $json, $user);
+        return is_null($evaluated) ? $defaultValue : $evaluated->getKey();
+    }
+
+    private function parseVariationIds(array $json, User $user = null)
+    {
+        $keys = array_keys($json);
+        $result = [];
+        foreach ($keys as $key) {
+            $result[] = $this->parseVariationId($key, $json[$key], null, $user);
+        }
+
+        return $result;
+    }
+
+    private function parseKeyAndValue(array $json, $variationId)
+    {
+        foreach ($json as $key => $value) {
+            if ($variationId == $value[SettingAttributes::VARIATION_ID]) {
+                return new Pair($key, $value[SettingAttributes::VALUE]);
+            }
+
+            $rolloutRules = $value[SettingAttributes::ROLLOUT_RULES];
+            $percentageItems = $value[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS];
+
+            foreach ($rolloutRules as $rolloutValue) {
+                if ($variationId == $rolloutValue[RolloutAttributes::VARIATION_ID]) {
+                    return new Pair($key, $rolloutValue[RolloutAttributes::VALUE]);
+                }
+            }
+
+            foreach ($percentageItems as $percentageValue) {
+                if ($variationId == $percentageValue[PercentageAttributes::VARIATION_ID]) {
+                    return new Pair($key, $percentageValue[PercentageAttributes::VALUE]);
+                }
+            }
+        }
+
+        $this->logger->error("Could not find the setting for the given variation ID: " . $variationId);
+        return null;
     }
 
     private function getConfig()
