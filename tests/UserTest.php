@@ -8,20 +8,16 @@ use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
 {
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructNullIdentifier()
     {
-        new User(null);
+        $user = new User(null);
+        $this->assertEquals("", $user->getIdentifier());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructEmptyIdentifier()
     {
-        new User("");
+        $user = new User("");
+        $this->assertEquals("", $user->getIdentifier());
     }
 
     /**
@@ -33,12 +29,9 @@ class UserTest extends TestCase
         $user->getAttribute(null);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testGetAttributeEmptyKey()
     {
         $user = new User("id");
-        $user->getAttribute("");
+        $this->assertEquals("", $user->getAttribute(""));
     }
 }

@@ -2,12 +2,15 @@
 
 namespace ConfigCat\Cache;
 
+use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
+
 class Psr16Cache extends ConfigCache
 {
-    /** @var \Psr\SimpleCache\CacheInterface */
+    /** @var CacheInterface */
     private $cache;
 
-    public function __construct(\Psr\SimpleCache\CacheInterface $cache)
+    public function __construct(CacheInterface $cache)
     {
         $this->cache = $cache;
     }
@@ -18,7 +21,7 @@ class Psr16Cache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @return string|null Cached value for the given key, or null if it's missing.
      *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws InvalidArgumentException If the $key is not a legal value.
      */
     protected function get($key)
     {
@@ -31,7 +34,7 @@ class Psr16Cache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws InvalidArgumentException If the $key is not a legal value.
      */
     protected function set($key, $value)
     {

@@ -10,13 +10,17 @@ use PHPUnit\Framework\TestCase;
 
 class RolloutIntegrationsTest extends TestCase
 {
+    const valueKind = 0;
+    const variationKind = 1;
+
     /**
      * @param $file
      * @param $sdkKey
+     * @param $kind
      *
      * @dataProvider rolloutTestData
      */
-    public function testRolloutIntegration($file, $sdkKey)
+    public function testRolloutIntegration($file, $sdkKey, $kind)
     {
         $rows = self::readCsv("tests/" . $file);
         $settingKeys = array_slice($rows[0], 4);
@@ -40,7 +44,7 @@ class RolloutIntegrationsTest extends TestCase
             $testObjects = $rows[$i];
 
             $user = null;
-            if (!empty($testObjects[0]) && $testObjects[0] !== "##null##") {
+            if ($testObjects[0] !== "##null##") {
                 $identifier = $testObjects[0];
 
                 $email = "";
@@ -67,7 +71,9 @@ class RolloutIntegrationsTest extends TestCase
             $count = 0;
             foreach ($settingKeys as $key) {
                 $expected = $testObjects[$count + 4];
-                $actual = $client->getValue($key, null, $user);
+                $actual = $kind == self::valueKind
+                    ? $client->getValue($key, null, $user)
+                    : $client->getVariationId($key, null, $user);
 
                 if (is_bool($actual)) {
                     $actual = $actual ? "True" : "False";
@@ -107,11 +113,12 @@ class RolloutIntegrationsTest extends TestCase
     public function rolloutTestData()
     {
         return [
-            ["testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A"],
-            ["testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA"],
-            ["testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw"],
-            ["testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w"],
-            ["testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA"],
+            ["testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", self::valueKind],
+            ["testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", self::valueKind],
+            ["testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", self::valueKind],
+            ["testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", self::valueKind],
+            ["testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", self::valueKind],
+            ["testmatrix_variationId.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", self::variationKind],
         ];
     }
 }

@@ -2,12 +2,15 @@
 
 namespace ConfigCat\Cache;
 
+use Illuminate\Contracts\Cache\Repository;
+use Psr\SimpleCache\InvalidArgumentException;
+
 class LaravelCache extends ConfigCache
 {
-    /** @var \Illuminate\Contracts\Cache\Repository */
+    /** @var Repository */
     private $cache;
 
-    public function __construct(\Illuminate\Contracts\Cache\Repository $cache)
+    public function __construct(Repository $cache)
     {
         $this->cache = $cache;
     }
@@ -17,6 +20,8 @@ class LaravelCache extends ConfigCache
      *
      * @param string $key Identifier for the cached value.
      * @return string|null Cached value for the given key, or null if it's missing.
+     *
+     * @throws InvalidArgumentException If the $key is not a legal value.
      */
     protected function get($key)
     {
