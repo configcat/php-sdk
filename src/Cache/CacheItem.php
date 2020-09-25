@@ -14,4 +14,6 @@ class CacheItem
     public $etag;
     /** @var array The cached JSON configuration. */
     public $config;
+    /** @var string The url pointing to the proper cdn server. */
+    public $url;
 }

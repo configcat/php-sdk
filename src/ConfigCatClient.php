@@ -2,6 +2,7 @@
 
 namespace ConfigCat;
 
+use ConfigCat\Attributes\Config;
 use ConfigCat\Attributes\PercentageAttributes;
 use ConfigCat\Attributes\RolloutAttributes;
 use ConfigCat\Attributes\SettingAttributes;
@@ -22,9 +23,9 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "4.1.0";
+    const SDK_VERSION = "5.0.0";
     /** @var string */
-    const CACHE_KEY = "configcat-%s";
+    const CACHE_KEY = "config-v5-%s";
 
     /** @var LoggerInterface */
     private $logger;
@@ -207,12 +208,17 @@ final class ConfigCatClient
 
     public function forceRefresh()
     {
-        $response = $this->fetcher->fetch("");
-        if (!$response->isFailed()) {
+        $cacheItem = $this->cache->load($this->cacheKey);
+        if (is_null($cacheItem)) {
             $cacheItem = new CacheItem();
+        }
+
+        $response = $this->fetcher->fetch("", $cacheItem->url);
+        if (!$response->isFailed()) {
             $cacheItem->lastRefreshed = time();
             $cacheItem->config = $response->getBody();
             $cacheItem->etag = $response->getETag();
+            $cacheItem->url = $response->getUrl();
 
             $this->cache->store($this->cacheKey, $cacheItem);
         }
@@ -278,13 +284,14 @@ final class ConfigCatClient
         }
 
         if ($cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
-            $response = $this->fetcher->fetch($cacheItem->etag);
+            $response = $this->fetcher->fetch($cacheItem->etag, $cacheItem->url);
 
             if (!$response->isFailed()) {
                 if ($response->isFetched()) {
                     $cacheItem->lastRefreshed = time();
                     $cacheItem->config = $response->getBody();
                     $cacheItem->etag = $response->getETag();
+                    $cacheItem->url = $response->getUrl();
                 }
 
                 if ($response->isNotModified()) {
@@ -295,6 +302,6 @@ final class ConfigCatClient
             }
         }
 
-        return $cacheItem->config;
+        return $cacheItem->config[Config::ENTRIES];
     }
 }

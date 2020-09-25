@@ -153,7 +153,7 @@ class ConfigCatClientTest extends TestCase
     {
         return new ConfigCatClient("fakeKey", [
             "custom-handler" => new MockHandler(
-                [new Response(200, [], "{ \"first\": { \"v\": false, \"p\": [], \"r\": [], \"i\":\"fakeIdFirst\" }, \"second\": { \"v\": true, \"p\": [], \"r\": [], \"i\":\"fakeIdSecond\" }}")]
+                [new Response(200, [], "{ \"f\" : { \"first\": { \"v\": false, \"p\": [], \"r\": [], \"i\":\"fakeIdFirst\" }, \"second\": { \"v\": true, \"p\": [], \"r\": [], \"i\":\"fakeIdSecond\" }}}")]
             ),
         ]);
     }

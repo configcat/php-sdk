@@ -2,9 +2,10 @@
 
 namespace ConfigCat;
 
+use ConfigCat\Attributes\Config;
+use ConfigCat\Attributes\Preferences;
 use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -15,18 +16,23 @@ use Psr\Log\LoggerInterface;
 final class ConfigFetcher
 {
     const ETAG_HEADER = "ETag";
-    const URL_FORMAT = "/configuration-files/%s/config_v4.json";
+    const URL_FORMAT = "configuration-files/%s/config_v5.json";
 
-    /** @var Client */
-    private $client;
+    const GLOBAL_URL = "https://cdn-global.configcat.com";
+    const EU_ONLY_URL = "https://cdn-eu.configcat.com";
+
     /** @var LoggerInterface */
     private $logger;
     /** @var array */
     private $requestOptions;
+    /** @var array */
+    private $clientOptions;
     /** @var string */
-    private $url;
+    private $urlPath;
     /** @var string */
-    private $baseUrl = "https://cdn.configcat.com";
+    private $baseUrl;
+    /** @var bool */
+    private $urlIsCustom = false;
 
     /**
      * ConfigFetcher constructor.
@@ -48,8 +54,17 @@ final class ConfigFetcher
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
+        $this->urlPath = sprintf(self::URL_FORMAT, $sdkKey);
+
         if (isset($options['base-url']) && !empty($options['base-url'])) {
             $this->baseUrl = $options['base-url'];
+            $this->urlIsCustom = true;
+        } elseif (isset($options['data-governance']) && DataGovernance::isValid($options['data-governance'])) {
+            $this->baseUrl = DataGovernance::isEuOnly($options['data-governance'])
+                ? self::EU_ONLY_URL
+                : self::GLOBAL_URL;
+        } else {
+            $this->baseUrl = self::GLOBAL_URL;
         }
 
         $additionalOptions = isset($options['request-options'])
@@ -67,40 +82,83 @@ final class ConfigFetcher
         }
 
         $this->logger = $logger;
-        $this->url = sprintf(self::URL_FORMAT, $sdkKey);
         $this->requestOptions = array_merge([
             'headers' => [
                 'X-ConfigCat-UserAgent' => "ConfigCat-PHP/" . ConfigCatClient::SDK_VERSION
             ],
         ], $additionalOptions);
 
-        if (isset($options['custom-handler']) && is_callable($options['custom-handler'])) {
-            $this->client = new Client([
-                'base_uri' => $this->baseUrl,
-                'handler' => HandlerStack::create($options['custom-handler'])
-            ]);
-        } else {
-            $this->client = new Client([
-                'base_uri' => $this->baseUrl
-            ]);
-        }
+        $this->clientOptions = isset($options['custom-handler'])
+            ? ['handler' => $options['custom-handler']]
+            : [];
     }
 
     /**
      * Gets the latest configuration from the network.
      *
      * @param string $etag The ETag.
+     * @param string $cachedUrl The cached cdn url.
      *
      * @return FetchResponse An object describing the result of the fetch.
      */
-    public function fetch($etag)
+    public function fetch($etag, $cachedUrl)
+    {
+        return $this->executeFetch($etag, !empty($cachedUrl) ? $cachedUrl : $this->baseUrl, 2);
+    }
+
+    public function getRequestOptions()
+    {
+        return $this->requestOptions;
+    }
+
+    private function executeFetch($etag, $url, $executionCount)
+    {
+        $response = $this->sendConfigFetchRequest($etag, $url);
+
+        if (!$response->isFetched() || !isset($response->getBody()[Config::PREFERENCES])) {
+            return $response;
+        }
+
+        $preferences = $response->getBody()[Config::PREFERENCES];
+        $newUrl = $preferences[Preferences::BASE_URL];
+        if (empty($newUrl) || $newUrl == $url) {
+            return $response;
+        }
+
+        $redirect = $preferences[Preferences::REDIRECT];
+        if ($this->urlIsCustom && $redirect != 2) {
+            return $response;
+        }
+
+        if ($redirect == 0) {
+            return $response;
+        } else {
+            if ($redirect == 1) {
+                $this->logger->warning("Please check the data_governance parameter ".
+                        "in the ConfigCatClient initialization. " .
+                        "It should match the settings provided in " .
+                        "https://app.configcat.com/organization/data-governance. " .
+                        "If you are not allowed to view this page, ask your Organization's Admins " .
+                        "for the correct setting.");
+            }
+
+            if ($executionCount > 0) {
+                return $this->executeFetch($etag, $newUrl, $executionCount - 1);
+            }
+        }
+
+        return $response;
+    }
+
+    private function sendConfigFetchRequest($etag, $url)
     {
         if (!empty($etag)) {
             $this->requestOptions['headers']['If-None-Match'] = $etag;
         }
 
         try {
-            $response = $this->client->get($this->url, $this->requestOptions);
+            $client = $this->createClient($url);
+            $response = $client->get($this->urlPath, $this->requestOptions);
             $statusCode = $response->getStatusCode();
 
             if ($statusCode >= 200 && $statusCode < 300) {
@@ -116,7 +174,12 @@ final class ConfigFetcher
                     $etag = $response->getHeader(self::ETAG_HEADER)[0];
                 }
 
-                return new FetchResponse(FetchResponse::FETCHED, $etag, $body);
+                $url = "";
+                if (isset($body[Config::PREFERENCES]) && isset($body[Config::PREFERENCES][Preferences::BASE_URL])) {
+                    $url = $body[Config::PREFERENCES][Preferences::BASE_URL];
+                }
+
+                return new FetchResponse(FetchResponse::FETCHED, $etag, $body, $url);
             } elseif ($statusCode === 304) {
                 $this->logger->debug("Fetch was successful: config not modified.");
                 return new FetchResponse(FetchResponse::NOT_MODIFIED);
@@ -132,8 +195,10 @@ final class ConfigFetcher
         }
     }
 
-    public function getRequestOptions()
+    private function createClient($baseUrl)
     {
-        return $this->requestOptions;
+        return new Client(array_merge([
+            'base_uri' => $baseUrl
+        ], $this->clientOptions));
     }
 }
