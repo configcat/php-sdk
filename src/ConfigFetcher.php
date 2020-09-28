@@ -134,12 +134,10 @@ final class ConfigFetcher
             return $response;
         } else {
             if ($redirect == 1) {
-                $this->logger->warning("Please check the data_governance parameter ".
-                        "in the ConfigCatClient initialization. " .
-                        "It should match the settings provided in " .
-                        "https://app.configcat.com/organization/data-governance. " .
-                        "If you are not allowed to view this page, ask your Organization's Admins " .
-                        "for the correct setting.");
+                $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
+                        "initialization is not in sync with your preferences on the ConfigCat " .
+                        "Dashboard: https://app.configcat.com/organization/data-governance. " .
+                        "Only Organization Admins can set this preference.");
             }
 
             if ($executionCount > 0) {
