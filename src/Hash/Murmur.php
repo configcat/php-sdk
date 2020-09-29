@@ -67,7 +67,7 @@ class Murmur
      * @param  int $seed Positive integer only
      * @return string
      */
-    public static function hash3($key, $seed = 0)
+    public static function hash3($key, $seed = 104729)
     {
         return base_convert(sprintf("%u\n", self::hash3Int($key, $seed)), 10, 32);
     }

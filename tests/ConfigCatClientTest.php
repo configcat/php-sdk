@@ -85,7 +85,8 @@ class ConfigCatClientTest extends TestCase
 
         $cache
             ->expects(self::once())
-            ->method("store");
+            ->method("store")
+            ->with("config-v5-1oi96ci", self::anything());
 
         $client->forceRefresh();
     }
