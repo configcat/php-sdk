@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigFetcher
 {
     const ETAG_HEADER = "ETag";
-    const URL_FORMAT = "configuration-files/%s/config_v5.json";
+    const CONFIG_JSON_NAME = "config_v5";
 
     const GLOBAL_URL = "https://cdn-global.configcat.com";
     const EU_ONLY_URL = "https://cdn-eu.configcat.com";
@@ -54,7 +54,7 @@ final class ConfigFetcher
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $this->urlPath = sprintf(self::URL_FORMAT, $sdkKey);
+        $this->urlPath = sprintf("configuration-files/%s/". self::CONFIG_JSON_NAME .".json", $sdkKey);
 
         if (isset($options['base-url']) && !empty($options['base-url'])) {
             $this->baseUrl = $options['base-url'];
@@ -137,7 +137,7 @@ final class ConfigFetcher
                 $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
                         "initialization is not in sync with your preferences on the ConfigCat " .
                         "Dashboard: https://app.configcat.com/organization/data-governance. " .
-                        "Only Organization Admins can set this preference.");
+                        "Only Organization Admins can access this preference.");
             }
 
             if ($executionCount > 0) {

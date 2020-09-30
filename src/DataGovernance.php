@@ -5,9 +5,9 @@ namespace ConfigCat;
 /** Class DataGovernance describes the location of your feature flag and setting data within the ConfigCat CDN. */
 final class DataGovernance
 {
-    /** @var int GLOBAL_ means your data will be published to all ConfigCat CDN nodes to guarantee lowest response times. */
+    /** @var int Select this if your feature flags are published to all global CDN nodes. */
     const GLOBAL_ = 0;
-    /** @var int EU_ONLY means your data will be published to CDN nodes only in the EU. */
+    /** @var int Select this if your feature flags are published to CDN nodes only in the EU. */
     const EU_ONLY = 1;
 
     public static function isValid($value)

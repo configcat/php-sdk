@@ -9,7 +9,6 @@ use ConfigCat\Attributes\SettingAttributes;
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
-use ConfigCat\Hash\Murmur;
 use Exception;
 use InvalidArgumentException;
 use Monolog\Handler\ErrorLogHandler;
@@ -24,8 +23,6 @@ final class ConfigCatClient
 {
     /** @var string */
     const SDK_VERSION = "5.0.0";
-    /** @var string */
-    const CACHE_KEY = "config-v5-%s";
 
     /** @var LoggerInterface */
     private $logger;
@@ -51,6 +48,9 @@ final class ConfigCatClient
      *     - timeout: sets the http request timeout of the underlying http requests.
      *     - connect-timeout: sets the http connect timeout.
      *     - custom-handler: a custom callable Guzzle http handler.
+     *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
+     *       preference on the Dashboard: https://app.configcat.com/organization/data-governance
+     *       (Only Organization Admins can access)
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey is not legal.
@@ -61,8 +61,7 @@ final class ConfigCatClient
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $hash = Murmur::hash3($sdkKey);
-        $this->cacheKey = sprintf(self::CACHE_KEY, $hash);
+        $this->cacheKey = sha1(sprintf("php_".ConfigFetcher::CONFIG_JSON_NAME."_%s", $sdkKey));
 
         if (isset($options['logger']) && $options['logger'] instanceof LoggerInterface) {
             $this->logger = $options['logger'];
