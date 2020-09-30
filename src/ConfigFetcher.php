@@ -21,6 +21,10 @@ final class ConfigFetcher
     const GLOBAL_URL = "https://cdn-global.configcat.com";
     const EU_ONLY_URL = "https://cdn-eu.configcat.com";
 
+    const NO_REDIRECT = 0;
+    const SHOULD_REDIRECT = 1;
+    const FORCE_REDIRECT = 2;
+
     /** @var LoggerInterface */
     private $logger;
     /** @var array */
@@ -126,14 +130,14 @@ final class ConfigFetcher
         }
 
         $redirect = $preferences[Preferences::REDIRECT];
-        if ($this->urlIsCustom && $redirect != 2) {
+        if ($this->urlIsCustom && $redirect != self::FORCE_REDIRECT) {
             return $response;
         }
 
-        if ($redirect == 0) {
+        if ($redirect == self::NO_REDIRECT) {
             return $response;
         } else {
-            if ($redirect == 1) {
+            if ($redirect == self::SHOULD_REDIRECT) {
                 $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
                         "initialization is not in sync with your preferences on the ConfigCat " .
                         "Dashboard: https://app.configcat.com/organization/data-governance. " .
