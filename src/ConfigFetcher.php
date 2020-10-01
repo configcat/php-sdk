@@ -123,12 +123,12 @@ final class ConfigFetcher
             return $response;
         }
 
-        $preferences = $response->getBody()[Config::PREFERENCES];
-        $newUrl = $preferences[Preferences::BASE_URL];
+        $newUrl = $response->getUrl();
         if (empty($newUrl) || $newUrl == $url) {
             return $response;
         }
 
+        $preferences = $response->getBody()[Config::PREFERENCES];
         $redirect = $preferences[Preferences::REDIRECT];
         if ($this->urlIsCustom && $redirect != self::FORCE_REDIRECT) {
             return $response;
@@ -136,19 +136,20 @@ final class ConfigFetcher
 
         if ($redirect == self::NO_REDIRECT) {
             return $response;
-        } else {
-            if ($redirect == self::SHOULD_REDIRECT) {
-                $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
-                        "initialization is not in sync with your preferences on the ConfigCat " .
-                        "Dashboard: https://app.configcat.com/organization/data-governance. " .
-                        "Only Organization Admins can access this preference.");
-            }
-
-            if ($executionCount > 0) {
-                return $this->executeFetch($etag, $newUrl, $executionCount - 1);
-            }
         }
 
+        if ($redirect == self::SHOULD_REDIRECT) {
+            $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
+                    "initialization is not in sync with your preferences on the ConfigCat " .
+                    "Dashboard: https://app.configcat.com/organization/data-governance. " .
+                    "Only Organization Admins can access this preference.");
+        }
+
+        if ($executionCount > 0) {
+            return $this->executeFetch($etag, $newUrl, $executionCount - 1);
+        }
+
+        $this->logger->error("Redirect loop during config.json fetch. Please contact support@configcat.com.");
         return $response;
     }
 
@@ -176,12 +177,12 @@ final class ConfigFetcher
                     $etag = $response->getHeader(self::ETAG_HEADER)[0];
                 }
 
-                $url = "";
+                $newUrl = "";
                 if (isset($body[Config::PREFERENCES]) && isset($body[Config::PREFERENCES][Preferences::BASE_URL])) {
-                    $url = $body[Config::PREFERENCES][Preferences::BASE_URL];
+                    $newUrl = $body[Config::PREFERENCES][Preferences::BASE_URL];
                 }
 
-                return new FetchResponse(FetchResponse::FETCHED, $etag, $body, $url);
+                return new FetchResponse(FetchResponse::FETCHED, $etag, $body, $newUrl);
             } elseif ($statusCode === 304) {
                 $this->logger->debug("Fetch was successful: config not modified.");
                 return new FetchResponse(FetchResponse::NOT_MODIFIED);

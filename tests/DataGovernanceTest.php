@@ -7,6 +7,8 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use Monolog\Handler\ErrorLogHandler;
+use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -169,6 +171,31 @@ class DataGovernanceTest extends TestCase
         $this->assertEquals(json_decode($firstBody, true), $response->getBody());
     }
 
+    public function testShouldBreakRedirectLoopWhenForced() {
+        // Arrange
+        $requests = [];
+        $firstBody = sprintf(self::JSON_TEMPLATE, ConfigFetcher::EU_ONLY_URL, 2);
+        $secondBody = sprintf(self::JSON_TEMPLATE, ConfigFetcher::GLOBAL_URL, 2);
+        $responses = [
+            new Response(200, [], $firstBody),
+            new Response(200, [], $secondBody),
+            new Response(200, [], $firstBody),
+        ];
+
+        $handler = $this->getHandlerStack($responses, $requests);
+        $fetcher = $this->getFetcher($handler);
+
+        // Act
+        $response = $fetcher->fetch("", "");
+
+        // Assert
+        $this->assertEquals(3, count($requests));
+        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
+        $this->assertContains($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertEquals(json_decode($firstBody, true), $response->getBody());
+    }
+
     public function testShouldRespectCustomUrlWhenNotForced() {
         // Arrange
         $requests = [];
@@ -221,7 +248,7 @@ class DataGovernanceTest extends TestCase
     }
 
     private function getFetcher($handler, $customUrl = "") {
-        return new ConfigFetcher("fakeKey", new NullLogger(), [
+        return new ConfigFetcher("fakeKey", new Logger("ConfigCat", [new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING)]), [
             'custom-handler' => $handler,
             'base-url' => $customUrl
         ]);
