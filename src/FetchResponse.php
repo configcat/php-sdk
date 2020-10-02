@@ -21,6 +21,8 @@ final class FetchResponse
     private $status;
     /** @var string */
     private $etag;
+    /** @var string */
+    private $url;
 
     /**
      * FetchResponse constructor.
@@ -28,12 +30,14 @@ final class FetchResponse
      * @param int $status The fetch status code.
      * @param string|null The received ETag.
      * @param array|null $body The decoded JSON configuration.
+     * @param null $url The url pointing to the proper cdn server.
      */
-    public function __construct($status, $etag = null, $body = null)
+    public function __construct($status, $etag = null, $body = null, $url = null)
     {
         $this->status = $status;
         $this->body = $body;
         $this->etag = $etag;
+        $this->url = $url;
     }
 
     /**
@@ -84,5 +88,15 @@ final class FetchResponse
     public function getETag()
     {
         return $this->etag;
+    }
+
+    /**
+     * Returns the proper cdn url.
+     *
+     * @return string|null The cdn url.
+     */
+    public function getUrl()
+    {
+        return $this->url;
     }
 }
