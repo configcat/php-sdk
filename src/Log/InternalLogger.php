@@ -109,8 +109,7 @@ class InternalLogger implements LoggerInterface
     {
         if (empty($this->exceptionsToIgnore) ||
             empty($context) ||
-            !isset($context['exception']) ||
-            !($context['exception'] instanceof \Exception)) {
+            !isset($context['exception'])) {
             return false;
         }
 
