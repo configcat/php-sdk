@@ -5,6 +5,8 @@ namespace ConfigCat\Tests;
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\ConfigCache;
 use ConfigCat\ConfigCatClient;
+use ConfigCat\Log\InternalLogger;
+use ConfigCat\Log\LogLevel;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
@@ -33,16 +35,29 @@ class ConfigCatClientTest extends TestCase
     public function testConstructDefaults()
     {
         $client = new ConfigCatClient("key");
-        $this->assertAttributeInstanceOf(Logger::class, "logger", $client);
+        $this->assertAttributeInstanceOf(InternalLogger::class, "logger", $client);
         $this->assertAttributeInstanceOf(ArrayCache::class, "cache", $client);
         $this->assertAttributeEquals(60, "cacheRefreshInterval", $client);
     }
 
     public function testConstructLoggerOption()
     {
+
         $logger = new NullLogger();
-        $client = new ConfigCatClient("key", ['logger' => $logger]);
-        $this->assertAttributeSame($logger, "logger", $client);
+        $client = new ConfigCatClient("key", [
+            'logger' => $logger,
+            'log-level' => LogLevel::ERROR,
+            'exceptions-to-ignore' => [InvalidArgumentException::class]
+        ]);
+        $internalLogger = $this->getReflectedValue($client, "logger");
+
+        $externallogger = $this->getReflectedValue($internalLogger, "logger");
+        $globalLevel = $this->getReflectedValue($internalLogger, "globalLevel");
+        $exceptions = $this->getReflectedValue($internalLogger, "exceptionsToIgnore");
+
+        $this->assertSame($logger, $externallogger);
+        $this->assertSame(LogLevel::ERROR, $globalLevel);
+        $this->assertArraySubset([InvalidArgumentException::class], $exceptions);
     }
 
     public function testConstructCacheOption()
@@ -156,5 +171,13 @@ class ConfigCatClientTest extends TestCase
                 [new Response(200, [], "{ \"f\" : { \"first\": { \"v\": false, \"p\": [], \"r\": [], \"i\":\"fakeIdFirst\" }, \"second\": { \"v\": true, \"p\": [], \"r\": [], \"i\":\"fakeIdSecond\" }}}")]
             ),
         ]);
+    }
+
+    private function getReflectedValue($object, $propertyName)
+    {
+        $reflection = new \ReflectionClass($object);
+        $property = $reflection->getProperty($propertyName);
+        $property->setAccessible(true);
+        return $property->getValue($object);
     }
 }

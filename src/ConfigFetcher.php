@@ -192,7 +192,7 @@ final class ConfigFetcher
                 "Received unexpected response: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
-            $this->logger->error("Exception in ConfigFetcher.getConfigurationJsonStringAsync: "
+            $this->logger->error("Exception in ConfigFetcher.sendConfigFetchRequest: "
                 . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         }

@@ -9,6 +9,8 @@ use ConfigCat\Attributes\SettingAttributes;
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
+use ConfigCat\Log\InternalLogger;
+use ConfigCat\Log\LogLevel;
 use Exception;
 use InvalidArgumentException;
 use Monolog\Handler\ErrorLogHandler;
@@ -63,17 +65,24 @@ final class ConfigCatClient
 
         $this->cacheKey = sha1(sprintf("php_".ConfigFetcher::CONFIG_JSON_NAME."_%s", $sdkKey));
 
-        if (isset($options['logger']) && $options['logger'] instanceof LoggerInterface) {
-            $this->logger = $options['logger'];
-        } else {
-            $this->logger = new Logger("ConfigCat", [new ErrorLogHandler()]);
-        }
+        $externalLogger = (isset($options['logger']) && $options['logger'] instanceof LoggerInterface)
+            ? $options['logger']
+            : new Logger("ConfigCat", [new ErrorLogHandler()]);
 
-        if (isset($options['cache']) && $options['cache'] instanceof ConfigCache) {
-            $this->cache = $options['cache'];
-        } else {
-            $this->cache = new ArrayCache();
-        }
+        $logLevel = (isset($options['log-level']) && LogLevel::isValid($options['log-level']))
+            ? $options['log-level']
+            : 0;
+
+        $exceptionsToIgnore = (isset($options['exceptions-to-ignore']) && is_array($options['exceptions-to-ignore']))
+            ? $options['exceptions-to-ignore']
+            : [];
+
+        $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
+
+        $this->cache = (isset($options['cache']) && $options['cache'] instanceof ConfigCache)
+            ? $options['cache']
+            : new ArrayCache();
+
 
         if (isset($options['cache-refresh-interval']) && is_int($options['cache-refresh-interval'])) {
             $this->cacheRefreshInterval = $options['cache-refresh-interval'];
