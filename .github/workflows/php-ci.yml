@@ -40,7 +40,7 @@ jobs:
         composer install --prefer-dist --no-progress --no-suggest
 
     - name: Execute tests
-      run: phpunit
+      run: vendor/bin/phpunit
       
   coverage:
     needs: test
@@ -66,7 +66,7 @@ jobs:
         composer install --prefer-dist --no-progress --no-suggest
 
     - name: Execute coverage
-      run: phpunit --coverage-clover clover.xml
+      run: vendor/bin/phpunit --coverage-clover clover.xml
       
     - name: Upload coverage report
       run: bash <(curl -s https://codecov.io/bash)
