@@ -65,7 +65,7 @@ if(is_bool($isMyAwesomeFeatureEnabled) && $isMyAwesomeFeatureEnabled) {
 https://configcat.com/support
 
 ## Contributing
-Contributions are welcome.
+Contributions are welcome. For more info please read the [Contribution Guideline](CONTRIBUTING.md).
 
 ## About ConfigCat
 - [Official ConfigCat SDKs for other platforms](https://github.com/configcat)
