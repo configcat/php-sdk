@@ -112,8 +112,8 @@ final class ConfigCatClient
             if (!array_key_exists($key, $config)) {
                 $this->logger->error("Evaluating getValue('". $key ."') failed. " .
                     "Value not found for key ". $key .". " .
-                    "Returning defaultValue: ". $defaultValue .". Here are the available keys: " .
-                    implode(", ", array_keys($config)));
+                    "Returning defaultValue: ". self::getStringRepresentation($defaultValue) ."." .
+                    "Here are the available keys: ".implode(", ", array_keys($config)));
 
                 return $defaultValue;
             }
@@ -121,7 +121,7 @@ final class ConfigCatClient
             return $this->parseValue($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
             $this->logger->error("Evaluating getValue('". $key ."') failed. " .
-                "Returning defaultValue: ". $defaultValue .". "
+                "Returning defaultValue: ". self::getStringRepresentation($defaultValue) .". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;
         }
@@ -310,6 +310,20 @@ final class ConfigCatClient
             }
         }
 
+        if (empty($cacheItem->config)) {
+            throw new ConfigCatClientException("Could not retrieve the config.json " .
+                "from either the cache or HTTP.");
+        }
+
         return $cacheItem->config[Config::ENTRIES];
+    }
+
+    private static function getStringRepresentation($value)
+    {
+        if (is_bool($value) === true) {
+            return $value ? "true" : "false";
+        }
+
+        return (string)$value;
     }
 }
