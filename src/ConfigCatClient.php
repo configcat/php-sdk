@@ -284,6 +284,9 @@ final class ConfigCatClient
         return null;
     }
 
+    /**
+     * @throws ConfigCatClientException
+     */
     private function getConfig()
     {
         $cacheItem = $this->cache->load($this->cacheKey);
