@@ -78,7 +78,7 @@ final class ConfigFetcher
             : [];
 
         if (!isset($additionalOptions['connect-timeout'])) {
-            $additionalOptions['connect-timeout'] = 10;
+            $additionalOptions['connect_timeout'] = 10;
         }
 
         if (!isset($additionalOptions['timeout'])) {
