@@ -89,7 +89,7 @@ class ConfigFetcherTest extends TestCase
         $fetcher = new ConfigFetcher("api", new NullLogger());
         $options = $fetcher->getRequestOptions();
 
-        $this->assertEquals(10, $options['connect-timeout']);
+        $this->assertEquals(10, $options['connect_timeout']);
         $this->assertEquals(30, $options['timeout']);
         $this->assertArrayHasKey("headers", $options);
     }
@@ -97,10 +97,10 @@ class ConfigFetcherTest extends TestCase
     public function testConstructConnectTimeoutOption()
     {
         $fetcher = new ConfigFetcher("api", new NullLogger(), ['request-options' => [
-            'connect-timeout' => 5
+            'connect_timeout' => 5
         ]]);
         $options = $fetcher->getRequestOptions();
-        $this->assertEquals(5, $options['connect-timeout']);
+        $this->assertEquals(5, $options['connect_timeout']);
     }
 
     public function testConstructRequestTimeoutOption()
