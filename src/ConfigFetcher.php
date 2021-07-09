@@ -45,7 +45,7 @@ final class ConfigFetcher
      * @param LoggerInterface $logger The logger instance.
      * @param array $options The http related configuration options:
      *     - timeout: sets the http request timeout of the underlying http requests.
-     *     - connect-timeout: sets the http connect timeout.
+     *     - connect_timeout: sets the http connect timeout.
      *     - custom-handler: a custom callable Guzzle http handler.
      *     - base-url: the base ConfigCat CDN url.
      *
