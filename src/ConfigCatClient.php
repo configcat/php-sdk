@@ -47,8 +47,10 @@ final class ConfigCatClient
      *     - logger: a \Psr\Log\LoggerInterface implementation used for logging.
      *     - cache: a \ConfigCat\ConfigCache implementation used for caching.
      *     - cache-refresh-interval: sets how frequent the cached configuration should be refreshed.
-     *     - timeout: sets the http request timeout of the underlying http requests.
-     *     - connect_timeout: sets the http connect timeout.
+     *     - timeout: Float describing the timeout of the request in seconds. 
+     *                Use 0 to wait indefinitely (the default behavior).
+     *     - connect_timeout: Float describing the number of seconds to wait while 
+     *                        trying to connect to a server. Use 0 to wait indefinitely (the default behavior).
      *     - custom-handler: a custom callable Guzzle http handler.
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
      *       preference on the Dashboard: https://app.configcat.com/organization/data-governance
