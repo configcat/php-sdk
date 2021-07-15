@@ -44,8 +44,10 @@ final class ConfigFetcher
      * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param LoggerInterface $logger The logger instance.
      * @param array $options The http related configuration options:
-     *     - timeout: sets the http request timeout of the underlying http requests.
-     *     - connect-timeout: sets the http connect timeout.
+     *     - timeout: Float describing the timeout of the request in seconds. 
+     *                Use 0 to wait indefinitely (the default behavior).
+     *     - connect_timeout: Float describing the number of seconds to wait while 
+     *                        trying to connect to a server. Use 0 to wait indefinitely (the default behavior).
      *     - custom-handler: a custom callable Guzzle http handler.
      *     - base-url: the base ConfigCat CDN url.
      *
