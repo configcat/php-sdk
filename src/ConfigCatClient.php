@@ -44,17 +44,15 @@ final class ConfigCatClient
      *
      * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param array $options The configuration options:
-     *     - logger: a \Psr\Log\LoggerInterface implementation used for logging.
-     *     - cache: a \ConfigCat\ConfigCache implementation used for caching.
-     *     - cache-refresh-interval: sets how frequent the cached configuration should be refreshed.
-     *     - timeout: Float describing the timeout of the request in seconds. 
-     *                Use 0 to wait indefinitely (the default behavior).
-     *     - connect_timeout: Float describing the number of seconds to wait while 
-     *                        trying to connect to a server. Use 0 to wait indefinitely (the default behavior).
-     *     - custom-handler: a custom callable Guzzle http handler.
+     *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
+     *     - cache: A \ConfigCat\ConfigCache implementation used for caching.
+     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
+     *     - request-options: Additional options for Guzzle http requests.
+     *                        https://docs.guzzlephp.org/en/stable/request-options.html
+     *     - custom-handler: A custom callable Guzzle http handler.
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
-     *       preference on the Dashboard: https://app.configcat.com/organization/data-governance
-     *       (Only Organization Admins can access)
+     *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
+     *                        (Only Organization Admins can access)
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey is not legal.

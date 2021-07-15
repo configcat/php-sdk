@@ -43,13 +43,12 @@ final class ConfigFetcher
      *
      * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param LoggerInterface $logger The logger instance.
-     * @param array $options The http related configuration options:
-     *     - timeout: Float describing the timeout of the request in seconds. 
-     *                Use 0 to wait indefinitely (the default behavior).
-     *     - connect_timeout: Float describing the number of seconds to wait while 
-     *                        trying to connect to a server. Use 0 to wait indefinitely (the default behavior).
-     *     - custom-handler: a custom callable Guzzle http handler.
-     *     - base-url: the base ConfigCat CDN url.
+     * @param array $options The additional configuration options:
+     *     - base-url: The base ConfigCat CDN url.
+     *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance.
+     *     - custom-handler: A custom callable Guzzle http handler.
+     *     - request-options: Additional options for Guzzle http requests.
+     *                        https://docs.guzzlephp.org/en/stable/request-options.html
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey, the $logger or the $cache is not legal.
