@@ -5,5 +5,3 @@ composer.lock
 .DS_Store
 
 /samples/consolesample/vendor
-
-!/composer.lock
