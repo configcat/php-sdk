@@ -20,8 +20,8 @@ ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature fl
 composer require configcat/configcat-client
 ```
 
-### 2. Go to <a href="https://app.configcat.com/sdkkey" target="_blank">Connect your application</a> section to get your *SDK Key*:
-![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/php-sdk/master/media/readme02-2.png  "SDK-KEY")
+### 2. Go to the <a href="https://app.configcat.com/sdkkey" target="_blank">ConfigCat Dashboard</a> to get your *SDK Key*:
+![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/php-sdk/master/media/readme02-3.png  "SDK-KEY")
 
 ### 3. Create the *ConfigCat* client instance
 ```php
