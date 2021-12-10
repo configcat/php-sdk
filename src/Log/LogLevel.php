@@ -16,6 +16,7 @@ class LogLevel
     const CRITICAL = 60;
     const ALERT = 70;
     const EMERGENCY = 80;
+    const NO_LOG = 90;
 
     public static function isValid($level)
     {

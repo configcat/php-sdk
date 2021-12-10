@@ -13,6 +13,7 @@ use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
 use Exception;
 use InvalidArgumentException;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -24,7 +25,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "5.3.1";
+    const SDK_VERSION = "5.4.0";
 
     /** @var LoggerInterface */
     private $logger;
@@ -38,6 +39,8 @@ final class ConfigCatClient
     private $cacheKey;
     /** @var RolloutEvaluator */
     private $evaluator;
+    /** @var string */
+    private $filePath;
 
     /**
      * Creates a new ConfigCatClient.
@@ -53,6 +56,7 @@ final class ConfigCatClient
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
+     *     - file-source: Path to a local file to read flags & settings.
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey is not legal.
@@ -63,21 +67,28 @@ final class ConfigCatClient
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $this->cacheKey = sha1(sprintf("php_".ConfigFetcher::CONFIG_JSON_NAME."_%s", $sdkKey));
+        $this->cacheKey = sha1(sprintf("php_" . ConfigFetcher::CONFIG_JSON_NAME . "_%s", $sdkKey));
 
         $externalLogger = (isset($options['logger']) && $options['logger'] instanceof LoggerInterface)
             ? $options['logger']
-            : new Logger("ConfigCat", [new ErrorLogHandler()]);
+            : $this->getMonolog();
 
         $logLevel = (isset($options['log-level']) && LogLevel::isValid($options['log-level']))
             ? $options['log-level']
-            : 0;
+            : LogLevel::WARNING;
 
         $exceptionsToIgnore = (isset($options['exceptions-to-ignore']) && is_array($options['exceptions-to-ignore']))
             ? $options['exceptions-to-ignore']
             : [];
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
+
+        $this->filePath = isset($options['file-source']) ? $options['file-source'] : null;
+        if (!is_null($this->filePath) && !file_exists($this->filePath)) {
+            throw new InvalidArgumentException(
+                "The 'file-source' option was set but the file '" . $this->filePath . "' doesn't exist."
+            );
+        }
 
         $this->cache = (isset($options['cache']) && $options['cache'] instanceof ConfigCache)
             ? $options['cache']
@@ -110,18 +121,18 @@ final class ConfigCatClient
             }
 
             if (!array_key_exists($key, $config)) {
-                $this->logger->error("Evaluating getValue('". $key ."') failed. " .
-                    "Value not found for key ". $key .". " .
-                    "Returning defaultValue: ". self::getStringRepresentation($defaultValue) ."." .
-                    "Here are the available keys: ".implode(", ", array_keys($config)));
+                $this->logger->error("Evaluating getValue('" . $key . "') failed. " .
+                    "Value not found for key " . $key . ". " .
+                    "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". " .
+                    "Here are the available keys: " . implode(", ", array_keys($config)));
 
                 return $defaultValue;
             }
 
             return $this->parseValue($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Evaluating getValue('". $key ."') failed. " .
-                "Returning defaultValue: ". self::getStringRepresentation($defaultValue) .". "
+            $this->logger->error("Evaluating getValue('" . $key . "') failed. " .
+                "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;
         }
@@ -144,9 +155,9 @@ final class ConfigCatClient
             }
 
             if (!array_key_exists($key, $config)) {
-                $this->logger->error("Evaluating getVariationId('". $key ."') failed. " .
-                    "Value not found for key ". $key .". " .
-                    "Returning defaultVariationId: ". $defaultVariationId .". Here are the available keys: " .
+                $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
+                    "Value not found for key " . $key . ". " .
+                    "Returning defaultVariationId: " . $defaultVariationId . ". Here are the available keys: " .
                     implode(", ", array_keys($config)));
 
                 return $defaultVariationId;
@@ -154,8 +165,8 @@ final class ConfigCatClient
 
             return $this->parseVariationId($key, $config[$key], $defaultVariationId, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Evaluating getVariationId('". $key ."') failed. " .
-                "Returning defaultVariationId: ". $defaultVariationId .". "
+            $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
+                "Returning defaultVariationId: " . $defaultVariationId . ". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultVariationId;
         }
@@ -234,15 +245,19 @@ final class ConfigCatClient
 
     private function parseValue($key, array $json, $defaultValue, User $user = null)
     {
-        $this->logger->info("Evaluating getValue(" . $key . ").");
-        $evaluated = $this->evaluator->evaluate($key, $json, $user);
+        $collector = new EvaluationLogCollector();
+        $collector->add("Evaluating getValue(" . $key . ").");
+        $evaluated = $this->evaluator->evaluate($key, $json, $collector, $user);
+        $this->logger->info($collector);
         return is_null($evaluated) ? $defaultValue : $evaluated->getValue();
     }
 
     private function parseVariationId($key, array $json, $defaultValue, User $user = null)
     {
-        $this->logger->info("Evaluating getVariationId(" . $key . ").");
-        $evaluated = $this->evaluator->evaluate($key, $json, $user);
+        $collector = new EvaluationLogCollector();
+        $collector->add("Evaluating getVariationId(" . $key . ").");
+        $evaluated = $this->evaluator->evaluate($key, $json, $collector, $user);
+        $this->logger->info($collector);
         return is_null($evaluated) ? $defaultValue : $evaluated->getKey();
     }
 
@@ -289,6 +304,22 @@ final class ConfigCatClient
      */
     private function getConfig()
     {
+        if (!is_null($this->filePath)) {
+            $content = file_get_contents($this->filePath);
+            $json = json_decode($content, true);
+
+            if (isset($json['flags'])) {
+                $result = [];
+                foreach ($json['flags'] as $key => $value) {
+                    $result[$key] = [
+                        SettingAttributes::VALUE => $value
+                    ];
+                }
+                return $result;
+            }
+            return $json[Config::ENTRIES];
+        }
+
         $cacheItem = $this->cache->load($this->cacheKey);
         if (is_null($cacheItem)) {
             $cacheItem = new CacheItem();
@@ -321,12 +352,11 @@ final class ConfigCatClient
         return $cacheItem->config[Config::ENTRIES];
     }
 
-    private static function getStringRepresentation($value)
+    private function getMonolog()
     {
-        if (is_bool($value) === true) {
-            return $value ? "true" : "false";
-        }
-
-        return (string)$value;
+        $handler = new ErrorLogHandler();
+        $formatter = new LineFormatter(null, null, true, true);
+        $handler->setFormatter($formatter);
+        return new Logger("ConfigCat", [$handler]);
     }
 }

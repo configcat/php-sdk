@@ -15,7 +15,7 @@ final class FetchResponse
     /** @var int */
     const FAILED = 3;
 
-    /** @var array|null  */
+    /** @var array|null */
     private $body;
     /** @var int */
     private $status;

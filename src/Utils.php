@@ -31,4 +31,19 @@ final class Utils
     {
         return array_map('trim', explode($delimiter, $text));
     }
+
+    /**
+     * Returns the string representation of a value.
+     *
+     * @param $value The value.
+     * @return string The result string.
+     */
+    public static function getStringRepresentation($value)
+    {
+        if (is_bool($value) === true) {
+            return $value ? "true" : "false";
+        }
+
+        return (string)$value;
+    }
 }

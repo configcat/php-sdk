@@ -94,10 +94,6 @@ class InternalLogger implements LoggerInterface
 
     private function shouldLog($currentLevel, array $context)
     {
-        if ($this->globalLevel == 0 && !$this->hasAnythingToIgnore($context)) {
-            return true;
-        }
-
         if ($currentLevel >= $this->globalLevel && !$this->hasAnythingToIgnore($context)) {
             return true;
         }

@@ -10,7 +10,6 @@ use GuzzleHttp\Psr7\Response;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 class DataGovernanceTest extends TestCase
 {

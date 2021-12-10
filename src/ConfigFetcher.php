@@ -6,6 +6,7 @@ use ConfigCat\Attributes\Config;
 use ConfigCat\Attributes\Preferences;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -59,7 +60,7 @@ final class ConfigFetcher
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $this->urlPath = sprintf("configuration-files/%s/". self::CONFIG_JSON_NAME .".json", $sdkKey);
+        $this->urlPath = sprintf("configuration-files/%s/" . self::CONFIG_JSON_NAME . ".json", $sdkKey);
 
         if (isset($options['base-url']) && !empty($options['base-url'])) {
             $this->baseUrl = $options['base-url'];
@@ -73,8 +74,8 @@ final class ConfigFetcher
         }
 
         $additionalOptions = isset($options['request-options'])
-            && is_array($options['request-options'])
-            && !empty($options['request-options'])
+        && is_array($options['request-options'])
+        && !empty($options['request-options'])
             ? $options['request-options']
             : [];
 
@@ -140,10 +141,10 @@ final class ConfigFetcher
         }
 
         if ($redirect == self::SHOULD_REDIRECT) {
-            $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
-                    "initialization is not in sync with your preferences on the ConfigCat " .
-                    "Dashboard: https://app.configcat.com/organization/data-governance. " .
-                    "Only Organization Admins can access this preference.");
+            $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient " .
+                "initialization is not in sync with your preferences on the ConfigCat " .
+                "Dashboard: https://app.configcat.com/organization/data-governance. " .
+                "Only Organization Admins can access this preference.");
         }
 
         if ($executionCount > 0) {
@@ -191,6 +192,10 @@ final class ConfigFetcher
 
             $this->logger->error("Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
                 "Received unexpected response: " . $statusCode);
+            return new FetchResponse(FetchResponse::FAILED);
+        } catch (GuzzleException $exception) {
+            $this->logger->error("HTTP exception: "
+                . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
             $this->logger->error("Exception in ConfigFetcher.sendConfigFetchRequest: "
