@@ -59,9 +59,9 @@ final class ConfigCatClient
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
      *     - file-source: Path to a local file to read flags & settings. When this option is set, the SDK won't fetch
-     *                    the configuration from the ConfigCat CDN.
+     *                    the flags & settings from the ConfigCat CDN.
      *     - array-source: An associative array that contains the flags & settings. When this option is set,
-     *                     the SDK won't fetch the configuration from the ConfigCat CDN.
+     *                     the SDK won't fetch the flags & settings from the ConfigCat CDN.
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey is not legal.
