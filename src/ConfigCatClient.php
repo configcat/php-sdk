@@ -41,6 +41,8 @@ final class ConfigCatClient
     private $evaluator;
     /** @var string */
     private $filePath;
+    /** @var array */
+    private $arraySource;
 
     /**
      * Creates a new ConfigCatClient.
@@ -56,7 +58,10 @@ final class ConfigCatClient
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
-     *     - file-source: Path to a local file to read flags & settings.
+     *     - file-source: Path to a local file to read flags & settings. When this option is set, the SDK won't fetch
+     *                    the configuration from the ConfigCat CDN.
+     *     - array-source: An associative array that contains the flags & settings. When this option is set,
+     *                     the SDK won't fetch the configuration from the ConfigCat CDN.
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey is not legal.
@@ -64,7 +69,7 @@ final class ConfigCatClient
     public function __construct($sdkKey, array $options = [])
     {
         if (empty($sdkKey)) {
-            throw new InvalidArgumentException("sdkKey cannot be empty.");
+            throw new InvalidArgumentException("'sdkKey' cannot be empty.");
         }
 
         $this->cacheKey = sha1(sprintf("php_" . ConfigFetcher::CONFIG_JSON_NAME . "_%s", $sdkKey));
@@ -87,6 +92,13 @@ final class ConfigCatClient
         if (!is_null($this->filePath) && !file_exists($this->filePath)) {
             throw new InvalidArgumentException(
                 "The 'file-source' option was set but the file '" . $this->filePath . "' doesn't exist."
+            );
+        }
+
+        $this->arraySource = isset($options['array-source']) ? $options['array-source'] : null;
+        if (!is_null($this->arraySource) && !is_array($this->arraySource)) {
+            throw new InvalidArgumentException(
+                "The 'array-source' option was set but its value is not an array."
             );
         }
 
@@ -318,6 +330,16 @@ final class ConfigCatClient
                 return $result;
             }
             return $json[Config::ENTRIES];
+        }
+
+        if (!is_null($this->arraySource)) {
+            $result = [];
+            foreach ($this->arraySource as $key => $value) {
+                $result[$key] = [
+                    SettingAttributes::VALUE => $value
+                ];
+            }
+            return $result;
         }
 
         $cacheItem = $this->cache->load($this->cacheKey);
