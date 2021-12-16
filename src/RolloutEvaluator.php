@@ -84,7 +84,8 @@ final class RolloutEvaluator
                 $comparisonValue = $rule[RolloutAttributes::COMPARISON_VALUE];
                 $comparator = $rule[RolloutAttributes::COMPARATOR];
                 $value = $rule[RolloutAttributes::VALUE];
-                $variationId = $rule[RolloutAttributes::VARIATION_ID];
+                $variationId = isset($rule[RolloutAttributes::VARIATION_ID]) ?
+                    $rule[RolloutAttributes::VARIATION_ID] : "";
                 $userValue = $user->getAttribute($comparisonAttribute);
 
                 if (empty($comparisonValue) || (!is_numeric($userValue) && empty($userValue))) {
@@ -323,7 +324,7 @@ final class RolloutEvaluator
         }
 
         $result = $json[SettingAttributes::VALUE];
-        $variationId = $json[SettingAttributes::VARIATION_ID];
+        $variationId = isset($json[SettingAttributes::VARIATION_ID]) ? $json[SettingAttributes::VARIATION_ID] : "";
         $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
         return new Pair($variationId, $result);
     }

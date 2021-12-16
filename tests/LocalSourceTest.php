@@ -3,6 +3,7 @@
 namespace ConfigCat\Tests;
 
 use ConfigCat\ConfigCatClient;
+use ConfigCat\User;
 use PHPUnit\Framework\TestCase;
 use InvalidArgumentException;
 
@@ -36,6 +37,21 @@ class LocalSourceTest extends TestCase
         $this->assertEquals(5, $client->getValue("intSetting", 0));
         $this->assertEquals(3.14, $client->getValue("doubleSetting", 0.0));
         $this->assertEquals("test", $client->getValue("stringSetting", 0));
+    }
+
+    public function testWithFile_Rules() {
+        $client = new ConfigCatClient("key", [
+            'file-source' => "tests/test-rules.json",
+        ]);
+
+        // without user
+        $this->assertFalse($client->getValue("rolloutFeature", true));
+
+        // not in rule
+        $this->assertFalse($client->getValue("rolloutFeature", true, new User("test@test.com")));
+
+        // in rule
+        $this->assertTrue($client->getValue("rolloutFeature", false, new User("test@example.com")));
     }
 
     public function testWithSimpleFile() {

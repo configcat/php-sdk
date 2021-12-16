@@ -40,7 +40,7 @@ final class ConfigCatClient
     /** @var RolloutEvaluator */
     private $evaluator;
     /** @var string */
-    private $filePath;
+    private $localModeFilePath;
     /** @var array */
     private $arraySource;
 
@@ -88,10 +88,10 @@ final class ConfigCatClient
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
 
-        $this->filePath = isset($options['file-source']) ? $options['file-source'] : null;
-        if (!is_null($this->filePath) && !file_exists($this->filePath)) {
+        $this->localModeFilePath = isset($options['file-source']) ? $options['file-source'] : null;
+        if (!is_null($this->localModeFilePath) && !file_exists($this->localModeFilePath)) {
             throw new InvalidArgumentException(
-                "The 'file-source' option was set but the file '" . $this->filePath . "' doesn't exist."
+                "The 'file-source' option was set but the file '" . $this->localModeFilePath . "' doesn't exist."
             );
         }
 
@@ -316,9 +316,20 @@ final class ConfigCatClient
      */
     private function getConfig()
     {
-        if (!is_null($this->filePath)) {
-            $content = file_get_contents($this->filePath);
+        if (!is_null($this->localModeFilePath)) {
+            $content = file_get_contents($this->localModeFilePath);
+            if ($content === false) {
+                $this->logger->error("Could not read the contents of the file " . $this->localModeFilePath . ".");
+                return null;
+            }
+
             $json = json_decode($content, true);
+
+            if ($json == null) {
+                $this->logger->error("Could not decode json from file " . $this->localModeFilePath . ". JSON error: 
+                " . json_last_error_msg() . "");
+                return null;
+            }
 
             if (isset($json['flags'])) {
                 $result = [];
