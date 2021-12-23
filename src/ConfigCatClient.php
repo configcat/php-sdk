@@ -11,6 +11,8 @@ use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
+use ConfigCat\Override\OverrideBehaviour;
+use ConfigCat\Override\OverrideDataSource;
 use Exception;
 use InvalidArgumentException;
 use Monolog\Formatter\LineFormatter;
@@ -25,7 +27,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "5.4.0";
+    const SDK_VERSION = "5.5.0";
 
     /** @var LoggerInterface */
     private $logger;
@@ -39,10 +41,8 @@ final class ConfigCatClient
     private $cacheKey;
     /** @var RolloutEvaluator */
     private $evaluator;
-    /** @var string */
-    private $localModeFilePath;
-    /** @var array */
-    private $arraySource;
+    /** @var OverrideDataSource */
+    private $overrideSource;
 
     /**
      * Creates a new ConfigCatClient.
@@ -58,13 +58,11 @@ final class ConfigCatClient
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
-     *     - file-source: Path to a local file to read flags & settings. When this option is set, the SDK won't fetch
-     *                    the flags & settings from the ConfigCat CDN.
-     *     - array-source: An associative array that contains the flags & settings. When this option is set,
-     *                     the SDK won't fetch the flags & settings from the ConfigCat CDN.
+     *     - flag-overrides: A \ConfigCat\Override\OverrideDataSource implementation used to override
+     *                       feature flags & settings.
      *
      * @throws InvalidArgumentException
-     *   When the $sdkKey is not legal.
+     *   When the $sdkKey is not valid.
      */
     public function __construct($sdkKey, array $options = [])
     {
@@ -88,19 +86,10 @@ final class ConfigCatClient
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
 
-        $this->localModeFilePath = isset($options['file-source']) ? $options['file-source'] : null;
-        if (!is_null($this->localModeFilePath) && !file_exists($this->localModeFilePath)) {
-            throw new InvalidArgumentException(
-                "The 'file-source' option was set but the file '" . $this->localModeFilePath . "' doesn't exist."
-            );
-        }
-
-        $this->arraySource = isset($options['array-source']) ? $options['array-source'] : null;
-        if (!is_null($this->arraySource) && !is_array($this->arraySource)) {
-            throw new InvalidArgumentException(
-                "The 'array-source' option was set but its value is not an array."
-            );
-        }
+        $this->overrideSource = (isset($options['flag-overrides']) &&
+            $options['flag-overrides'] instanceof OverrideDataSource)
+            ? $options['flag-overrides']
+            : null;
 
         $this->cache = (isset($options['cache']) && $options['cache'] instanceof ConfigCache)
             ? $options['cache']
@@ -109,6 +98,10 @@ final class ConfigCatClient
 
         if (isset($options['cache-refresh-interval']) && is_int($options['cache-refresh-interval'])) {
             $this->cacheRefreshInterval = $options['cache-refresh-interval'];
+        }
+
+        if (!is_null($this->overrideSource)) {
+            $this->overrideSource->setLogger($this->logger);
         }
 
         $this->cache->setLogger($this->logger);
@@ -316,43 +309,29 @@ final class ConfigCatClient
      */
     private function getConfig()
     {
-        if (!is_null($this->localModeFilePath)) {
-            $content = file_get_contents($this->localModeFilePath);
-            if ($content === false) {
-                $this->logger->error("Could not read the contents of the file " . $this->localModeFilePath . ".");
-                return null;
+        if (!is_null($this->overrideSource)) {
+            switch ($this->overrideSource->getBehaviour()) {
+                case OverrideBehaviour::LOCAL_ONLY:
+                    return $this->overrideSource->getOverrides();
+                case OverrideBehaviour::LOCAL_OVER_REMOTE:
+                    $local = $this->overrideSource->getOverrides();
+                    $remote = $this->getRemoteConfig();
+                    return array_merge($remote, $local);
+                case OverrideBehaviour::REMOTE_OVER_LOCAL:
+                    $local = $this->overrideSource->getOverrides();
+                    $remote = $this->getRemoteConfig();
+                    return array_merge($local, $remote);
             }
-
-            $json = json_decode($content, true);
-
-            if ($json == null) {
-                $this->logger->error("Could not decode json from file " . $this->localModeFilePath . ". JSON error: 
-                " . json_last_error_msg() . "");
-                return null;
-            }
-
-            if (isset($json['flags'])) {
-                $result = [];
-                foreach ($json['flags'] as $key => $value) {
-                    $result[$key] = [
-                        SettingAttributes::VALUE => $value
-                    ];
-                }
-                return $result;
-            }
-            return $json[Config::ENTRIES];
         }
 
-        if (!is_null($this->arraySource)) {
-            $result = [];
-            foreach ($this->arraySource as $key => $value) {
-                $result[$key] = [
-                    SettingAttributes::VALUE => $value
-                ];
-            }
-            return $result;
-        }
+        return $this->getRemoteConfig();
+    }
 
+    /**
+     * @throws ConfigCatClientException
+     */
+    private function getRemoteConfig()
+    {
         $cacheItem = $this->cache->load($this->cacheKey);
         if (is_null($cacheItem)) {
             $cacheItem = new CacheItem();
