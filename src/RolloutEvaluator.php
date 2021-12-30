@@ -181,9 +181,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            break;
                         }
-
                         break;
                     //LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (SemVer)
                     case 6:
@@ -216,7 +214,6 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $exception
                             ));
-                            break;
                         }
                         break;
                     //LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Number)
