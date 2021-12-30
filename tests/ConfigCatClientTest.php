@@ -164,6 +164,14 @@ class ConfigCatClientTest extends TestCase
         $this->assertNull($value);
     }
 
+    public function testGetAllValues()
+    {
+        $client = $this->getTestClient();
+        $value = $client->getAllValues();
+
+        $this->assertEquals(["first" => false, "second" => true], $value);
+    }
+
     private function getTestClient()
     {
         return new ConfigCatClient("fakeKey", [

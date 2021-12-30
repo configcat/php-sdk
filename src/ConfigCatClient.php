@@ -110,7 +110,7 @@ final class ConfigCatClient
     }
 
     /**
-     * Gets a value from the configuration identified by the given key.
+     * Gets a value of a feature flag or setting identified by the given key.
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
@@ -214,7 +214,7 @@ final class ConfigCatClient
     }
 
     /**
-     * Gets all keys from the configuration.
+     * Gets a collection of all setting keys.
      *
      * @return array of keys.
      */
@@ -225,6 +225,24 @@ final class ConfigCatClient
             return is_null($config) ? [] : array_keys($config);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during the deserialization. Returning empty array. "
+                . $exception->getMessage(), ['exception' => $exception]);
+            return [];
+        }
+    }
+
+    /**
+     * Gets the values of all feature flags or settings.
+     *
+     * @param User|null $user The user object to identify the caller.
+     * @return array of values.
+     */
+    public function getAllValues(User $user = null)
+    {
+        try {
+            $config = $this->getConfig();
+            return is_null($config) ? [] : $this->parseValues($config, $user);
+        } catch (Exception $exception) {
+            $this->logger->error("An error occurred during getting all values. Returning empty array. "
                 . $exception->getMessage(), ['exception' => $exception]);
             return [];
         }
@@ -264,6 +282,17 @@ final class ConfigCatClient
         $evaluated = $this->evaluator->evaluate($key, $json, $collector, $user);
         $this->logger->info($collector);
         return is_null($evaluated) ? $defaultValue : $evaluated->getKey();
+    }
+
+    private function parseValues(array $json, User $user = null)
+    {
+        $keys = array_keys($json);
+        $result = [];
+        foreach ($keys as $key) {
+            $result[$key] = $this->parseValue($key, $json[$key], null, $user);
+        }
+
+        return $result;
     }
 
     private function parseVariationIds(array $json, User $user = null)
