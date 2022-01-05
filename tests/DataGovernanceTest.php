@@ -2,6 +2,7 @@
 
 namespace ConfigCat\Tests;
 
+use ConfigCat\ClientOptions;
 use ConfigCat\ConfigFetcher;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -248,8 +249,8 @@ class DataGovernanceTest extends TestCase
 
     private function getFetcher($handler, $customUrl = "") {
         return new ConfigFetcher("fakeKey", new Logger("ConfigCat", [new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING)]), [
-            'custom-handler' => $handler,
-            'base-url' => $customUrl
+            ClientOptions::CUSTOM_HANDLER => $handler,
+            ClientOptions::BASE_URL => $customUrl
         ]);
     }
 }

@@ -3,7 +3,7 @@
 namespace ConfigCat\Cache;
 
 /**
- * Class ArrayCache Represents a simple cache which just uses an array to store the values.
+ * Represents a simple cache which just uses an array to store the values.
  * @package ConfigCat
  */
 final class ArrayCache extends ConfigCache

@@ -4,6 +4,7 @@ namespace ConfigCat\Tests;
 
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\ConfigCache;
+use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
@@ -45,9 +46,9 @@ class ConfigCatClientTest extends TestCase
 
         $logger = new NullLogger();
         $client = new ConfigCatClient("key", [
-            'logger' => $logger,
-            'log-level' => LogLevel::ERROR,
-            'exceptions-to-ignore' => [InvalidArgumentException::class]
+            ClientOptions::LOGGER => $logger,
+            ClientOptions::LOG_LEVEL => LogLevel::ERROR,
+            ClientOptions::EXCEPTIONS_TO_IGNORE => [InvalidArgumentException::class]
         ]);
         $internalLogger = $this->getReflectedValue($client, "logger");
 
@@ -63,19 +64,19 @@ class ConfigCatClientTest extends TestCase
     public function testConstructCacheOption()
     {
         $cache = new ArrayCache();
-        $client = new ConfigCatClient("key", ['cache' => $cache]);
+        $client = new ConfigCatClient("key", [ClientOptions::CACHE => $cache]);
         $this->assertAttributeSame($cache, "cache", $client);
     }
 
     public function testConstructCacheRefreshIntervalOption()
     {
-        $client = new ConfigCatClient("key", ['cache-refresh-interval' => 20]);
+        $client = new ConfigCatClient("key", [ClientOptions::CACHE_REFRESH_INTERVAL => 20]);
         $this->assertAttributeSame(20, "cacheRefreshInterval", $client);
     }
 
     public function testGetValueFailedFetch()
     {
-        $client = new ConfigCatClient("sdkKey", ['custom-handler' => new MockHandler([
+        $client = new ConfigCatClient("sdkKey", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(400)
         ])]);
 
@@ -85,7 +86,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllKeysFailedFetch()
     {
-        $client = new ConfigCatClient("sdkKey", ['custom-handler' => new MockHandler([
+        $client = new ConfigCatClient("sdkKey", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(400)
         ])]);
 
@@ -139,7 +140,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllVariationIdsEmpty()
     {
-        $client = new ConfigCatClient("fakeKey", ['custom-handler' => new MockHandler([
+        $client = new ConfigCatClient("fakeKey", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(400)
         ])]);
         $value = $client->getAllVariationIds();
@@ -175,7 +176,7 @@ class ConfigCatClientTest extends TestCase
     private function getTestClient()
     {
         return new ConfigCatClient("fakeKey", [
-            "custom-handler" => new MockHandler(
+            ClientOptions::CUSTOM_HANDLER => new MockHandler(
                 [new Response(200, [], "{ \"f\" : { \"first\": { \"v\": false, \"p\": [], \"r\": [], \"i\":\"fakeIdFirst\" }, \"second\": { \"v\": true, \"p\": [], \"r\": [], \"i\":\"fakeIdSecond\" }}}")]
             ),
         ]);

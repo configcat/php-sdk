@@ -2,11 +2,10 @@
 
 namespace ConfigCat\Tests;
 
+use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
 use ConfigCat\Log\LogLevel;
 use ConfigCat\User;
-use Monolog\Handler\ErrorLogHandler;
-use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 
 class RolloutIntegrationsTest extends TestCase
@@ -27,7 +26,7 @@ class RolloutIntegrationsTest extends TestCase
         $settingKeys = array_slice($rows[0], 4);
         $customKey = $rows[0][3];
         $client = new ConfigCatClient($sdkKey, [
-            "log-level" => LogLevel::WARNING
+            ClientOptions::LOG_LEVEL => LogLevel::WARNING
         ]);
 
         $errors = [];

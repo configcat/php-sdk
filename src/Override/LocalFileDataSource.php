@@ -7,7 +7,7 @@ use ConfigCat\Attributes\SettingAttributes;
 use InvalidArgumentException;
 
 /**
- * Class LocalFileDataSource Describes a local file override data source.
+ * Describes a local file override data source.
  * @package ConfigCat
  */
 class LocalFileDataSource extends OverrideDataSource

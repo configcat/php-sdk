@@ -7,7 +7,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class OverrideDataSource Describes an override data source.
+ * Describes an override data source.
  * @package ConfigCat
  */
 abstract class OverrideDataSource implements LoggerAwareInterface

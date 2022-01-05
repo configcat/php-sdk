@@ -3,7 +3,7 @@
 namespace ConfigCat;
 
 /**
- * Class FetchResponse Represents a fetch response, including its state and body.
+ * Represents a fetch response, including its state and body.
  * @package ConfigCat
  */
 final class FetchResponse

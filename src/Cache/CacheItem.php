@@ -3,7 +3,7 @@
 namespace ConfigCat\Cache;
 
 /**
- * Class CacheItem Represents the cached configuration.
+ * Represents the cached configuration.
  * @package ConfigCat
  */
 class CacheItem

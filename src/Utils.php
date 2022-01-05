@@ -3,7 +3,7 @@
 namespace ConfigCat;
 
 /**
- * Class Utils Contains utility operations.
+ * Contains helper utility operations.
  * @package ConfigCat
  */
 final class Utils

@@ -3,7 +3,7 @@
 namespace ConfigCat\Attributes;
 
 /**
- * Class RolloutAttributes Represents the JSON keys of a ConfigCat roll-out rule.
+ * Represents the JSON keys of a ConfigCat roll-out rule.
  * @package ConfigCat
  */
 class RolloutAttributes

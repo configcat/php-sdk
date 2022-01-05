@@ -3,7 +3,7 @@
 namespace ConfigCat\Override;
 
 /**
- * Class OverrideBehaviour Describes how the overrides should behave.
+ * Describes how the overrides should behave.
  * @package ConfigCat
  */
 class OverrideBehaviour

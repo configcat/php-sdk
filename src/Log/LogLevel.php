@@ -3,7 +3,7 @@
 namespace ConfigCat\Log;
 
 /**
- * Class LogLevel Determines the current log level of the ConfigCat SDK.
+ * Determines the current log level of the ConfigCat SDK.
  * @package ConfigCat
  */
 class LogLevel

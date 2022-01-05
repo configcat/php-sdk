@@ -2,7 +2,10 @@
 
 namespace ConfigCat;
 
-/** Class DataGovernance describes the location of your feature flag and setting data within the ConfigCat CDN. */
+/**
+ * Describes the location of your feature flag and setting data within the ConfigCat CDN.
+ * @package ConfigCat
+ */
 final class DataGovernance
 {
     /** @var int Select this if your feature flags are published to all global CDN nodes. */

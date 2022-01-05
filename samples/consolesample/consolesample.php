@@ -3,7 +3,7 @@
 require __DIR__ . '/vendor/autoload.php';
 
 $client = new \ConfigCat\ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ", [
-    'logger' => new \Monolog\Logger("consolesample"),
+    \ConfigCat\ClientOptions::LOG_LEVEL => new \Monolog\Logger("consolesample"),
 ]);
 
 $user = new \ConfigCat\User("Some UserID",

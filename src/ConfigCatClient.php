@@ -21,7 +21,7 @@ use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class ConfigCatClient A client for handling configurations provided by ConfigCat.
+ * A client for handling configurations provided by ConfigCat.
  * @package ConfigCat
  */
 final class ConfigCatClient
@@ -49,6 +49,7 @@ final class ConfigCatClient
      *
      * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param array $options The configuration options:
+     *     - base-url: The base ConfigCat CDN url.
      *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
      *     - cache: A \ConfigCat\ConfigCache implementation used for caching.
      *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
@@ -58,8 +59,10 @@ final class ConfigCatClient
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
+     *     - exceptions-to-ignore: Array of exception classes that should be ignored from logs.
      *     - flag-overrides: A \ConfigCat\Override\OverrideDataSource implementation used to override
      *                       feature flags & settings.
+     *     - log-level: Default: Warning. Sets the internal log level.
      *
      * @throws InvalidArgumentException
      *   When the $sdkKey is not valid.
@@ -72,32 +75,36 @@ final class ConfigCatClient
 
         $this->cacheKey = sha1(sprintf("php_" . ConfigFetcher::CONFIG_JSON_NAME . "_%s", $sdkKey));
 
-        $externalLogger = (isset($options['logger']) && $options['logger'] instanceof LoggerInterface)
-            ? $options['logger']
+        $externalLogger = (isset($options[ClientOptions::LOGGER]) &&
+            $options[ClientOptions::LOGGER] instanceof LoggerInterface)
+            ? $options[ClientOptions::LOGGER]
             : $this->getMonolog();
 
-        $logLevel = (isset($options['log-level']) && LogLevel::isValid($options['log-level']))
-            ? $options['log-level']
+        $logLevel = (isset($options[ClientOptions::LOG_LEVEL]) &&
+            LogLevel::isValid($options[ClientOptions::LOG_LEVEL]))
+            ? $options[ClientOptions::LOG_LEVEL]
             : LogLevel::WARNING;
 
-        $exceptionsToIgnore = (isset($options['exceptions-to-ignore']) && is_array($options['exceptions-to-ignore']))
-            ? $options['exceptions-to-ignore']
+        $exceptionsToIgnore = (isset($options[ClientOptions::EXCEPTIONS_TO_IGNORE]) &&
+            is_array($options[ClientOptions::EXCEPTIONS_TO_IGNORE]))
+            ? $options[ClientOptions::EXCEPTIONS_TO_IGNORE]
             : [];
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
 
-        $this->overrideSource = (isset($options['flag-overrides']) &&
-            $options['flag-overrides'] instanceof OverrideDataSource)
-            ? $options['flag-overrides']
+        $this->overrideSource = (isset($options[ClientOptions::FLAG_OVERRIDES]) &&
+            $options[ClientOptions::FLAG_OVERRIDES] instanceof OverrideDataSource)
+            ? $options[ClientOptions::FLAG_OVERRIDES]
             : null;
 
-        $this->cache = (isset($options['cache']) && $options['cache'] instanceof ConfigCache)
-            ? $options['cache']
+        $this->cache = (isset($options[ClientOptions::CACHE]) && $options[ClientOptions::CACHE] instanceof ConfigCache)
+            ? $options[ClientOptions::CACHE]
             : new ArrayCache();
 
 
-        if (isset($options['cache-refresh-interval']) && is_int($options['cache-refresh-interval'])) {
-            $this->cacheRefreshInterval = $options['cache-refresh-interval'];
+        if (isset($options[ClientOptions::CACHE_REFRESH_INTERVAL]) &&
+            is_int($options[ClientOptions::CACHE_REFRESH_INTERVAL])) {
+            $this->cacheRefreshInterval = $options[ClientOptions::CACHE_REFRESH_INTERVAL];
         }
 
         if (!is_null($this->overrideSource)) {
