@@ -30,7 +30,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('ConfigCat\ConfigCatClient', function () {
             return new ConfigCatClient("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ", [
                 ClientOptions::CACHE => new LaravelCache(Cache::store()),
-                ClientOptions::CACHE_REFRESH_INTERVAL => 5
+                ClientOptions::CACHE_REFRESH_INTERVAL => 5,
+                // Info level logging helps to inspect the feature flag evaluation process.
+                // Use the default Warning level to avoid too detailed logging in your application.
+                ClientOptions::LOG_LEVEL => \ConfigCat\Log\LogLevel::INFO,
             ]);
         });
     }

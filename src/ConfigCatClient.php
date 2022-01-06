@@ -255,6 +255,9 @@ final class ConfigCatClient
         }
     }
 
+    /**
+     * Initiates a force refresh on the cached configuration.
+     */
     public function forceRefresh()
     {
         $cacheItem = $this->cache->load($this->cacheKey);

@@ -4,8 +4,10 @@ namespace ConfigCat\Tests;
 
 use ConfigCat\ClientOptions;
 use ConfigCat\ConfigFetcher;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
@@ -20,7 +22,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchOk()
     {
-        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, Utils::getTestLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
             new Response(200, [ConfigFetcher::ETAG_HEADER => $this->mockEtag], $this->mockBody)
         ]))]);
 
@@ -33,7 +35,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchNotModified()
     {
-        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, Utils::getTestLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
             new Response(304, [ConfigFetcher::ETAG_HEADER => $this->mockEtag])
         ]))]);
 
@@ -46,7 +48,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchFailed()
     {
-        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, Utils::getTestLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
             new Response(400)
         ]))]);
 
@@ -59,7 +61,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testFetchInvalidJson()
     {
-        $fetcher = new ConfigFetcher($this->mockSdkKey, new NullLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
+        $fetcher = new ConfigFetcher($this->mockSdkKey, Utils::getTestLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
             new Response(200, [], "{\"key\": value}")
         ]))]);
 
@@ -88,7 +90,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testConstructDefaults()
     {
-        $fetcher = new ConfigFetcher("api", new NullLogger());
+        $fetcher = new ConfigFetcher("api", Utils::getTestLogger());
         $options = $fetcher->getRequestOptions();
 
         $this->assertEquals(10, $options[RequestOptions::CONNECT_TIMEOUT]);
@@ -98,7 +100,7 @@ class ConfigFetcherTest extends TestCase
 
     public function testConstructConnectTimeoutOption()
     {
-        $fetcher = new ConfigFetcher("api", new NullLogger(), [ClientOptions::REQUEST_OPTIONS => [
+        $fetcher = new ConfigFetcher("api", Utils::getTestLogger(), [ClientOptions::REQUEST_OPTIONS => [
             RequestOptions::CONNECT_TIMEOUT => 5
         ]]);
         $options = $fetcher->getRequestOptions();
@@ -107,16 +109,25 @@ class ConfigFetcherTest extends TestCase
 
     public function testConstructRequestTimeoutOption()
     {
-        $fetcher = new ConfigFetcher("api", new NullLogger(), [ClientOptions::REQUEST_OPTIONS => [
+        $fetcher = new ConfigFetcher("api", Utils::getTestLogger(), [ClientOptions::REQUEST_OPTIONS => [
             RequestOptions::TIMEOUT => 5
         ]]);
         $options = $fetcher->getRequestOptions();
         $this->assertEquals(5, $options[RequestOptions::TIMEOUT]);
     }
 
+    public function testTimeoutException()
+    {
+        $fetcher = new ConfigFetcher("api", Utils::getTestLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
+            new ConnectException("timeout", new Request("GET", "test"))
+        ]))]);
+        $response = $fetcher->fetch("", "");
+        $this->assertTrue($response->isFailed());
+    }
+
     public function testIntegration()
     {
-        $fetcher = new ConfigFetcher("PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA", new NullLogger());
+        $fetcher = new ConfigFetcher("PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA", Utils::getTestLogger());
         $response = $fetcher->fetch("", "");
 
         $this->assertTrue($response->isFetched());

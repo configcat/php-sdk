@@ -6,6 +6,7 @@ use ConfigCat\Attributes\Config;
 use ConfigCat\Attributes\Preferences;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
@@ -143,7 +144,7 @@ final class ConfigFetcher
         }
 
         if ($redirect == self::SHOULD_REDIRECT) {
-            $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient " .
+            $this->logger->warning("Your data-governance parameter at ConfigCatClient " .
                 "initialization is not in sync with your preferences on the ConfigCat " .
                 "Dashboard: https://app.configcat.com/organization/data-governance. " .
                 "Only Organization Admins can access this preference.");
@@ -195,12 +196,19 @@ final class ConfigFetcher
             $this->logger->error("Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
                 "Received unexpected response: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
+        } catch (ConnectException $exception) {
+            $connTimeout = $this->requestOptions[RequestOptions::CONNECT_TIMEOUT];
+            $timeout = $this->requestOptions[RequestOptions::TIMEOUT];
+            $this->logger->error(
+                "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]",
+                ['exception' => $exception]
+            );
+            return new FetchResponse(FetchResponse::FAILED);
         } catch (GuzzleException $exception) {
-            $this->logger->error("HTTP exception: "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("HTTP exception: ". $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
-            $this->logger->error("Exception in ConfigFetcher.sendConfigFetchRequest: "
+            $this->logger->error("Exception during fetch: "
                 . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         }
