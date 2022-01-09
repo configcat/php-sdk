@@ -360,6 +360,8 @@ final class ConfigCatClient
                     $local = $this->overrideSource->getOverrides();
                     $remote = $this->getRemoteConfig();
                     return array_merge($local, $remote);
+                default:
+                    throw new InvalidArgumentException("Invalid override behaviour.");
             }
         }
 
