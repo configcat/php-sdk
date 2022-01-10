@@ -51,7 +51,7 @@ final class ConfigCatClient
      * @param array $options The configuration options:
      *     - base-url: The base ConfigCat CDN url.
      *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
-     *     - cache: A \ConfigCat\ConfigCache implementation used for caching.
+     *     - cache: A \ConfigCat\ConfigCache implementation used for caching the latest feature flag and setting values.
      *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
      *     - request-options: Additional options for Guzzle http requests.
      *                        https://docs.guzzlephp.org/en/stable/request-options.html
