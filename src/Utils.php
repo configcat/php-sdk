@@ -3,7 +3,7 @@
 namespace ConfigCat;
 
 /**
- * Class Utils Contains utility operations.
+ * Contains helper utility operations.
  * @package ConfigCat
  */
 final class Utils
@@ -30,5 +30,20 @@ final class Utils
     public static function splitTrim($text, $delimiter = ',')
     {
         return array_map('trim', explode($delimiter, $text));
+    }
+
+    /**
+     * Returns the string representation of a value.
+     *
+     * @param $value The value.
+     * @return string The result string.
+     */
+    public static function getStringRepresentation($value)
+    {
+        if (is_bool($value) === true) {
+            return $value ? "true" : "false";
+        }
+
+        return (string)$value;
     }
 }

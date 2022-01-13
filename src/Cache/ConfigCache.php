@@ -8,7 +8,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class ConfigCache A cache API used to make custom cache implementations.
+ * A cache API used to make custom cache implementations.
  * @package ConfigCat
  */
 abstract class ConfigCache implements LoggerAwareInterface

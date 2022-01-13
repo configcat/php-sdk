@@ -5,7 +5,7 @@ namespace ConfigCat\Log;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class InternalLogger A Psr\Log\LoggerInterface for internal use only.
+ * A Psr\Log\LoggerInterface for internal use only.
  * It handles the ConfigCat SDK specific log level and custom log entry filters.
  * @package ConfigCat
  */
@@ -94,10 +94,6 @@ class InternalLogger implements LoggerInterface
 
     private function shouldLog($currentLevel, array $context)
     {
-        if ($this->globalLevel == 0 && !$this->hasAnythingToIgnore($context)) {
-            return true;
-        }
-
         if ($currentLevel >= $this->globalLevel && !$this->hasAnythingToIgnore($context)) {
             return true;
         }

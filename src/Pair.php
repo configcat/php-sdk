@@ -3,7 +3,7 @@
 namespace ConfigCat;
 
 /**
- * Class Pair represents a simple key-value pair.
+ * Represents a simple key-value pair.
  * @package ConfigCat
  */
 class Pair

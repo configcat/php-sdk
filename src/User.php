@@ -5,7 +5,7 @@ namespace ConfigCat;
 use InvalidArgumentException;
 
 /**
- * Class User An object containing attributes to properly identify a given user for rollout evaluation.
+ * An object containing attributes to properly identify a given user for rollout evaluation.
  * @package ConfigCat
  */
 final class User

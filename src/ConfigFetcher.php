@@ -6,6 +6,9 @@ use ConfigCat\Attributes\Config;
 use ConfigCat\Attributes\Preferences;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -59,31 +62,32 @@ final class ConfigFetcher
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $this->urlPath = sprintf("configuration-files/%s/". self::CONFIG_JSON_NAME .".json", $sdkKey);
+        $this->urlPath = sprintf("configuration-files/%s/" . self::CONFIG_JSON_NAME . ".json", $sdkKey);
 
-        if (isset($options['base-url']) && !empty($options['base-url'])) {
-            $this->baseUrl = $options['base-url'];
+        if (isset($options[ClientOptions::BASE_URL]) && !empty($options[ClientOptions::BASE_URL])) {
+            $this->baseUrl = $options[ClientOptions::BASE_URL];
             $this->urlIsCustom = true;
-        } elseif (isset($options['data-governance']) && DataGovernance::isValid($options['data-governance'])) {
-            $this->baseUrl = DataGovernance::isEuOnly($options['data-governance'])
+        } elseif (isset($options[ClientOptions::DATA_GOVERNANCE]) &&
+            DataGovernance::isValid($options[ClientOptions::DATA_GOVERNANCE])) {
+            $this->baseUrl = DataGovernance::isEuOnly($options[ClientOptions::DATA_GOVERNANCE])
                 ? self::EU_ONLY_URL
                 : self::GLOBAL_URL;
         } else {
             $this->baseUrl = self::GLOBAL_URL;
         }
 
-        $additionalOptions = isset($options['request-options'])
-            && is_array($options['request-options'])
-            && !empty($options['request-options'])
-            ? $options['request-options']
+        $additionalOptions = isset($options[ClientOptions::REQUEST_OPTIONS])
+        && is_array($options[ClientOptions::REQUEST_OPTIONS])
+        && !empty($options[ClientOptions::REQUEST_OPTIONS])
+            ? $options[ClientOptions::REQUEST_OPTIONS]
             : [];
 
-        if (!isset($additionalOptions['connect_timeout'])) {
-            $additionalOptions['connect_timeout'] = 10;
+        if (!isset($additionalOptions[RequestOptions::CONNECT_TIMEOUT])) {
+            $additionalOptions[RequestOptions::CONNECT_TIMEOUT] = 10;
         }
 
-        if (!isset($additionalOptions['timeout'])) {
-            $additionalOptions['timeout'] = 30;
+        if (!isset($additionalOptions[RequestOptions::TIMEOUT])) {
+            $additionalOptions[RequestOptions::TIMEOUT] = 30;
         }
 
         $this->logger = $logger;
@@ -93,8 +97,8 @@ final class ConfigFetcher
             ],
         ], $additionalOptions);
 
-        $this->clientOptions = isset($options['custom-handler'])
-            ? ['handler' => $options['custom-handler']]
+        $this->clientOptions = isset($options[ClientOptions::CUSTOM_HANDLER])
+            ? ['handler' => $options[ClientOptions::CUSTOM_HANDLER]]
             : [];
     }
 
@@ -140,10 +144,10 @@ final class ConfigFetcher
         }
 
         if ($redirect == self::SHOULD_REDIRECT) {
-            $this->logger->warning("Your config.DataGovernance parameter at ConfigCatClient ".
-                    "initialization is not in sync with your preferences on the ConfigCat " .
-                    "Dashboard: https://app.configcat.com/organization/data-governance. " .
-                    "Only Organization Admins can access this preference.");
+            $this->logger->warning("Your data-governance parameter at ConfigCatClient " .
+                "initialization is not in sync with your preferences on the ConfigCat " .
+                "Dashboard: https://app.configcat.com/organization/data-governance. " .
+                "Only Organization Admins can access this preference.");
         }
 
         if ($executionCount > 0) {
@@ -192,8 +196,19 @@ final class ConfigFetcher
             $this->logger->error("Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
                 "Received unexpected response: " . $statusCode);
             return new FetchResponse(FetchResponse::FAILED);
+        } catch (ConnectException $exception) {
+            $connTimeout = $this->requestOptions[RequestOptions::CONNECT_TIMEOUT];
+            $timeout = $this->requestOptions[RequestOptions::TIMEOUT];
+            $this->logger->error(
+                "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]",
+                ['exception' => $exception]
+            );
+            return new FetchResponse(FetchResponse::FAILED);
+        } catch (GuzzleException $exception) {
+            $this->logger->error("HTTP exception: ". $exception->getMessage(), ['exception' => $exception]);
+            return new FetchResponse(FetchResponse::FAILED);
         } catch (Exception $exception) {
-            $this->logger->error("Exception in ConfigFetcher.sendConfigFetchRequest: "
+            $this->logger->error("Exception during fetch: "
                 . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         }

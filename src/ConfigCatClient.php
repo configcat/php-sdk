@@ -11,20 +11,24 @@ use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
+use ConfigCat\Override\FlagOverrides;
+use ConfigCat\Override\OverrideBehaviour;
+use ConfigCat\Override\OverrideDataSource;
 use Exception;
 use InvalidArgumentException;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class ConfigCatClient A client for handling configurations provided by ConfigCat.
+ * A client for handling configurations provided by ConfigCat.
  * @package ConfigCat
  */
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "5.3.1";
+    const SDK_VERSION = "5.5.0";
 
     /** @var LoggerInterface */
     private $logger;
@@ -38,14 +42,17 @@ final class ConfigCatClient
     private $cacheKey;
     /** @var RolloutEvaluator */
     private $evaluator;
+    /** @var FlagOverrides */
+    private $overrides;
 
     /**
      * Creates a new ConfigCatClient.
      *
      * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
      * @param array $options The configuration options:
+     *     - base-url: The base ConfigCat CDN url.
      *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
-     *     - cache: A \ConfigCat\ConfigCache implementation used for caching.
+     *     - cache: A \ConfigCat\ConfigCache implementation used for caching the latest feature flag and setting values.
      *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
      *     - request-options: Additional options for Guzzle http requests.
      *                        https://docs.guzzlephp.org/en/stable/request-options.html
@@ -53,39 +60,56 @@ final class ConfigCatClient
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
+     *     - exceptions-to-ignore: Array of exception classes that should be ignored from logs.
+     *     - flag-overrides: A \ConfigCat\Override\FlagOverrides instance used to override
+     *                       feature flags & settings.
+     *     - log-level: Default: Warning. Sets the internal log level.
      *
      * @throws InvalidArgumentException
-     *   When the $sdkKey is not legal.
+     *   When the $sdkKey is not valid.
      */
     public function __construct($sdkKey, array $options = [])
     {
         if (empty($sdkKey)) {
-            throw new InvalidArgumentException("sdkKey cannot be empty.");
+            throw new InvalidArgumentException("'sdkKey' cannot be empty.");
         }
 
-        $this->cacheKey = sha1(sprintf("php_".ConfigFetcher::CONFIG_JSON_NAME."_%s", $sdkKey));
+        $this->cacheKey = sha1(sprintf("php_" . ConfigFetcher::CONFIG_JSON_NAME . "_%s", $sdkKey));
 
-        $externalLogger = (isset($options['logger']) && $options['logger'] instanceof LoggerInterface)
-            ? $options['logger']
-            : new Logger("ConfigCat", [new ErrorLogHandler()]);
+        $externalLogger = (isset($options[ClientOptions::LOGGER]) &&
+            $options[ClientOptions::LOGGER] instanceof LoggerInterface)
+            ? $options[ClientOptions::LOGGER]
+            : $this->getMonolog();
 
-        $logLevel = (isset($options['log-level']) && LogLevel::isValid($options['log-level']))
-            ? $options['log-level']
-            : 0;
+        $logLevel = (isset($options[ClientOptions::LOG_LEVEL]) &&
+            LogLevel::isValid($options[ClientOptions::LOG_LEVEL]))
+            ? $options[ClientOptions::LOG_LEVEL]
+            : LogLevel::WARNING;
 
-        $exceptionsToIgnore = (isset($options['exceptions-to-ignore']) && is_array($options['exceptions-to-ignore']))
-            ? $options['exceptions-to-ignore']
+        $exceptionsToIgnore = (isset($options[ClientOptions::EXCEPTIONS_TO_IGNORE]) &&
+            is_array($options[ClientOptions::EXCEPTIONS_TO_IGNORE]))
+            ? $options[ClientOptions::EXCEPTIONS_TO_IGNORE]
             : [];
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
 
-        $this->cache = (isset($options['cache']) && $options['cache'] instanceof ConfigCache)
-            ? $options['cache']
+        $this->overrides = (isset($options[ClientOptions::FLAG_OVERRIDES]) &&
+            $options[ClientOptions::FLAG_OVERRIDES] instanceof FlagOverrides)
+            ? $options[ClientOptions::FLAG_OVERRIDES]
+            : null;
+
+        $this->cache = (isset($options[ClientOptions::CACHE]) && $options[ClientOptions::CACHE] instanceof ConfigCache)
+            ? $options[ClientOptions::CACHE]
             : new ArrayCache();
 
 
-        if (isset($options['cache-refresh-interval']) && is_int($options['cache-refresh-interval'])) {
-            $this->cacheRefreshInterval = $options['cache-refresh-interval'];
+        if (isset($options[ClientOptions::CACHE_REFRESH_INTERVAL]) &&
+            is_int($options[ClientOptions::CACHE_REFRESH_INTERVAL])) {
+            $this->cacheRefreshInterval = $options[ClientOptions::CACHE_REFRESH_INTERVAL];
+        }
+
+        if (!is_null($this->overrides)) {
+            $this->overrides->setLogger($this->logger);
         }
 
         $this->cache->setLogger($this->logger);
@@ -94,7 +118,7 @@ final class ConfigCatClient
     }
 
     /**
-     * Gets a value from the configuration identified by the given key.
+     * Gets a value of a feature flag or setting identified by the given key.
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
@@ -110,18 +134,18 @@ final class ConfigCatClient
             }
 
             if (!array_key_exists($key, $config)) {
-                $this->logger->error("Evaluating getValue('". $key ."') failed. " .
-                    "Value not found for key ". $key .". " .
-                    "Returning defaultValue: ". self::getStringRepresentation($defaultValue) ."." .
-                    "Here are the available keys: ".implode(", ", array_keys($config)));
+                $this->logger->error("Evaluating getValue('" . $key . "') failed. " .
+                    "Value not found for key " . $key . ". " .
+                    "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". " .
+                    "Here are the available keys: " . implode(", ", array_keys($config)));
 
                 return $defaultValue;
             }
 
             return $this->parseValue($key, $config[$key], $defaultValue, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Evaluating getValue('". $key ."') failed. " .
-                "Returning defaultValue: ". self::getStringRepresentation($defaultValue) .". "
+            $this->logger->error("Evaluating getValue('" . $key . "') failed. " .
+                "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultValue;
         }
@@ -144,9 +168,9 @@ final class ConfigCatClient
             }
 
             if (!array_key_exists($key, $config)) {
-                $this->logger->error("Evaluating getVariationId('". $key ."') failed. " .
-                    "Value not found for key ". $key .". " .
-                    "Returning defaultVariationId: ". $defaultVariationId .". Here are the available keys: " .
+                $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
+                    "Value not found for key " . $key . ". " .
+                    "Returning defaultVariationId: " . $defaultVariationId . ". Here are the available keys: " .
                     implode(", ", array_keys($config)));
 
                 return $defaultVariationId;
@@ -154,8 +178,8 @@ final class ConfigCatClient
 
             return $this->parseVariationId($key, $config[$key], $defaultVariationId, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Evaluating getVariationId('". $key ."') failed. " .
-                "Returning defaultVariationId: ". $defaultVariationId .". "
+            $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
+                "Returning defaultVariationId: " . $defaultVariationId . ". "
                 . $exception->getMessage(), ['exception' => $exception]);
             return $defaultVariationId;
         }
@@ -198,7 +222,7 @@ final class ConfigCatClient
     }
 
     /**
-     * Gets all keys from the configuration.
+     * Gets a collection of all setting keys.
      *
      * @return array of keys.
      */
@@ -214,6 +238,27 @@ final class ConfigCatClient
         }
     }
 
+    /**
+     * Gets the values of all feature flags or settings.
+     *
+     * @param User|null $user The user object to identify the caller.
+     * @return array of values.
+     */
+    public function getAllValues(User $user = null)
+    {
+        try {
+            $config = $this->getConfig();
+            return is_null($config) ? [] : $this->parseValues($config, $user);
+        } catch (Exception $exception) {
+            $this->logger->error("An error occurred during getting all values. Returning empty array. "
+                . $exception->getMessage(), ['exception' => $exception]);
+            return [];
+        }
+    }
+
+    /**
+     * Initiates a force refresh on the cached configuration.
+     */
     public function forceRefresh()
     {
         $cacheItem = $this->cache->load($this->cacheKey);
@@ -234,16 +279,31 @@ final class ConfigCatClient
 
     private function parseValue($key, array $json, $defaultValue, User $user = null)
     {
-        $this->logger->info("Evaluating getValue(" . $key . ").");
-        $evaluated = $this->evaluator->evaluate($key, $json, $user);
+        $collector = new EvaluationLogCollector();
+        $collector->add("Evaluating getValue(" . $key . ").");
+        $evaluated = $this->evaluator->evaluate($key, $json, $collector, $user);
+        $this->logger->info($collector);
         return is_null($evaluated) ? $defaultValue : $evaluated->getValue();
     }
 
     private function parseVariationId($key, array $json, $defaultValue, User $user = null)
     {
-        $this->logger->info("Evaluating getVariationId(" . $key . ").");
-        $evaluated = $this->evaluator->evaluate($key, $json, $user);
+        $collector = new EvaluationLogCollector();
+        $collector->add("Evaluating getVariationId(" . $key . ").");
+        $evaluated = $this->evaluator->evaluate($key, $json, $collector, $user);
+        $this->logger->info($collector);
         return is_null($evaluated) ? $defaultValue : $evaluated->getKey();
+    }
+
+    private function parseValues(array $json, User $user = null)
+    {
+        $keys = array_keys($json);
+        $result = [];
+        foreach ($keys as $key) {
+            $result[$key] = $this->parseValue($key, $json[$key], null, $user);
+        }
+
+        return $result;
     }
 
     private function parseVariationIds(array $json, User $user = null)
@@ -289,6 +349,31 @@ final class ConfigCatClient
      */
     private function getConfig()
     {
+        if (!is_null($this->overrides)) {
+            switch ($this->overrides->getBehaviour()) {
+                case OverrideBehaviour::LOCAL_ONLY:
+                    return $this->overrides->getDataSource()->getOverrides();
+                case OverrideBehaviour::LOCAL_OVER_REMOTE:
+                    $local = $this->overrides->getDataSource()->getOverrides();
+                    $remote = $this->getRemoteConfig();
+                    return array_merge($remote, $local);
+                case OverrideBehaviour::REMOTE_OVER_LOCAL:
+                    $local = $this->overrides->getDataSource()->getOverrides();
+                    $remote = $this->getRemoteConfig();
+                    return array_merge($local, $remote);
+                default:
+                    throw new InvalidArgumentException("Invalid override behaviour.");
+            }
+        }
+
+        return $this->getRemoteConfig();
+    }
+
+    /**
+     * @throws ConfigCatClientException
+     */
+    private function getRemoteConfig()
+    {
         $cacheItem = $this->cache->load($this->cacheKey);
         if (is_null($cacheItem)) {
             $cacheItem = new CacheItem();
@@ -321,12 +406,11 @@ final class ConfigCatClient
         return $cacheItem->config[Config::ENTRIES];
     }
 
-    private static function getStringRepresentation($value)
+    private function getMonolog()
     {
-        if (is_bool($value) === true) {
-            return $value ? "true" : "false";
-        }
-
-        return (string)$value;
+        $handler = new ErrorLogHandler();
+        $formatter = new LineFormatter(null, null, true, true);
+        $handler->setFormatter($formatter);
+        return new Logger("ConfigCat", [$handler]);
     }
 }

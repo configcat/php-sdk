@@ -3,7 +3,7 @@
 namespace ConfigCat\Attributes;
 
 /**
- * Class PercentageAttributes Represents the JSON keys of a ConfigCat percentage rule.
+ * Represents the JSON keys of a ConfigCat percentage rule.
  * @package ConfigCat
  */
 class PercentageAttributes

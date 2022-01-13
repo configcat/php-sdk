@@ -3,7 +3,7 @@
 namespace ConfigCat\Log;
 
 /**
- * Class LogLevel Determines the current log level of the ConfigCat SDK.
+ * Determines the current log level of the ConfigCat SDK.
  * @package ConfigCat
  */
 class LogLevel
@@ -16,6 +16,7 @@ class LogLevel
     const CRITICAL = 60;
     const ALERT = 70;
     const EMERGENCY = 80;
+    const NO_LOG = 90;
 
     public static function isValid($level)
     {

@@ -3,7 +3,7 @@
 namespace ConfigCat\Attributes;
 
 /**
- * Class SettingAttributes Represents the JSON keys of a ConfigCat setting.
+ * Represents the JSON keys of a ConfigCat setting.
  * @package ConfigCat
  */
 class SettingAttributes

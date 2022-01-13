@@ -394,6 +394,54 @@ class LoggerTest extends TestCase
         $logger->warning("");
     }
 
+    public function testLoggerNoLog()
+    {
+        $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
+
+        $logger = new InternalLogger($mockLogger, LogLevel::NO_LOG, []);
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("emergency");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("alert");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("critical");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("error");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("warning");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("notice");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("info");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("debug");
+
+        $logger->emergency("");
+        $logger->alert("");
+        $logger->critical("");
+        $logger->error("");
+        $logger->notice("");
+        $logger->info("");
+        $logger->debug("");
+        $logger->warning("");
+    }
+
     public function testLoggerBypassesLogWhenExceptionIsIgnored()
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();

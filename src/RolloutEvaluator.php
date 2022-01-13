@@ -5,6 +5,7 @@ namespace ConfigCat;
 use ConfigCat\Attributes\PercentageAttributes;
 use ConfigCat\Attributes\RolloutAttributes;
 use ConfigCat\Attributes\SettingAttributes;
+use Exception;
 use Psr\Log\LoggerInterface;
 use z4kn4fein\SemVer\Version;
 use z4kn4fein\SemVer\VersionFormatException;
@@ -50,14 +51,15 @@ final class RolloutEvaluator
     }
 
     /**
-     * Evaluates a requested value from the configuration by the specified roll out rules.
+     * Evaluates a requested value from the configuration by the specified roll-out rules.
      *
      * @param string $key The key of the desired value.
      * @param array $json The decoded JSON configuration.
+     * @param EvaluationLogCollector $logCollector The evaluation log collector.
      * @param User|null $user Optional. The user to identify the caller.
      * @return Pair The evaluated configuration value and Variation ID.
      */
-    public function evaluate($key, array $json, User $user = null)
+    public function evaluate($key, array $json, EvaluationLogCollector $logCollector, User $user = null)
     {
         if (is_null($user)) {
             if (isset($json[SettingAttributes::ROLLOUT_RULES]) &&
@@ -70,23 +72,29 @@ final class RolloutEvaluator
             }
 
             $result = $json[SettingAttributes::VALUE];
-            $variationId = $json[SettingAttributes::VARIATION_ID];
-            $this->logger->info("Returning ". $result .".");
+            $variationId = isset($json[SettingAttributes::VARIATION_ID]) ? $json[SettingAttributes::VARIATION_ID] : "";
+            $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
             return new Pair($variationId, $result);
         }
 
-        $this->logger->info("User object: " . $user);
+        $logCollector->add("User object: " . $user);
         if (isset($json[SettingAttributes::ROLLOUT_RULES]) && !empty($json[SettingAttributes::ROLLOUT_RULES])) {
             foreach ($json[SettingAttributes::ROLLOUT_RULES] as $rule) {
                 $comparisonAttribute = $rule[RolloutAttributes::COMPARISON_ATTRIBUTE];
                 $comparisonValue = $rule[RolloutAttributes::COMPARISON_VALUE];
                 $comparator = $rule[RolloutAttributes::COMPARATOR];
                 $value = $rule[RolloutAttributes::VALUE];
-                $variationId = $rule[RolloutAttributes::VARIATION_ID];
+                $variationId = isset($rule[RolloutAttributes::VARIATION_ID]) ?
+                    $rule[RolloutAttributes::VARIATION_ID] : "";
                 $userValue = $user->getAttribute($comparisonAttribute);
 
                 if (empty($comparisonValue) || (!is_numeric($userValue) && empty($userValue))) {
-                    $this->logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue);
+                    $logCollector->add($this->logNoMatch(
+                        $comparisonAttribute,
+                        $userValue,
+                        $comparator,
+                        $comparisonValue
+                    ));
                     continue;
                 }
 
@@ -95,13 +103,13 @@ final class RolloutEvaluator
                     case 0:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
                         if (in_array($userValue, $split, true)) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
@@ -109,39 +117,39 @@ final class RolloutEvaluator
                     case 1:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
                         if (!in_array($userValue, $split, true)) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
                     //CONTAINS
                     case 2:
                         if (Utils::strContains($userValue, $comparisonValue)) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
                     //DOES NOT CONTAIN
                     case 3:
                         if (!Utils::strContains($userValue, $comparisonValue)) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
@@ -156,23 +164,23 @@ final class RolloutEvaluator
                             }
 
                             if (($matched && $comparator == 4) || (!$matched && $comparator == 5)) {
-                                $this->logMatch(
+                                $logCollector->add($this->logMatch(
                                     $comparisonAttribute,
                                     $userValue,
                                     $comparator,
                                     $comparisonValue,
                                     $value
-                                );
+                                ));
                                 return new Pair($variationId, $value);
                             }
                         } catch (VersionFormatException $exception) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             break;
                         }
 
@@ -191,23 +199,23 @@ final class RolloutEvaluator
                                     Version::greaterThan($userValue, $comparisonValue)) ||
                                 ($comparator == 9 &&
                                     Version::greaterThanOrEqual($userValue, $comparisonValue))) {
-                                $this->logMatch(
+                                $logCollector->add($this->logMatch(
                                     $comparisonAttribute,
                                     $userValue,
                                     $comparator,
                                     $comparisonValue,
                                     $value
-                                );
+                                ));
                                 return new Pair($variationId, $value);
                             }
                         } catch (VersionFormatException $exception) {
-                            $this->logFormatError(
+                            $logCollector->add($this->logFormatError(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $exception
-                            );
+                            ));
                             break;
                         }
                         break;
@@ -221,24 +229,24 @@ final class RolloutEvaluator
                         $userDouble = str_replace(",", ".", $userValue);
                         $comparisonDouble = str_replace(",", ".", $comparisonValue);
                         if (!is_numeric($userDouble)) {
-                            $this->logFormatErrorWithMessage(
+                            $logCollector->add($this->logFormatErrorWithMessage(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $userDouble . "is not a valid number."
-                            );
+                            ));
                             break;
                         }
 
                         if (!is_numeric($comparisonDouble)) {
-                            $this->logFormatErrorWithMessage(
+                            $logCollector->add($this->logFormatErrorWithMessage(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $comparisonDouble . "is not a valid number."
-                            );
+                            ));
                             break;
                         }
 
@@ -251,7 +259,13 @@ final class RolloutEvaluator
                             ($comparator == 13 && $userDoubleValue <= $comparisonDoubleValue) ||
                             ($comparator == 14 && $userDoubleValue > $comparisonDoubleValue) ||
                             ($comparator == 15 && $userDoubleValue >= $comparisonDoubleValue)) {
-                            $this->logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value);
+                            $logCollector->add($this->logMatch(
+                                $comparisonAttribute,
+                                $userValue,
+                                $comparator,
+                                $comparisonValue,
+                                $value
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
@@ -259,13 +273,13 @@ final class RolloutEvaluator
                     case 16:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
                         if (in_array(sha1($userValue), $split, true)) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
@@ -273,18 +287,18 @@ final class RolloutEvaluator
                     case 17:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
                         if (!in_array(sha1($userValue), $split, true)) {
-                            $this->logMatch(
+                            $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
                                 $comparisonValue,
                                 $value
-                            );
+                            ));
                             return new Pair($variationId, $value);
                         }
                         break;
                 }
-                $this->logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue);
+                $logCollector->add($this->logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue));
             }
         }
 
@@ -301,30 +315,32 @@ final class RolloutEvaluator
                 if ($scale < $bucket) {
                     $result = $rule[PercentageAttributes::VALUE];
                     $variationId = $rule[PercentageAttributes::VARIATION_ID];
-                    $this->logger->info("Evaluating % options. Returning " . $result . ".");
+                    $logCollector->add(
+                        "Evaluating % options. Returning " . Utils::getStringRepresentation($result) . "."
+                    );
                     return new Pair($variationId, $result);
                 }
             }
         }
 
         $result = $json[SettingAttributes::VALUE];
-        $variationId = $json[SettingAttributes::VARIATION_ID];
-        $this->logger->info("Returning ". $result .".");
+        $variationId = isset($json[SettingAttributes::VARIATION_ID]) ? $json[SettingAttributes::VARIATION_ID] : "";
+        $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
         return new Pair($variationId, $result);
     }
 
     private function logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value)
     {
-        $this->logger->info("Evaluating rule: [". $comparisonAttribute . ":" . $userValue . "] " .
-        "[" . $this->comparatorTexts[$comparator] . "] " .
-        "[" . $comparisonValue . "] => match, returning: " . $value. "");
+        return "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
+            "[" . $this->comparatorTexts[$comparator] . "] " .
+            "[" . $comparisonValue . "] => match, returning: " . Utils::getStringRepresentation($value) . ".";
     }
 
     private function logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue)
     {
-        $this->logger->info("Evaluating rule: [". $comparisonAttribute . ":" . $userValue . "] " .
+        return "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
-            "[" . $comparisonValue . "] => no match");
+            "[" . $comparisonValue . "] => no match.";
     }
 
     private function logFormatError(
@@ -332,14 +348,13 @@ final class RolloutEvaluator
         $userValue,
         $comparator,
         $comparisonValue,
-        \Exception $exception
+        Exception $exception
     ) {
-        $this->logger->warning(
-            "Evaluating rule: [". $comparisonAttribute . ":" . $userValue . "] " .
+        $message = "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
-            "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $exception->getMessage() . "",
-            ['exception' => $exception]
-        );
+            "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $exception->getMessage() . ".";
+        $this->logger->warning($message, ['exception' => $exception]);
+        return $message;
     }
 
     private function logFormatErrorWithMessage(
@@ -349,8 +364,10 @@ final class RolloutEvaluator
         $comparisonValue,
         $message
     ) {
-        $this->logger->warning("Evaluating rule: [". $comparisonAttribute . ":" . $userValue . "] " .
-        "[" . $this->comparatorTexts[$comparator] . "] " .
-        "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . "");
+        $message = "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
+            "[" . $this->comparatorTexts[$comparator] . "] " .
+            "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . ".";
+        $this->logger->warning($message);
+        return $message;
     }
 }
