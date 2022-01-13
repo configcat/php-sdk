@@ -28,7 +28,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "5.5.0";
+    const SDK_VERSION = "5.4.0";
 
     /** @var LoggerInterface */
     private $logger;
