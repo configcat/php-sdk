@@ -17,15 +17,13 @@ class ArrayDataSource extends OverrideDataSource
     /**
      * Constructs an array data source.
      * @param $overrides array The array that contains the overrides.
-     * @param $behaviour int The override behaviour.
      */
-    public function __construct($overrides, $behaviour)
+    public function __construct($overrides)
     {
         if (!is_array($overrides)) {
             throw new InvalidArgumentException("The overrides is not a valid array.");
         }
 
-        parent::__construct($behaviour);
         $this->overrides = $overrides;
     }
 

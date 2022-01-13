@@ -11,6 +11,7 @@ use ConfigCat\Cache\CacheItem;
 use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
+use ConfigCat\Override\FlagOverrides;
 use ConfigCat\Override\OverrideBehaviour;
 use ConfigCat\Override\OverrideDataSource;
 use Exception;
@@ -41,8 +42,8 @@ final class ConfigCatClient
     private $cacheKey;
     /** @var RolloutEvaluator */
     private $evaluator;
-    /** @var OverrideDataSource */
-    private $overrideSource;
+    /** @var FlagOverrides */
+    private $overrides;
 
     /**
      * Creates a new ConfigCatClient.
@@ -60,7 +61,7 @@ final class ConfigCatClient
      *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
      *                        (Only Organization Admins can access)
      *     - exceptions-to-ignore: Array of exception classes that should be ignored from logs.
-     *     - flag-overrides: A \ConfigCat\Override\OverrideDataSource implementation used to override
+     *     - flag-overrides: A \ConfigCat\Override\FlagOverrides instance used to override
      *                       feature flags & settings.
      *     - log-level: Default: Warning. Sets the internal log level.
      *
@@ -92,8 +93,8 @@ final class ConfigCatClient
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore);
 
-        $this->overrideSource = (isset($options[ClientOptions::FLAG_OVERRIDES]) &&
-            $options[ClientOptions::FLAG_OVERRIDES] instanceof OverrideDataSource)
+        $this->overrides = (isset($options[ClientOptions::FLAG_OVERRIDES]) &&
+            $options[ClientOptions::FLAG_OVERRIDES] instanceof FlagOverrides)
             ? $options[ClientOptions::FLAG_OVERRIDES]
             : null;
 
@@ -107,8 +108,8 @@ final class ConfigCatClient
             $this->cacheRefreshInterval = $options[ClientOptions::CACHE_REFRESH_INTERVAL];
         }
 
-        if (!is_null($this->overrideSource)) {
-            $this->overrideSource->setLogger($this->logger);
+        if (!is_null($this->overrides)) {
+            $this->overrides->setLogger($this->logger);
         }
 
         $this->cache->setLogger($this->logger);
@@ -348,16 +349,16 @@ final class ConfigCatClient
      */
     private function getConfig()
     {
-        if (!is_null($this->overrideSource)) {
-            switch ($this->overrideSource->getBehaviour()) {
+        if (!is_null($this->overrides)) {
+            switch ($this->overrides->getBehaviour()) {
                 case OverrideBehaviour::LOCAL_ONLY:
-                    return $this->overrideSource->getOverrides();
+                    return $this->overrides->getDataSource()->getOverrides();
                 case OverrideBehaviour::LOCAL_OVER_REMOTE:
-                    $local = $this->overrideSource->getOverrides();
+                    $local = $this->overrides->getDataSource()->getOverrides();
                     $remote = $this->getRemoteConfig();
                     return array_merge($remote, $local);
                 case OverrideBehaviour::REMOTE_OVER_LOCAL:
-                    $local = $this->overrideSource->getOverrides();
+                    $local = $this->overrides->getDataSource()->getOverrides();
                     $remote = $this->getRemoteConfig();
                     return array_merge($local, $remote);
                 default:

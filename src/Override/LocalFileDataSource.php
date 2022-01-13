@@ -18,15 +18,13 @@ class LocalFileDataSource extends OverrideDataSource
     /**
      * Constructs a local file data source.
      * @param $filePath string The path to the file.
-     * @param $behaviour int The override behaviour.
      */
-    public function __construct($filePath, $behaviour)
+    public function __construct($filePath)
     {
         if (!file_exists($filePath)) {
             throw new InvalidArgumentException("The file '" . $filePath . "' doesn't exist.");
         }
 
-        parent::__construct($behaviour);
         $this->filePath = $filePath;
     }
 
