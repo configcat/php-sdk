@@ -70,7 +70,12 @@ abstract class ConfigCache implements LoggerAwareInterface
         }
 
         try {
-            $result = unserialize($this->get($key));
+            $cached = $this->get($key);
+            if (!$cached) {
+                return null;
+            }
+            
+            $result = unserialize($cached);
             if ($result instanceof CacheItem) {
                 return $result;
             }
