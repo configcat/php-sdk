@@ -36,7 +36,7 @@ class Psr16Cache extends ConfigCache
      *
      * @throws InvalidArgumentException If the $key is not a legal value.
      */
-    protected function set(string $key, string $value): string
+    protected function set(string $key, string $value): void
     {
         $this->cache->set($key, $value);
     }
