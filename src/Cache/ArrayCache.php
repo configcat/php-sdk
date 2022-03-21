@@ -28,7 +28,7 @@ final class ArrayCache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      */
-    protected function set($key, $value): void
+    protected function set(string $key, string $value): void
     {
         $this->arrayCache[$key] = $value;
     }
