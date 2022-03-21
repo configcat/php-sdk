@@ -23,7 +23,7 @@ class LaravelCache extends ConfigCache
      *
      * @throws InvalidArgumentException If the $key is not a legal value.
      */
-    protected function get($key)
+    protected function get(string $key): ?string
     {
         return $this->cache->get($key);
     }
@@ -34,7 +34,7 @@ class LaravelCache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      */
-    protected function set($key, $value)
+    protected function set(string $key, string $value): void
     {
         $this->cache->forever($key, $value);
     }

@@ -17,37 +17,15 @@ class LocalSourceTest extends TestCase
 {
     const TEST_JSON_BODY = "{ \"f\" : { \"disabled\": { \"v\": false, \"p\": [], \"r\": [], \"i\":\"fakeIdFirst\" }, \"enabled\": { \"v\": true, \"p\": [], \"r\": [], \"i\":\"fakeIdSecond\" }}}";
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testWithNonExistingFile() {
+        $this->expectException(InvalidArgumentException::class);
         new ConfigCatClient("key", [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile("non-existing"), OverrideBehaviour::LOCAL_ONLY),
         ]);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testWithNonArray() {
-        new ConfigCatClient("key", [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localArray(null), OverrideBehaviour::LOCAL_ONLY),
-        ]);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testWithNullSource() {
-        new ConfigCatClient("key", [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(null, OverrideBehaviour::LOCAL_ONLY),
-        ]);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testWithInvalidBehavior() {
+        $this->expectException(InvalidArgumentException::class);
         new ConfigCatClient("key", [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localArray([]), 50),
         ]);

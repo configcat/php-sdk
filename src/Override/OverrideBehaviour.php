@@ -31,7 +31,7 @@ class OverrideBehaviour
      * @param $behaviour int The behaviour value to check.
      * @return bool True when the given value is a valid override behaviour.
      */
-    public static function isValid($behaviour)
+    public static function isValid(int $behaviour): bool
     {
         if (!is_int($behaviour)) {
             return false;

@@ -22,7 +22,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @param string $key Identifier for the cached value.
      * @return string|null Cached value for the given key, or null if it's missing.
      */
-    abstract protected function get($key);
+    abstract protected function get(string $key): ?string;
 
     /**
      * Writes the value identified by the given $key into the underlying cache.
@@ -30,7 +30,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      */
-    abstract protected function set($key, $value);
+    abstract protected function set(string $key, string $value): void;
 
     /**
      * Writes the value identified by the given $key into the underlying cache.
@@ -41,7 +41,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @throws InvalidArgumentException
      *   If the $key is not a legal value.
      */
-    public function store($key, CacheItem $value)
+    public function store(string $key, CacheItem $value): void
     {
         if (empty($key)) {
             throw new InvalidArgumentException("key cannot be empty.");
@@ -63,7 +63,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @throws InvalidArgumentException
      *   If the $key is not a legal value.
      */
-    public function load($key)
+    public function load(string $key): ?CacheItem
     {
         if (empty($key)) {
             throw new InvalidArgumentException("key cannot be empty.");
@@ -90,10 +90,8 @@ abstract class ConfigCache implements LoggerAwareInterface
      * Sets a logger instance on the object.
      *
      * @param LoggerInterface $logger
-     *
-     * @return void
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }

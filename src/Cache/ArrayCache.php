@@ -17,7 +17,7 @@ final class ArrayCache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @return string|null Cached value for the given key, or null if it's missing.
      */
-    protected function get($key)
+    protected function get(string $key): ?string
     {
         return array_key_exists($key, $this->arrayCache) ? $this->arrayCache[$key] : null;
     }
@@ -28,7 +28,7 @@ final class ArrayCache extends ConfigCache
      * @param string $key Identifier for the cached value.
      * @param string $value The value to cache.
      */
-    protected function set($key, $value)
+    protected function set($key, $value): void
     {
         $this->arrayCache[$key] = $value;
     }

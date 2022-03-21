@@ -20,7 +20,7 @@ class Pair
      * @param string $key The key.
      * @param mixed $value The value:
      */
-    public function __construct($key, $value)
+    public function __construct(string $key, $value)
     {
         $this->key = $key;
         $this->value = $value;
@@ -31,7 +31,7 @@ class Pair
      *
      * @return string
      */
-    public function getKey()
+    public function getKey(): string
     {
         return $this->key;
     }

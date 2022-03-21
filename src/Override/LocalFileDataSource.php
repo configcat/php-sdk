@@ -19,7 +19,7 @@ class LocalFileDataSource extends OverrideDataSource
      * Constructs a local file data source.
      * @param $filePath string The path to the file.
      */
-    public function __construct($filePath)
+    public function __construct(string $filePath)
     {
         if (!file_exists($filePath)) {
             throw new InvalidArgumentException("The file '" . $filePath . "' doesn't exist.");
@@ -32,7 +32,7 @@ class LocalFileDataSource extends OverrideDataSource
      * Gets the overrides.
      * @return array The overrides.
      */
-    public function getOverrides()
+    public function getOverrides(): ?array
     {
         $content = file_get_contents($this->filePath);
         if ($content === false) {

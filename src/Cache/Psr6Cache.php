@@ -23,7 +23,7 @@ class Psr6Cache extends ConfigCache
      *
      * @throws InvalidArgumentException If the $key is not a legal value.
      */
-    protected function get($key)
+    protected function get(string $key): ?string
     {
         $item = $this->cachePool->getItem($key);
         return $item->get();
@@ -37,7 +37,7 @@ class Psr6Cache extends ConfigCache
      *
      * @throws InvalidArgumentException If the $key is not a legal value.
      */
-    protected function set($key, $value)
+    protected function set(string $key, string $value): void
     {
         $item = $this->cachePool->getItem($key);
         $item->set($value);

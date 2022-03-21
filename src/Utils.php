@@ -15,7 +15,7 @@ final class Utils
      * @param string $needle The string we search.
      * @return bool True if the $haystack contains the $needle.
      */
-    public static function strContains($haystack, $needle)
+    public static function strContains(string $haystack, string $needle): bool
     {
         return strpos($haystack, $needle) !== false;
     }
@@ -27,7 +27,7 @@ final class Utils
      * @param string $delimiter The delimiter.
      * @return array The array of split items.
      */
-    public static function splitTrim($text, $delimiter = ',')
+    public static function splitTrim(string $text, string $delimiter = ','): array
     {
         return array_map('trim', explode($delimiter, $text));
     }
@@ -35,10 +35,10 @@ final class Utils
     /**
      * Returns the string representation of a value.
      *
-     * @param $value The value.
+     * @param mixed $value The value.
      * @return string The result string.
      */
-    public static function getStringRepresentation($value)
+    public static function getStringRepresentation($value): string
     {
         if (is_bool($value) === true) {
             return $value ? "true" : "false";

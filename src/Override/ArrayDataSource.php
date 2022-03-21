@@ -18,7 +18,7 @@ class ArrayDataSource extends OverrideDataSource
      * Constructs an array data source.
      * @param $overrides array The array that contains the overrides.
      */
-    public function __construct($overrides)
+    public function __construct(array $overrides)
     {
         if (!is_array($overrides)) {
             throw new InvalidArgumentException("The overrides is not a valid array.");
@@ -31,7 +31,7 @@ class ArrayDataSource extends OverrideDataSource
      * Gets the overrides.
      * @return array The overrides.
      */
-    public function getOverrides()
+    public function getOverrides(): array
     {
         $result = [];
         foreach ($this->overrides as $key => $value) {

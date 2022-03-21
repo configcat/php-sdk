@@ -30,9 +30,9 @@ final class FetchResponse
      * @param int $status The fetch status code.
      * @param string|null The received ETag.
      * @param array|null $body The decoded JSON configuration.
-     * @param null $url The url pointing to the proper cdn server.
+     * @param string|null $url The url pointing to the proper cdn server.
      */
-    public function __construct($status, $etag = null, $body = null, $url = null)
+    public function __construct(int $status, $etag = null, ?array $body = null, ?string $url = null)
     {
         $this->status = $status;
         $this->body = $body;
@@ -45,7 +45,7 @@ final class FetchResponse
      *
      * @return bool True if the fetch succeeded, otherwise false.
      */
-    public function isFetched()
+    public function isFetched(): bool
     {
         return $this->status === self::FETCHED;
     }
@@ -55,7 +55,7 @@ final class FetchResponse
      *
      * @return bool True if the fetched configurations was not modified, otherwise false.
      */
-    public function isNotModified()
+    public function isNotModified(): bool
     {
         return $this->status === self::NOT_MODIFIED;
     }
@@ -65,7 +65,7 @@ final class FetchResponse
      *
      * @return bool True if the fetch failed, otherwise false.
      */
-    public function isFailed()
+    public function isFailed(): bool
     {
         return $this->status === self::FAILED;
     }
@@ -75,7 +75,7 @@ final class FetchResponse
      *
      * @return array|null The fetched response body.
      */
-    public function getBody()
+    public function getBody(): ?array
     {
         return $this->body;
     }
@@ -85,7 +85,7 @@ final class FetchResponse
      *
      * @return string|null The received ETag.
      */
-    public function getETag()
+    public function getETag(): ?string
     {
         return $this->etag;
     }
@@ -95,7 +95,7 @@ final class FetchResponse
      *
      * @return string|null The cdn url.
      */
-    public function getUrl()
+    public function getUrl(): ?string
     {
         return $this->url;
     }

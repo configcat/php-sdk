@@ -23,14 +23,10 @@ class FlagOverrides implements LoggerAwareInterface
      *                       override the remote values, or use local values only when a remote value doesn't exist,
      *                       or use it for local only mode.
      */
-    public function __construct($dataSource, $behaviour)
+    public function __construct(OverrideDataSource $dataSource, int $behaviour)
     {
         if (!OverrideBehaviour::isValid($behaviour)) {
             throw new InvalidArgumentException("The behaviour argument is not valid.");
-        }
-
-        if (!($dataSource instanceof OverrideDataSource)) {
-            throw new InvalidArgumentException("The dataSource argument is not valid.");
         }
 
         $this->behaviour = $behaviour;
@@ -41,7 +37,7 @@ class FlagOverrides implements LoggerAwareInterface
      * Gets the override behaviour.
      * @return int The override behaviour.
      */
-    public function getBehaviour()
+    public function getBehaviour(): int
     {
         return $this->behaviour;
     }
@@ -50,7 +46,7 @@ class FlagOverrides implements LoggerAwareInterface
      * Gets the override data source.
      * @return OverrideDataSource The override data source.
      */
-    public function getDataSource()
+    public function getDataSource(): OverrideDataSource
     {
         return $this->dataSource;
     }
@@ -59,7 +55,7 @@ class FlagOverrides implements LoggerAwareInterface
      * Sets the logger.
      * @param LoggerInterface $logger The logger.
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->dataSource->setLogger($logger);
     }

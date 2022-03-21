@@ -19,28 +19,24 @@ use Psr\Log\NullLogger;
 
 class ConfigCatClientTest extends TestCase
 {
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testConstructNullSdkKey()
-    {
-        new ConfigCatClient(null);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructEmptySdkKey()
     {
+        $this->expectException(InvalidArgumentException::class);
         new ConfigCatClient("");
     }
 
     public function testConstructDefaults()
     {
         $client = new ConfigCatClient("key");
-        $this->assertAttributeInstanceOf(InternalLogger::class, "logger", $client);
-        $this->assertAttributeInstanceOf(ArrayCache::class, "cache", $client);
-        $this->assertAttributeEquals(60, "cacheRefreshInterval", $client);
+
+        $logger = $this->getReflectedValue($client, "logger");
+        $this->assertInstanceOf(InternalLogger::class, $logger);
+
+        $cache = $this->getReflectedValue($client, "cache");
+        $this->assertInstanceOf(ArrayCache::class, $cache);
+
+        $cacheRefreshInterval = $this->getReflectedValue($client, "cacheRefreshInterval");
+        $this->assertEquals(60, $cacheRefreshInterval);
     }
 
     public function testConstructLoggerOption()
@@ -54,11 +50,11 @@ class ConfigCatClientTest extends TestCase
         ]);
         $internalLogger = $this->getReflectedValue($client, "logger");
 
-        $externallogger = $this->getReflectedValue($internalLogger, "logger");
+        $externalLogger = $this->getReflectedValue($internalLogger, "logger");
         $globalLevel = $this->getReflectedValue($internalLogger, "globalLevel");
         $exceptions = $this->getReflectedValue($internalLogger, "exceptionsToIgnore");
 
-        $this->assertSame($logger, $externallogger);
+        $this->assertSame($logger, $externalLogger);
         $this->assertSame(LogLevel::ERROR, $globalLevel);
         $this->assertArraySubset([InvalidArgumentException::class], $exceptions);
     }

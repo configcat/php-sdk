@@ -56,7 +56,7 @@ final class ConfigFetcher
      * @throws InvalidArgumentException
      *   When the $sdkKey, the $logger or the $cache is not legal.
      */
-    public function __construct($sdkKey, LoggerInterface $logger, array $options = [])
+    public function __construct(string $sdkKey, LoggerInterface $logger, array $options = [])
     {
         if (empty($sdkKey)) {
             throw new InvalidArgumentException("sdkKey cannot be empty.");
@@ -105,22 +105,22 @@ final class ConfigFetcher
     /**
      * Gets the latest configuration from the network.
      *
-     * @param string $etag The ETag.
-     * @param string $cachedUrl The cached cdn url.
+     * @param string|null $etag The ETag.
+     * @param string|null $cachedUrl The cached cdn url.
      *
      * @return FetchResponse An object describing the result of the fetch.
      */
-    public function fetch($etag, $cachedUrl)
+    public function fetch(?string $etag, ?string $cachedUrl): FetchResponse
     {
         return $this->executeFetch($etag, !empty($cachedUrl) ? $cachedUrl : $this->baseUrl, 2);
     }
 
-    public function getRequestOptions()
+    public function getRequestOptions(): array
     {
         return $this->requestOptions;
     }
 
-    private function executeFetch($etag, $url, $executionCount)
+    private function executeFetch(?string $etag, string $url, int $executionCount): FetchResponse
     {
         $response = $this->sendConfigFetchRequest($etag, $url);
 
@@ -158,7 +158,7 @@ final class ConfigFetcher
         return $response;
     }
 
-    private function sendConfigFetchRequest($etag, $url)
+    private function sendConfigFetchRequest(?string $etag, string $url): FetchResponse
     {
         if (!empty($etag)) {
             $this->requestOptions['headers']['If-None-Match'] = $etag;
@@ -214,7 +214,7 @@ final class ConfigFetcher
         }
     }
 
-    private function createClient($baseUrl)
+    private function createClient(string $baseUrl): Client
     {
         return new Client(array_merge([
             'base_uri' => $baseUrl

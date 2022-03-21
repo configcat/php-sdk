@@ -18,7 +18,7 @@ class LogLevel
     const EMERGENCY = 80;
     const NO_LOG = 90;
 
-    public static function isValid($level)
+    public static function isValid($level): bool
     {
         if (!is_int($level)) {
             return false;

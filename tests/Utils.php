@@ -10,7 +10,8 @@ use Monolog\Logger;
 
 class Utils
 {
-    public static function getTestLogger() {
+    public static function getTestLogger(): InternalLogger
+    {
         $handler = new ErrorLogHandler();
         $formatter = new LineFormatter(null, null, true, true);
         $handler->setFormatter($formatter);

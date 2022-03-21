@@ -59,7 +59,7 @@ final class RolloutEvaluator
      * @param User|null $user Optional. The user to identify the caller.
      * @return Pair The evaluated configuration value and Variation ID.
      */
-    public function evaluate($key, array $json, EvaluationLogCollector $logCollector, User $user = null)
+    public function evaluate(string $key, array $json, EvaluationLogCollector $logCollector, User $user = null): Pair
     {
         if (is_null($user)) {
             if (isset($json[SettingAttributes::ROLLOUT_RULES]) &&
@@ -72,7 +72,7 @@ final class RolloutEvaluator
             }
 
             $result = $json[SettingAttributes::VALUE];
-            $variationId = isset($json[SettingAttributes::VARIATION_ID]) ? $json[SettingAttributes::VARIATION_ID] : "";
+            $variationId = $json[SettingAttributes::VARIATION_ID] ?? "";
             $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
             return new Pair($variationId, $result);
         }
@@ -84,8 +84,7 @@ final class RolloutEvaluator
                 $comparisonValue = $rule[RolloutAttributes::COMPARISON_VALUE];
                 $comparator = $rule[RolloutAttributes::COMPARATOR];
                 $value = $rule[RolloutAttributes::VALUE];
-                $variationId = isset($rule[RolloutAttributes::VARIATION_ID]) ?
-                    $rule[RolloutAttributes::VARIATION_ID] : "";
+                $variationId = $rule[RolloutAttributes::VARIATION_ID] ?? "";
                 $userValue = $user->getAttribute($comparisonAttribute);
 
                 if (empty($comparisonValue) || (!is_numeric($userValue) && empty($userValue))) {
@@ -324,19 +323,19 @@ final class RolloutEvaluator
         }
 
         $result = $json[SettingAttributes::VALUE];
-        $variationId = isset($json[SettingAttributes::VARIATION_ID]) ? $json[SettingAttributes::VARIATION_ID] : "";
+        $variationId = $json[SettingAttributes::VARIATION_ID] ?? "";
         $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
         return new Pair($variationId, $result);
     }
 
-    private function logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value)
+    private function logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value): string
     {
         return "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
             "[" . $comparisonValue . "] => match, returning: " . Utils::getStringRepresentation($value) . ".";
     }
 
-    private function logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue)
+    private function logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue): string
     {
         return "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
@@ -349,7 +348,8 @@ final class RolloutEvaluator
         $comparator,
         $comparisonValue,
         Exception $exception
-    ) {
+    ): string
+    {
         $message = "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
             "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $exception->getMessage() . ".";
@@ -363,7 +363,8 @@ final class RolloutEvaluator
         $comparator,
         $comparisonValue,
         $message
-    ) {
+    ): string
+    {
         $message = "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
             "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . ".";

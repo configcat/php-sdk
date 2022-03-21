@@ -18,7 +18,7 @@ abstract class OverrideDataSource implements LoggerAwareInterface
      * Gets the overrides.
      * @return array The overrides.
      */
-    abstract public function getOverrides();
+    abstract public function getOverrides(): ?array;
 
     /**
      * Sets the logger.
@@ -34,7 +34,7 @@ abstract class OverrideDataSource implements LoggerAwareInterface
      * @param $filePath string The path to the file.
      * @return OverrideDataSource The constructed data source.
      */
-    public static function localFile($filePath)
+    public static function localFile(string $filePath): OverrideDataSource
     {
         return new LocalFileDataSource($filePath);
     }
@@ -44,7 +44,7 @@ abstract class OverrideDataSource implements LoggerAwareInterface
      * @param $overrides array The array that contains the overrides.
      * @return OverrideDataSource The constructed data source.
      */
-    public static function localArray($overrides)
+    public static function localArray(array $overrides): OverrideDataSource
     {
         return new ArrayDataSource($overrides);
     }

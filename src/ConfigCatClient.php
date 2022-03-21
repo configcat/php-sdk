@@ -13,7 +13,6 @@ use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
 use ConfigCat\Override\FlagOverrides;
 use ConfigCat\Override\OverrideBehaviour;
-use ConfigCat\Override\OverrideDataSource;
 use Exception;
 use InvalidArgumentException;
 use Monolog\Formatter\LineFormatter;
@@ -28,7 +27,7 @@ use Psr\Log\LoggerInterface;
 final class ConfigCatClient
 {
     /** @var string */
-    const SDK_VERSION = "5.4.0";
+    const SDK_VERSION = "6.0.0";
 
     /** @var LoggerInterface */
     private $logger;
@@ -68,7 +67,7 @@ final class ConfigCatClient
      * @throws InvalidArgumentException
      *   When the $sdkKey is not valid.
      */
-    public function __construct($sdkKey, array $options = [])
+    public function __construct(string $sdkKey, array $options = [])
     {
         if (empty($sdkKey)) {
             throw new InvalidArgumentException("'sdkKey' cannot be empty.");
@@ -125,7 +124,7 @@ final class ConfigCatClient
      * @param User|null $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValue($key, $defaultValue, User $user = null)
+    public function getValue(string $key, $defaultValue, User $user = null)
     {
         try {
             $config = $this->getConfig();
@@ -159,7 +158,7 @@ final class ConfigCatClient
      * @param User|null $user The user object to identify the caller.
      * @return mixed The Variation ID identified by the given key.
      */
-    public function getVariationId($key, $defaultVariationId, User $user = null)
+    public function getVariationId(string $key, $defaultVariationId, User $user = null)
     {
         try {
             $config = $this->getConfig();
@@ -191,7 +190,7 @@ final class ConfigCatClient
      * @param User|null $user The user object to identify the caller.
      * @return array of all Variation IDs.
      */
-    public function getAllVariationIds(User $user = null)
+    public function getAllVariationIds(User $user = null): array
     {
         try {
             $config = $this->getConfig();
@@ -209,7 +208,7 @@ final class ConfigCatClient
      * @param string $variationId The Variation ID.
      * @return Pair|null of the key and value of a setting.
      */
-    public function getKeyAndValue($variationId)
+    public function getKeyAndValue(string $variationId): ?Pair
     {
         try {
             $config = $this->getConfig();
@@ -226,7 +225,7 @@ final class ConfigCatClient
      *
      * @return array of keys.
      */
-    public function getAllKeys()
+    public function getAllKeys(): array
     {
         try {
             $config = $this->getConfig();
@@ -244,7 +243,7 @@ final class ConfigCatClient
      * @param User|null $user The user object to identify the caller.
      * @return array of values.
      */
-    public function getAllValues(User $user = null)
+    public function getAllValues(User $user = null): array
     {
         try {
             $config = $this->getConfig();
@@ -259,7 +258,7 @@ final class ConfigCatClient
     /**
      * Initiates a force refresh on the cached configuration.
      */
-    public function forceRefresh()
+    public function forceRefresh(): void
     {
         $cacheItem = $this->cache->load($this->cacheKey);
         if (is_null($cacheItem)) {
@@ -277,7 +276,7 @@ final class ConfigCatClient
         }
     }
 
-    private function parseValue($key, array $json, $defaultValue, User $user = null)
+    private function parseValue(string $key, array $json, $defaultValue, User $user = null)
     {
         $collector = new EvaluationLogCollector();
         $collector->add("Evaluating getValue(" . $key . ").");
@@ -286,16 +285,16 @@ final class ConfigCatClient
         return is_null($evaluated) ? $defaultValue : $evaluated->getValue();
     }
 
-    private function parseVariationId($key, array $json, $defaultValue, User $user = null)
+    private function parseVariationId($key, array $json, $defaultVariationId, User $user = null): string
     {
         $collector = new EvaluationLogCollector();
         $collector->add("Evaluating getVariationId(" . $key . ").");
         $evaluated = $this->evaluator->evaluate($key, $json, $collector, $user);
         $this->logger->info($collector);
-        return is_null($evaluated) ? $defaultValue : $evaluated->getKey();
+        return is_null($evaluated) ? $defaultVariationId : $evaluated->getKey();
     }
 
-    private function parseValues(array $json, User $user = null)
+    private function parseValues(array $json, User $user = null): array
     {
         $keys = array_keys($json);
         $result = [];
@@ -306,7 +305,7 @@ final class ConfigCatClient
         return $result;
     }
 
-    private function parseVariationIds(array $json, User $user = null)
+    private function parseVariationIds(array $json, User $user = null): array
     {
         $keys = array_keys($json);
         $result = [];
@@ -317,7 +316,7 @@ final class ConfigCatClient
         return $result;
     }
 
-    private function parseKeyAndValue(array $json, $variationId)
+    private function parseKeyAndValue(array $json, $variationId): ?Pair
     {
         foreach ($json as $key => $value) {
             if ($variationId == $value[SettingAttributes::VARIATION_ID]) {
@@ -406,7 +405,7 @@ final class ConfigCatClient
         return $cacheItem->config[Config::ENTRIES];
     }
 
-    private function getMonolog()
+    private function getMonolog(): Logger
     {
         $handler = new ErrorLogHandler();
         $formatter = new LineFormatter(null, null, true, true);
