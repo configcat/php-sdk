@@ -39,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         composer self-update
-        composer install --prefer-dist --no-progress --no-suggest
+        composer install --prefer-dist --no-progress --no-suggest --no-plugins
 
     - name: Execute tests
       run: vendor/bin/phpunit
@@ -71,7 +71,7 @@ jobs:
     - name: Install dependencies
       run: |
         composer self-update
-        composer install --prefer-dist --no-progress --no-suggest
+        composer install --prefer-dist --no-progress --no-suggest --no-plugins
 
     - name: Execute coverage
       run: vendor/bin/phpunit --coverage-clover clover.xml
