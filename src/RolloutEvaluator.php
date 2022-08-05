@@ -348,8 +348,7 @@ final class RolloutEvaluator
         $comparator,
         $comparisonValue,
         Exception $exception
-    ): string
-    {
+    ): string {
         $message = "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
             "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $exception->getMessage() . ".";
@@ -363,8 +362,7 @@ final class RolloutEvaluator
         $comparator,
         $comparisonValue,
         $message
-    ): string
-    {
+    ): string {
         $message = "Evaluating rule: [" . $comparisonAttribute . ":" . $userValue . "] " .
             "[" . $this->comparatorTexts[$comparator] . "] " .
             "[" . $comparisonValue . "] => SKIP rule. Validation error: " . $message . ".";
