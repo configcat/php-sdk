@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
  * A client for handling configurations provided by ConfigCat.
  * @package ConfigCat
  */
-final class ConfigCatClient
+final class ConfigCatClient implements ClientInterface
 {
     /** @var string */
     const SDK_VERSION = "6.0.0";
