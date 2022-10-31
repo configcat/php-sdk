@@ -248,7 +248,8 @@ final class ConfigCatClient implements ClientInterface
         } catch (Exception $exception) {
             $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
                 "Returning defaultVariationId: " . $defaultVariationId . ". "
-                . $exception->getMessage(), ['exception' => $exception]);
+                . $exception->getMessage(), ['exception' => $exception]
+            );
             return $defaultVariationId;
         }
     }
@@ -266,7 +267,8 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? [] : $this->parseVariationIds($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during getting all the variation ids. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+                . $exception->getMessage(), ['exception' => $exception]
+            );
             return [];
         }
     }
@@ -284,7 +286,8 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? null : $this->parseKeyAndValue($settingsResult->settings, $variationId);
         } catch (Exception $exception) {
             $this->logger->error("Could not find the setting for the given variation ID: " . $variationId . ". "
-                . $exception->getMessage(), ['exception' => $exception]);
+                . $exception->getMessage(), ['exception' => $exception]
+            );
             return null;
         }
     }
@@ -301,7 +304,8 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during the deserialization. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+                . $exception->getMessage(), ['exception' => $exception]
+            );
             return [];
         }
     }
@@ -319,7 +323,8 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during getting all values. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+                . $exception->getMessage(), ['exception' => $exception]
+            );
             return [];
         }
     }
@@ -395,14 +400,24 @@ final class ConfigCatClient implements ClientInterface
         return $result;
     }
 
-    private function evaluate(string $key, array $setting, ?User $user, int $fetchTime): EvaluationDetails {
+    private function evaluate(string $key, array $setting, ?User $user, int $fetchTime): EvaluationDetails
+    {
         $actualUser = is_null($user) ? $this->defaultUser : $user;
         $collector = new EvaluationLogCollector();
         $collector->add("Evaluating " . $key . ".");
         $result = $this->evaluator->evaluate($key, $setting, $collector, $actualUser);
         $this->logger->info($collector);
-        $details = new EvaluationDetails($key, $result->variationId, $result->value, $actualUser,
-            false, null, $fetchTime, $result->targetingRule, $result->percentageRule);
+        $details = new EvaluationDetails(
+            $key,
+            $result->variationId,
+            $result->value,
+            $actualUser,
+            false,
+            null,
+            $fetchTime,
+            $result->targetingRule,
+            $result->percentageRule
+        );
         $this->hooks->fireOnFlagEvaluated($details);
         return $details;
     }
