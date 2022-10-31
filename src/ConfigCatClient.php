@@ -320,7 +320,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Initiates a force refresh on the cached configuration.
      */
-    public function forceRefresh(): void
+    public function forceRefresh(): RefreshResult
     {
         $cacheItem = $this->cache->load($this->cacheKey);
         if (is_null($cacheItem)) {
@@ -336,6 +336,8 @@ final class ConfigCatClient implements ClientInterface
 
             $this->cache->store($this->cacheKey, $cacheItem);
         }
+
+        return new RefreshResult(!$response->isFailed(), $response->getError());
     }
 
     /**

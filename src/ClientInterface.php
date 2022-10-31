@@ -72,7 +72,7 @@ interface ClientInterface
     /**
      * Initiates a force refresh on the cached configuration.
      */
-    public function forceRefresh(): void;
+    public function forceRefresh(): RefreshResult;
 
     /**
      * Sets the default user.

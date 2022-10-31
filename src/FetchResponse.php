@@ -24,6 +24,8 @@ final class FetchResponse
     private $etag;
     /** @var string */
     private $url;
+    /** @var string|null */
+    private $error;
 
     /**
      * FetchResponse constructor.
@@ -33,12 +35,13 @@ final class FetchResponse
      * @param array|null $body The decoded JSON configuration.
      * @param string|null $url The url pointing to the proper cdn server.
      */
-    public function __construct(int $status, string $etag = null, ?array $body = null, ?string $url = null)
+    public function __construct(int $status, string $etag = null, ?array $body = null, ?string $url = null, ?string $error = null)
     {
         $this->status = $status;
         $this->body = $body;
         $this->etag = $etag;
         $this->url = $url;
+        $this->error = $error;
     }
 
     /**
@@ -99,5 +102,15 @@ final class FetchResponse
     public function getUrl(): ?string
     {
         return $this->url;
+    }
+
+    /**
+     * Returns the error if the fetch failed.
+     *
+     * @return string|null The error.
+     */
+    public function getError(): ?string
+    {
+        return $this->error;
     }
 }
