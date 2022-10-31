@@ -149,6 +149,9 @@ final class ConfigCatClient implements ClientInterface
         try {
             $settingsResult = $this->getSettings();
             if (empty($settingsResult->settings)) {
+                $message = "Config JSON is not present. Returning defaultValue: '" . $defaultValue . "'.";
+                $this->logger->error($message);
+                $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError($key, $defaultValue, $user, $message));
                 return $defaultValue;
             }
 
@@ -186,7 +189,11 @@ final class ConfigCatClient implements ClientInterface
         try {
             $settingsResult = $this->getSettings();
             if (empty($settingsResult->settings)) {
-                return $defaultValue;
+                $message = "Config JSON is not present. Returning defaultValue: '" . $defaultValue . "'.";
+                $this->logger->error($message);
+                $details = EvaluationDetails::fromError($key, $defaultValue, $user, $message);
+                $this->hooks->fireOnFlagEvaluated($details);
+                return $details;
             }
 
             if (!array_key_exists($key, $settingsResult->settings)) {

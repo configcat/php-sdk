@@ -308,6 +308,7 @@ class ConfigCatClientTest extends TestCase
         $this->assertEquals(2, $details->getMatchedEvaluationRule()["t"]);
         $this->assertNull($details->getMatchedEvaluationPercentageRule());
         $this->assertTrue($details->getFetchTimeUnixSeconds() > 0);
+        $this->assertFalse($details->isDefaultValue());
     }
 
     public function testEvalDetailsHook()
@@ -327,6 +328,7 @@ class ConfigCatClientTest extends TestCase
             $this->assertEquals("@test1.com", $details->getMatchedEvaluationRule()["c"]);
             $this->assertEquals(2, $details->getMatchedEvaluationRule()["t"]);
             $this->assertNull($details->getMatchedEvaluationPercentageRule());
+            $this->assertFalse($details->isDefaultValue());
             $this->assertTrue($details->getFetchTimeUnixSeconds() > 0);
             $called = true;
         });

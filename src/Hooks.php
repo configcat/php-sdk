@@ -41,7 +41,7 @@ final class Hooks
     /**
      * @internal
      */
-    function fireOnConfigChanged(array $settings) {
+    public function fireOnConfigChanged(array $settings) {
         foreach ($this->onConfigChanged as $callback) {
             call_user_func($callback, $settings);
         }
@@ -50,7 +50,7 @@ final class Hooks
     /**
      * @internal
      */
-    function fireOnFlagEvaluated(EvaluationDetails $details) {
+    public function fireOnFlagEvaluated(EvaluationDetails $details) {
         foreach ($this->onFlagEvaluated as $callback) {
             call_user_func($callback, $details);
         }
@@ -59,7 +59,7 @@ final class Hooks
     /**
      * @internal
      */
-    function fireOnError(string $error) {
+    public function fireOnError(string $error) {
         foreach ($this->onError as $callback) {
             call_user_func($callback, $error);
         }

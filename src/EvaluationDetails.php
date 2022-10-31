@@ -39,7 +39,10 @@ class EvaluationDetails
         $this->matchedEvaluationPercentageRule = $matchedEvaluationPercentageRule;
     }
 
-    static function fromError(string $key, $value, ?User $user, string $error): EvaluationDetails {
+    /**
+     * @internal
+     */
+    public static function fromError(string $key, $value, ?User $user, string $error): EvaluationDetails {
         return new EvaluationDetails($key, null, $value, $user, true, $error, 0, null, null);
     }
 
