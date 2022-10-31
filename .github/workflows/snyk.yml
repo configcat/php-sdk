@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer self-update
-          composer install --prefer-dist --no-progress --no-suggest
+          composer install --prefer-dist --no-progress --no-suggest --no-plugins
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/php@master
