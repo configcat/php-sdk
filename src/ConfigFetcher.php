@@ -10,7 +10,6 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
-use PHP_CodeSniffer\Tests\Core\File\testFECNClassThatExtendsAndImplements;
 use Psr\Log\LoggerInterface;
 
 /**
