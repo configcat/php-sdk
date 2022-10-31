@@ -5,6 +5,7 @@ namespace ConfigCat;
 /**
  * Contains helper utility operations.
  * @package ConfigCat
+ * @internal
  */
 final class Utils
 {

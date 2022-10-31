@@ -5,6 +5,7 @@ namespace ConfigCat;
 /**
  * Represents a fetch response, including its state and body.
  * @package ConfigCat
+ * @internal
  */
 final class FetchResponse
 {
@@ -28,11 +29,11 @@ final class FetchResponse
      * FetchResponse constructor.
      *
      * @param int $status The fetch status code.
-     * @param string|null The received ETag.
+     * @param string|null $etag The received ETag.
      * @param array|null $body The decoded JSON configuration.
      * @param string|null $url The url pointing to the proper cdn server.
      */
-    public function __construct(int $status, $etag = null, ?array $body = null, ?string $url = null)
+    public function __construct(int $status, string $etag = null, ?array $body = null, ?string $url = null)
     {
         $this->status = $status;
         $this->body = $body;

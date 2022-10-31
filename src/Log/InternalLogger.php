@@ -2,12 +2,14 @@
 
 namespace ConfigCat\Log;
 
+use ConfigCat\Hooks;
 use Psr\Log\LoggerInterface;
 
 /**
  * A Psr\Log\LoggerInterface for internal use only.
  * It handles the ConfigCat SDK specific log level and custom log entry filters.
  * @package ConfigCat
+ * @internal
  */
 class InternalLogger implements LoggerInterface
 {
@@ -23,16 +25,22 @@ class InternalLogger implements LoggerInterface
      * @var array
      */
     private $exceptionsToIgnore;
+    /**
+     * @var Hooks
+     */
+    private $hooks;
 
-    public function __construct(LoggerInterface $logger, $globalLevel, array $exceptionsToIgnore)
+    public function __construct(LoggerInterface $logger, $globalLevel, array $exceptionsToIgnore, Hooks $hooks)
     {
         $this->logger = $logger;
         $this->globalLevel = $globalLevel;
         $this->exceptionsToIgnore = $exceptionsToIgnore;
+        $this->hooks = $hooks;
     }
 
     public function emergency($message, array $context = []): void
     {
+        $this->hooks->fireOnError($message);
         if ($this->shouldLog(LogLevel::EMERGENCY, $context)) {
             $this->logger->emergency($message, $context);
         }
@@ -40,6 +48,7 @@ class InternalLogger implements LoggerInterface
 
     public function alert($message, array $context = []): void
     {
+        $this->hooks->fireOnError($message);
         if ($this->shouldLog(LogLevel::ALERT, $context)) {
             $this->logger->alert($message, $context);
         }
@@ -47,6 +56,7 @@ class InternalLogger implements LoggerInterface
 
     public function critical($message, array $context = []): void
     {
+        $this->hooks->fireOnError($message);
         if ($this->shouldLog(LogLevel::CRITICAL, $context)) {
             $this->logger->critical($message, $context);
         }
@@ -54,6 +64,7 @@ class InternalLogger implements LoggerInterface
 
     public function error($message, array $context = []): void
     {
+        $this->hooks->fireOnError($message);
         if ($this->shouldLog(LogLevel::ERROR, $context)) {
             $this->logger->error($message, $context);
         }

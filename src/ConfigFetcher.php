@@ -15,6 +15,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class ConfigFetcher This class is used to fetch the latest configuration.
  * @package ConfigCat
+ * @internal
  */
 final class ConfigFetcher
 {
@@ -40,6 +41,8 @@ final class ConfigFetcher
     private $baseUrl;
     /** @var bool */
     private $urlIsCustom = false;
+    /** @var Client */
+    private $client;
 
     /**
      * ConfigFetcher constructor.
@@ -100,6 +103,8 @@ final class ConfigFetcher
         $this->clientOptions = isset($options[ClientOptions::CUSTOM_HANDLER])
             ? ['handler' => $options[ClientOptions::CUSTOM_HANDLER]]
             : [];
+
+        $this->client = new Client($this->clientOptions);
     }
 
     /**
@@ -165,8 +170,8 @@ final class ConfigFetcher
         }
 
         try {
-            $client = $this->createClient($url);
-            $response = $client->get($this->urlPath, $this->requestOptions);
+            $configJsonUrl = sprintf("%s/%s", $url, $this->urlPath);
+            $response = $this->client->get($configJsonUrl, $this->requestOptions);
             $statusCode = $response->getStatusCode();
 
             if ($statusCode >= 200 && $statusCode < 300) {
@@ -212,12 +217,5 @@ final class ConfigFetcher
                 . $exception->getMessage(), ['exception' => $exception]);
             return new FetchResponse(FetchResponse::FAILED);
         }
-    }
-
-    private function createClient(string $baseUrl): Client
-    {
-        return new Client(array_merge([
-            'base_uri' => $baseUrl
-        ], $this->clientOptions));
     }
 }

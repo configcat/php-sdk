@@ -8,11 +8,12 @@ use ConfigCat\Attributes\SettingAttributes;
 use Exception;
 use Psr\Log\LoggerInterface;
 use z4kn4fein\SemVer\Version;
-use z4kn4fein\SemVer\VersionFormatException;
+use z4kn4fein\SemVer\SemverException;
 
 /**
  * Class RolloutEvaluator
  * @package ConfigCat
+ * @internal
  */
 final class RolloutEvaluator
 {
@@ -57,9 +58,9 @@ final class RolloutEvaluator
      * @param array $json The decoded JSON configuration.
      * @param EvaluationLogCollector $logCollector The evaluation log collector.
      * @param User|null $user Optional. The user to identify the caller.
-     * @return Pair The evaluated configuration value and Variation ID.
+     * @return EvaluationResult The evaluation result.
      */
-    public function evaluate(string $key, array $json, EvaluationLogCollector $logCollector, User $user = null): Pair
+    public function evaluate(string $key, array $json, EvaluationLogCollector $logCollector, User $user = null): EvaluationResult
     {
         if (is_null($user)) {
             if (isset($json[SettingAttributes::ROLLOUT_RULES]) &&
@@ -74,7 +75,7 @@ final class RolloutEvaluator
             $result = $json[SettingAttributes::VALUE];
             $variationId = $json[SettingAttributes::VARIATION_ID] ?? "";
             $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
-            return new Pair($variationId, $result);
+            return new EvaluationResult($result, $variationId, null, null);
         }
 
         $logCollector->add("User object: " . $user);
@@ -109,7 +110,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                     //IS NOT ONE OF
@@ -123,7 +124,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                     //CONTAINS
@@ -136,7 +137,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                     //DOES NOT CONTAIN
@@ -149,7 +150,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                     //IS ONE OF, IS NOT ONE OF (SemVer)
@@ -170,9 +171,9 @@ final class RolloutEvaluator
                                     $comparisonValue,
                                     $value
                                 ));
-                                return new Pair($variationId, $value);
+                                return new EvaluationResult($value, $variationId, $rule, null);
                             }
-                        } catch (VersionFormatException $exception) {
+                        } catch (SemverException $exception) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
@@ -205,9 +206,9 @@ final class RolloutEvaluator
                                     $comparisonValue,
                                     $value
                                 ));
-                                return new Pair($variationId, $value);
+                                return new EvaluationResult($value, $variationId, $rule, null);
                             }
-                        } catch (VersionFormatException $exception) {
+                        } catch (SemverException $exception) {
                             $logCollector->add($this->logFormatError(
                                 $comparisonAttribute,
                                 $userValue,
@@ -265,7 +266,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                     //IS ONE OF (Sensitive)
@@ -279,7 +280,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                     //IS NOT ONE OF (Sensitive)
@@ -293,7 +294,7 @@ final class RolloutEvaluator
                                 $comparisonValue,
                                 $value
                             ));
-                            return new Pair($variationId, $value);
+                            return new EvaluationResult($value, $variationId, $rule, null);
                         }
                         break;
                 }
@@ -317,7 +318,7 @@ final class RolloutEvaluator
                     $logCollector->add(
                         "Evaluating % options. Returning " . Utils::getStringRepresentation($result) . "."
                     );
-                    return new Pair($variationId, $result);
+                    return new EvaluationResult($result, $variationId, null, $rule);
                 }
             }
         }
@@ -325,7 +326,7 @@ final class RolloutEvaluator
         $result = $json[SettingAttributes::VALUE];
         $variationId = $json[SettingAttributes::VARIATION_ID] ?? "";
         $logCollector->add("Returning " . Utils::getStringRepresentation($result) . ".");
-        return new Pair($variationId, $result);
+        return new EvaluationResult($result, $variationId, null, null);
     }
 
     private function logMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue, $value): string

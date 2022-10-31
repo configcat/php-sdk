@@ -2,6 +2,9 @@
 
 namespace ConfigCat;
 
+/**
+ * @internal
+ */
 class EvaluationLogCollector
 {
     /** @var array */
