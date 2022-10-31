@@ -278,13 +278,16 @@ class ConfigCatClientTest extends TestCase
         });
 
         $client->getValue("first", false);
-        $client->forceRefresh();
+        $result = $client->forceRefresh();
 
 
         $this->assertTrue($evaluated);
         $this->assertTrue($error);
         $this->assertEquals("Double-check your SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400", $message);
         $this->assertTrue($changed);
+
+        $this->assertFalse($result->isSuccess());
+        $this->assertEquals("Double-check your SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400", $result->getError());
     }
 
     public function testEvalDetails()

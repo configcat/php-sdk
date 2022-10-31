@@ -20,28 +20,54 @@ final class FetchResponse
     private $body;
     /** @var int */
     private $status;
-    /** @var string */
+    /** @var string|null */
     private $etag;
     /** @var string */
     private $url;
     /** @var string|null */
     private $error;
 
-    /**
-     * FetchResponse constructor.
-     *
-     * @param int $status The fetch status code.
-     * @param string|null $etag The received ETag.
-     * @param array|null $body The decoded JSON configuration.
-     * @param string|null $url The url pointing to the proper cdn server.
-     */
-    public function __construct(int $status, string $etag = null, ?array $body = null, ?string $url = null, ?string $error = null)
+    private function __construct(int $status, ?string $etag = null, ?array $body = null, ?string $url = null, ?string $error = null)
     {
         $this->status = $status;
         $this->body = $body;
         $this->etag = $etag;
         $this->url = $url;
         $this->error = $error;
+    }
+
+    /**
+     * Creates a new response with FAILED status.
+     *
+     * @param string $error the reason of the failure.
+     * @return FetchResponse the response.
+     */
+    public static function failure(string $error): FetchResponse
+    {
+        return new FetchResponse(self::FAILED, null, null, null, $error);
+    }
+
+    /**
+     * Creates a new response with NOT_MODIFIED status.
+     *
+     * @return FetchResponse the response.
+     */
+    public static function notModified(): FetchResponse
+    {
+        return new FetchResponse(self::NOT_MODIFIED, null, null, null, null);
+    }
+
+    /**
+     * Creates a new response with FETCHED status.
+     *
+     * @param string|null $etag the ETag.
+     * @param array $body the response body.
+     * @param string $url the fetched url.
+     * @return FetchResponse the response.
+     */
+    public static function success(?string $etag, array $body, string $url): FetchResponse
+    {
+        return new FetchResponse(self::FETCHED, $etag, $body, $url, null);
     }
 
     /**

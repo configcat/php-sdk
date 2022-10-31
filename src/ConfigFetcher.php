@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
+use PHP_CodeSniffer\Tests\Core\File\testFECNClassThatExtendsAndImplements;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -179,8 +180,9 @@ final class ConfigFetcher
 
                 $body = json_decode($response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    $this->logger->error(json_last_error_msg());
-                    return new FetchResponse(FetchResponse::FAILED);
+                    $message = json_last_error_msg();
+                    $this->logger->error($message);
+                    return FetchResponse::failure($message);
                 }
 
                 if ($response->hasHeader(self::ETAG_HEADER)) {
@@ -192,30 +194,30 @@ final class ConfigFetcher
                     $newUrl = $body[Config::PREFERENCES][Preferences::BASE_URL];
                 }
 
-                return new FetchResponse(FetchResponse::FETCHED, $etag, $body, $newUrl);
+                return FetchResponse::success($etag, $body, $newUrl);
             } elseif ($statusCode === 304) {
                 $this->logger->debug("Fetch was successful: config not modified.");
-                return new FetchResponse(FetchResponse::NOT_MODIFIED);
+                return FetchResponse::notModified();
             }
 
-            $this->logger->error("Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
-                "Received unexpected response: " . $statusCode);
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
+                "Received unexpected response: " . $statusCode;
+            $this->logger->error($message);
+            return FetchResponse::failure($message);
         } catch (ConnectException $exception) {
             $connTimeout = $this->requestOptions[RequestOptions::CONNECT_TIMEOUT];
             $timeout = $this->requestOptions[RequestOptions::TIMEOUT];
-            $this->logger->error(
-                "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]",
-                ['exception' => $exception]
-            );
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]";
+            $this->logger->error($message, ['exception' => $exception]);
+            return FetchResponse::failure($message);
         } catch (GuzzleException $exception) {
-            $this->logger->error("HTTP exception: ". $exception->getMessage(), ['exception' => $exception]);
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "HTTP exception: ". $exception->getMessage();
+            $this->logger->error($message, ['exception' => $exception]);
+            return FetchResponse::failure($message);
         } catch (Exception $exception) {
-            $this->logger->error("Exception during fetch: "
-                . $exception->getMessage(), ['exception' => $exception]);
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "Exception during fetch: " . $exception->getMessage();
+            $this->logger->error($message, ['exception' => $exception]);
+            return FetchResponse::failure($message);
         }
     }
 }
