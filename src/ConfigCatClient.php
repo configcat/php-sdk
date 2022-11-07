@@ -399,6 +399,14 @@ final class ConfigCatClient implements ClientInterface
         $this->offline = false;
     }
 
+    /**
+     * Indicates whether the SDK should be initialized in offline mode or not.
+     */
+    public function isOffline(): bool
+    {
+        return $this->offline;
+    }
+
     private function parseValues(SettingsResult $settingsResult, User $user = null): array
     {
         $keys = array_keys($settingsResult->settings);

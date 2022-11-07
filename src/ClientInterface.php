@@ -102,4 +102,9 @@ interface ClientInterface
      * Configures the SDK to allow HTTP requests.
      */
     public function setOnline();
+
+    /**
+     * Indicates whether the SDK should be initialized in offline mode or not.
+     */
+    public function isOffline(): bool;
 }
