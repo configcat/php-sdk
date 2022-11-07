@@ -267,6 +267,7 @@ class ConfigCatClientTest extends TestCase
             ClientOptions::CUSTOM_HANDLER => $handler,
         ]);
 
+        $this->assertFalse($client->isOffline());
         $client->forceRefresh();
 
         $this->assertEquals(2, $handler->count());
@@ -276,11 +277,13 @@ class ConfigCatClientTest extends TestCase
         $client->forceRefresh();
 
         $this->assertEquals(2, $handler->count());
+        $this->assertTrue($client->isOffline());
 
         $client->setOnline();
         $client->forceRefresh();
 
         $this->assertEquals(1, $handler->count());
+        $this->assertFalse($client->isOffline());
     }
 
     public function testInitOfflineOnline()
@@ -298,6 +301,8 @@ class ConfigCatClientTest extends TestCase
             ClientOptions::OFFLINE => true
         ]);
 
+        $this->assertTrue($client->isOffline());
+
         $client->forceRefresh();
         $client->forceRefresh();
 
@@ -307,6 +312,7 @@ class ConfigCatClientTest extends TestCase
         $client->forceRefresh();
 
         $this->assertEquals(2, $handler->count());
+        $this->assertFalse($client->isOffline());
     }
 
     public function testHooks()
