@@ -76,6 +76,8 @@ interface ClientInterface
 
     /**
      * Sets the default user.
+     *
+     * @param User $user The default user.
      */
     public function setDefaultUser(User $user);
 
@@ -90,4 +92,14 @@ interface ClientInterface
      * @return Hooks for subscribing to SDK events.
      */
     public function hooks(): Hooks;
+
+    /**
+     * Configures the SDK to not initiate HTTP requests.
+     */
+    public function setOffline();
+
+    /**
+     * Configures the SDK to allow HTTP requests.
+     */
+    public function setOnline();
 }

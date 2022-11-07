@@ -60,4 +60,9 @@ final class ClientOptions
      * feature flags & settings.
      */
     const FLAG_OVERRIDES = "flag-overrides";
+
+    /**
+     * Default: false. Indicates whether the SDK should be initialized in offline mode or not.
+     */
+    const OFFLINE = "offline";
 }

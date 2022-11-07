@@ -25,7 +25,7 @@ class RolloutIntegrationsTest extends TestCase
         $rows = self::readCsv("tests/" . $file);
         $settingKeys = array_slice($rows[0], 4);
         $customKey = $rows[0][3];
-        $client = ConfigCatClient::get($sdkKey, [
+        $client = new ConfigCatClient($sdkKey, [
             ClientOptions::LOG_LEVEL => LogLevel::WARNING
         ]);
 

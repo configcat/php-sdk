@@ -47,10 +47,34 @@ final class ConfigCatClient implements ClientInterface
     private $defaultUser;
     /** @var Hooks */
     private $hooks;
+    /** @var bool */
+    private $offline = false;
 
-    private static $instances = [];
-
-    private function __construct(string $sdkKey, array $options = [])
+    /**
+     * Creates a new ConfigCatClient.
+     *
+     * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
+     * @param array $options The configuration options:
+     *     - base-url: The base ConfigCat CDN url.
+     *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
+     *     - cache: A \ConfigCat\ConfigCache implementation used for caching the latest feature flag and setting values.
+     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
+     *     - request-options: Additional options for Guzzle http requests.
+     *                        https://docs.guzzlephp.org/en/stable/request-options.html
+     *     - custom-handler: A custom callable Guzzle http handler.
+     *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
+     *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
+     *                        (Only Organization Admins can access)
+     *     - exceptions-to-ignore: Array of exception classes that should be ignored from logs.
+     *     - flag-overrides: A \ConfigCat\Override\FlagOverrides instance used to override
+     *                       feature flags & settings.
+     *     - log-level: Default: Warning. Sets the internal log level.
+     *     - offline: Default: false. Indicates whether the SDK should be initialized in offline mode or not.
+     *
+     * @throws InvalidArgumentException
+     *   When the $sdkKey is not valid.
+     */
+    public function __construct(string $sdkKey, array $options = [])
     {
         if (empty($sdkKey)) {
             throw new InvalidArgumentException("'sdkKey' cannot be empty.");
@@ -95,45 +119,13 @@ final class ConfigCatClient implements ClientInterface
             $this->overrides->setLogger($this->logger);
         }
 
+        if (isset($options[ClientOptions::OFFLINE]) && $options[ClientOptions::OFFLINE] === true) {
+            $this->offline = true;
+        }
+
         $this->cache->setLogger($this->logger);
         $this->fetcher = new ConfigFetcher($sdkKey, $this->logger, $options);
         $this->evaluator = new RolloutEvaluator($this->logger);
-    }
-
-    /**
-     * Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
-     *
-     * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
-     * @param array $options The configuration options:
-     *     - base-url: The base ConfigCat CDN url.
-     *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
-     *     - cache: A \ConfigCat\ConfigCache implementation used for caching the latest feature flag and setting values.
-     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
-     *     - request-options: Additional options for Guzzle http requests.
-     *                        https://docs.guzzlephp.org/en/stable/request-options.html
-     *     - custom-handler: A custom callable Guzzle http handler.
-     *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance
-     *                        preference on the Dashboard: https://app.configcat.com/organization/data-governance
-     *                        (Only Organization Admins can access)
-     *     - exceptions-to-ignore: Array of exception classes that should be ignored from logs.
-     *     - flag-overrides: A \ConfigCat\Override\FlagOverrides instance used to override
-     *                       feature flags & settings.
-     *     - log-level: Default: Warning. Sets the internal log level.
-     *
-     * @throws InvalidArgumentException
-     *   When the $sdkKey is not valid.
-     */
-    public static function get(string $sdkKey, array $options = []): ConfigCatClient
-    {
-        if (empty($sdkKey)) {
-            throw new InvalidArgumentException("'sdkKey' cannot be empty.");
-        }
-
-        if (array_key_exists($sdkKey, self::$instances)) {
-            return self::$instances[$sdkKey];
-        }
-
-        return self::$instances[$sdkKey] = new ConfigCatClient($sdkKey, $options);
     }
 
     /**
@@ -165,7 +157,12 @@ final class ConfigCatClient implements ClientInterface
                 return $defaultValue;
             }
 
-            return $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime)->getValue();
+            return $this->evaluate(
+                $key,
+                $settingsResult->settings[$key],
+                $user,
+                $settingsResult->fetchTime
+            )->getValue();
         } catch (Exception $exception) {
             $message = "Evaluating getValue('" . $key . "') failed. " .
                 "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". "
@@ -244,12 +241,16 @@ final class ConfigCatClient implements ClientInterface
                 return $defaultVariationId;
             }
 
-            return $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime)->getVariationId();
+            return $this->evaluate(
+                $key,
+                $settingsResult->settings[$key],
+                $user,
+                $settingsResult->fetchTime
+            )->getVariationId();
         } catch (Exception $exception) {
             $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
                 "Returning defaultVariationId: " . $defaultVariationId . ". "
-                . $exception->getMessage(), ['exception' => $exception]
-            );
+                . $exception->getMessage(), ['exception' => $exception]);
             return $defaultVariationId;
         }
     }
@@ -267,8 +268,7 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? [] : $this->parseVariationIds($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during getting all the variation ids. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]
-            );
+                . $exception->getMessage(), ['exception' => $exception]);
             return [];
         }
     }
@@ -283,11 +283,12 @@ final class ConfigCatClient implements ClientInterface
     {
         try {
             $settingsResult = $this->getSettings();
-            return is_null($settingsResult->settings) ? null : $this->parseKeyAndValue($settingsResult->settings, $variationId);
+            return is_null($settingsResult->settings)
+                ? null
+                : $this->parseKeyAndValue($settingsResult->settings, $variationId);
         } catch (Exception $exception) {
             $this->logger->error("Could not find the setting for the given variation ID: " . $variationId . ". "
-                . $exception->getMessage(), ['exception' => $exception]
-            );
+                . $exception->getMessage(), ['exception' => $exception]);
             return null;
         }
     }
@@ -304,8 +305,7 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during the deserialization. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]
-            );
+                . $exception->getMessage(), ['exception' => $exception]);
             return [];
         }
     }
@@ -323,8 +323,7 @@ final class ConfigCatClient implements ClientInterface
             return is_null($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during getting all values. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]
-            );
+                . $exception->getMessage(), ['exception' => $exception]);
             return [];
         }
     }
@@ -334,20 +333,26 @@ final class ConfigCatClient implements ClientInterface
      */
     public function forceRefresh(): RefreshResult
     {
+        if (!is_null($this->overrides) && $this->overrides->getBehaviour() == OverrideBehaviour::LOCAL_ONLY) {
+            return new RefreshResult(
+                false,
+                "The ConfigCat SDK is in local-only mode. Calling .forceRefresh() has no effect."
+            );
+        }
+
+        if ($this->offline) {
+            $message = "The SDK is in offline mode, it can't initiate HTTP calls.";
+            $this->logger->warning($message);
+            return new RefreshResult(false, $message);
+        }
+
         $cacheItem = $this->cache->load($this->cacheKey);
         if (is_null($cacheItem)) {
             $cacheItem = new CacheItem();
         }
 
         $response = $this->fetcher->fetch("", $cacheItem->url);
-        if (!$response->isFailed()) {
-            $cacheItem->lastRefreshed = time();
-            $cacheItem->config = $response->getBody();
-            $cacheItem->etag = $response->getETag();
-            $cacheItem->url = $response->getUrl();
-
-            $this->cache->store($this->cacheKey, $cacheItem);
-        }
+        $this->handleResponse($response, $cacheItem);
 
         return new RefreshResult(!$response->isFailed(), $response->getError());
     }
@@ -378,12 +383,33 @@ final class ConfigCatClient implements ClientInterface
         return $this->hooks;
     }
 
+    /**
+     * Configures the SDK to not initiate HTTP requests.
+     */
+    public function setOffline()
+    {
+        $this->offline = true;
+    }
+
+    /**
+     * Configures the SDK to allow HTTP requests.
+     */
+    public function setOnline()
+    {
+        $this->offline = false;
+    }
+
     private function parseValues(SettingsResult $settingsResult, User $user = null): array
     {
         $keys = array_keys($settingsResult->settings);
         $result = [];
         foreach ($keys as $key) {
-            $result[$key] = $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime)->getValue();
+            $result[$key] = $this->evaluate(
+                $key,
+                $settingsResult->settings[$key],
+                $user,
+                $settingsResult->fetchTime
+            )->getValue();
         }
 
         return $result;
@@ -394,7 +420,12 @@ final class ConfigCatClient implements ClientInterface
         $keys = array_keys($settingsResult->settings);
         $result = [];
         foreach ($keys as $key) {
-            $result[] = $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime)->getVariationId();
+            $result[] = $this->evaluate(
+                $key,
+                $settingsResult->settings[$key],
+                $user,
+                $settingsResult->fetchTime
+            )->getVariationId();
         }
 
         return $result;
@@ -484,24 +515,9 @@ final class ConfigCatClient implements ClientInterface
             $cacheItem = new CacheItem();
         }
 
-        if ($cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
+        if (!$this->offline && $cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
             $response = $this->fetcher->fetch($cacheItem->etag, $cacheItem->url);
-
-            if (!$response->isFailed()) {
-                if ($response->isFetched()) {
-                    $cacheItem->lastRefreshed = time();
-                    $cacheItem->config = $response->getBody();
-                    $cacheItem->etag = $response->getETag();
-                    $cacheItem->url = $response->getUrl();
-                    $this->hooks->fireOnConfigChanged($cacheItem->config[Config::ENTRIES]);
-                }
-
-                if ($response->isNotModified()) {
-                    $cacheItem->lastRefreshed = time();
-                }
-
-                $this->cache->store($this->cacheKey, $cacheItem);
-            }
+            $this->handleResponse($response, $cacheItem);
         }
 
         if (empty($cacheItem->config)) {
@@ -512,19 +528,26 @@ final class ConfigCatClient implements ClientInterface
         return new SettingsResult($cacheItem->config[Config::ENTRIES], $cacheItem->lastRefreshed);
     }
 
+    private function handleResponse(FetchResponse $response, CacheItem $cacheItem)
+    {
+        if (!$response->isFailed()) {
+            if ($response->isFetched()) {
+                $cacheItem->config = $response->getBody();
+                $cacheItem->etag = $response->getETag();
+                $cacheItem->url = $response->getUrl();
+                $this->hooks->fireOnConfigChanged($cacheItem->config[Config::ENTRIES]);
+            }
+
+            $cacheItem->lastRefreshed = time();
+            $this->cache->store($this->cacheKey, $cacheItem);
+        }
+    }
+
     private function getMonolog(): Logger
     {
         $handler = new ErrorLogHandler();
         $formatter = new LineFormatter(null, null, true, true);
         $handler->setFormatter($formatter);
         return new Logger("ConfigCat", [$handler]);
-    }
-
-    /**
-     * Private clone method to prevent cloning of the instance of the
-     * *Singleton* instance.
-     */
-    private function __clone()
-    {
     }
 }
