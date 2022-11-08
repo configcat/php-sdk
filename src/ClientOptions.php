@@ -62,6 +62,11 @@ final class ClientOptions
     const FLAG_OVERRIDES = "flag-overrides";
 
     /**
+     * A \ConfigCat\User as default user.
+     */
+    const DEFAULT_USER = "default-user";
+
+    /**
      * Default: false. Indicates whether the SDK should be initialized in offline mode or not.
      */
     const OFFLINE = "offline";

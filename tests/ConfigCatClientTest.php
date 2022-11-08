@@ -230,6 +230,29 @@ class ConfigCatClientTest extends TestCase
         $this->assertEquals("def", $value);
     }
 
+    public function testInitDefaultUser()
+    {
+        $client = new ConfigCatClient("testInitDefaultUser",
+            [
+                ClientOptions::CUSTOM_HANDLER => new MockHandler([new Response(200, [], Utils::formatConfigWithRules())]),
+                ClientOptions::DEFAULT_USER => new User("test@test1.com")
+            ]
+        );
+
+        $user2 = new User("test@test2.com");
+
+        $value = $client->getValue("key", "");
+        $this->assertEquals("fake1", $value);
+
+        $value = $client->getValue("key", "", $user2);
+        $this->assertEquals("fake2", $value);
+
+        $client->clearDefaultUser();
+
+        $value = $client->getValue("key", "");
+        $this->assertEquals("def", $value);
+    }
+
     public function testDefaultUserVariationId()
     {
         $client = new ConfigCatClient("testDefaultUserVariationId", [ClientOptions::CUSTOM_HANDLER => new MockHandler([

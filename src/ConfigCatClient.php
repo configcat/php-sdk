@@ -69,6 +69,7 @@ final class ConfigCatClient implements ClientInterface
      *     - flag-overrides: A \ConfigCat\Override\FlagOverrides instance used to override
      *                       feature flags & settings.
      *     - log-level: Default: Warning. Sets the internal log level.
+     *     - default-user: A \ConfigCat\User as default user.
      *     - offline: Default: false. Indicates whether the SDK should be initialized in offline mode or not.
      *
      * @throws InvalidArgumentException
@@ -103,6 +104,11 @@ final class ConfigCatClient implements ClientInterface
         $this->overrides = (isset($options[ClientOptions::FLAG_OVERRIDES]) &&
             $options[ClientOptions::FLAG_OVERRIDES] instanceof FlagOverrides)
             ? $options[ClientOptions::FLAG_OVERRIDES]
+            : null;
+
+        $this->defaultUser = (isset($options[ClientOptions::DEFAULT_USER]) &&
+            $options[ClientOptions::DEFAULT_USER] instanceof User)
+            ? $options[ClientOptions::DEFAULT_USER]
             : null;
 
         $this->cache = (isset($options[ClientOptions::CACHE]) && $options[ClientOptions::CACHE] instanceof ConfigCache)
