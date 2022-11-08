@@ -402,7 +402,7 @@ class ConfigCatClientTest extends TestCase
         $this->assertTrue($called);
     }
 
-    public function testTimout()
+    public function testTimeout()
     {
         $client = new ConfigCatClient("testTimout", [
             ClientOptions::CUSTOM_HANDLER => new MockHandler([
