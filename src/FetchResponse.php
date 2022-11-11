@@ -27,8 +27,13 @@ final class FetchResponse
     /** @var string|null */
     private $error;
 
-    private function __construct(int $status, ?string $etag = null, ?array $body = null, ?string $url = null, ?string $error = null)
-    {
+    private function __construct(
+        int $status,
+        ?string $etag = null,
+        ?array $body = null,
+        ?string $url = null,
+        ?string $error = null
+    ) {
         $this->status = $status;
         $this->body = $body;
         $this->etag = $etag;

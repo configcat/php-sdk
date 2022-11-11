@@ -26,8 +26,17 @@ class EvaluationDetails
     /**
      * @internal
      */
-    public function __construct(string $key, ?string $variationId, $value, ?User $user, bool $isDefaultValue, ?string $error, int $fetchTimeUnixSeconds, ?array $matchedEvaluationRule, ?array $matchedEvaluationPercentageRule)
-    {
+    public function __construct(
+        string $key,
+        ?string $variationId,
+        $value,
+        ?User $user,
+        bool $isDefaultValue,
+        ?string $error,
+        int $fetchTimeUnixSeconds,
+        ?array $matchedEvaluationRule,
+        ?array $matchedEvaluationPercentageRule
+    ) {
         $this->key = $key;
         $this->variationId = $variationId;
         $this->value = $value;
@@ -44,7 +53,17 @@ class EvaluationDetails
      */
     public static function fromError(string $key, $value, ?User $user, string $error): EvaluationDetails
     {
-        return new EvaluationDetails($key, null, $value, $user, true, $error, 0, null, null);
+        return new EvaluationDetails(
+            $key,
+            null,
+            $value,
+            $user,
+            true,
+            $error,
+            0,
+            null,
+            null
+        );
     }
 
     /**

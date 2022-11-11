@@ -60,8 +60,12 @@ final class RolloutEvaluator
      * @param User|null $user Optional. The user to identify the caller.
      * @return EvaluationResult The evaluation result.
      */
-    public function evaluate(string $key, array $json, EvaluationLogCollector $logCollector, User $user = null): EvaluationResult
-    {
+    public function evaluate(
+        string $key,
+        array $json,
+        EvaluationLogCollector $logCollector,
+        User $user = null
+    ): EvaluationResult {
         if (is_null($user)) {
             if (isset($json[SettingAttributes::ROLLOUT_RULES]) &&
                 !empty($json[SettingAttributes::ROLLOUT_RULES]) ||
