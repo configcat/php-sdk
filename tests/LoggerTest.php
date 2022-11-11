@@ -2,6 +2,7 @@
 
 namespace ConfigCat\Tests;
 
+use ConfigCat\Hooks;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +15,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, 0, [InvalidArgumentException::class]);
+        $logger = new InternalLogger($mockLogger, 0, [InvalidArgumentException::class], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -62,7 +63,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::INFO, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::INFO, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -110,7 +111,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::NOTICE, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::NOTICE, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -158,7 +159,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::WARNING, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::WARNING, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -206,7 +207,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::ERROR, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::ERROR, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -254,7 +255,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::CRITICAL, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::CRITICAL, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -302,7 +303,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::ALERT, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::ALERT, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -350,7 +351,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::EMERGENCY, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::EMERGENCY, [], new Hooks());
 
         $mockLogger
             ->expects(self::once())
@@ -398,7 +399,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::NO_LOG, []);
+        $logger = new InternalLogger($mockLogger, LogLevel::NO_LOG, [], new Hooks());
 
         $mockLogger
             ->expects(self::never())
@@ -446,7 +447,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $logger = new InternalLogger($mockLogger, LogLevel::EMERGENCY, [InvalidArgumentException::class]);
+        $logger = new InternalLogger($mockLogger, LogLevel::EMERGENCY, [InvalidArgumentException::class], new Hooks());
 
         $mockLogger
             ->expects(self::never())

@@ -3,13 +3,13 @@
 namespace ConfigCat\Cache;
 
 /**
- * Represents a simple cache which just uses an array to store the values.
+ * Represents a simple cache which just uses a shared array to store the values.
  * @package ConfigCat
  */
 final class ArrayCache extends ConfigCache
 {
     /** @var array */
-    protected $arrayCache = [];
+    private static $arrayCache = [];
 
     /**
      * Reads the value identified by the given $key from the underlying cache.
@@ -19,7 +19,7 @@ final class ArrayCache extends ConfigCache
      */
     protected function get(string $key): ?string
     {
-        return array_key_exists($key, $this->arrayCache) ? $this->arrayCache[$key] : null;
+        return array_key_exists($key, self::$arrayCache) ? self::$arrayCache[$key] : null;
     }
 
     /**
@@ -30,6 +30,6 @@ final class ArrayCache extends ConfigCache
      */
     protected function set(string $key, string $value): void
     {
-        $this->arrayCache[$key] = $value;
+        self::$arrayCache[$key] = $value;
     }
 }

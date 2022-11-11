@@ -34,10 +34,10 @@ class RolloutIntegrationsTest extends TestCase
         $keys = $client->getAllKeys();
         $diff = array_diff($settingKeys, $keys);
         if (!empty($diff)) {
-            array_push($errors, sprintf("Not all keys are found, Expected: %s, Result: %s, Diff: %s",
+            $errors[] = sprintf("Not all keys are found, Expected: %s, Result: %s, Diff: %s",
                 print_r($settingKeys, true),
                 print_r($keys, true),
-                print_r($diff, true)));
+                print_r($diff, true));
         }
 
         foreach (range(1, count($rows) - 1) as $i) {
@@ -88,7 +88,7 @@ class RolloutIntegrationsTest extends TestCase
                 }
 
                 if ($expected !== $actual) {
-                    array_push($errors, sprintf("Identifier: %s, SettingKey: %s, UV: %s, Expected: %s, Result: %s", $testObjects[0], $key, $testObjects[3], $expected, $actual));
+                    $errors[] = sprintf("Identifier: %s, SettingKey: %s, UV: %s, Expected: %s, Result: %s", $testObjects[0], $key, $testObjects[3], $expected, $actual);
                 }
                 $count++;
             }
@@ -97,12 +97,12 @@ class RolloutIntegrationsTest extends TestCase
         $this->assertEquals(0, count($errors));
     }
 
-    private static function readCsv($file, $delimiter = ';')
+    private static function readCsv($file): array
     {
         $rows = [];
         if (($handle = fopen($file, "r")) !== false) {
-            while (($data = fgetcsv($handle, 1200, $delimiter)) !== false) {
-                array_push($rows, $data);
+            while (($data = fgetcsv($handle, 1200, ';')) !== false) {
+                $rows[] = $data;
             }
             fclose($handle);
         }
@@ -110,7 +110,7 @@ class RolloutIntegrationsTest extends TestCase
         return $rows;
     }
 
-    public function rolloutTestData()
+    public function rolloutTestData(): array
     {
         return [
             ["testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", self::valueKind],

@@ -19,6 +19,16 @@ interface ClientInterface
     public function getValue(string $key, $defaultValue, User $user = null);
 
     /**
+     * Gets the value and evaluation details of a feature flag or setting identified by the given key.
+     *
+     * @param string $key The identifier of the configuration value.
+     * @param mixed $defaultValue In case of any failure, this value will be returned.
+     * @param User|null $user The user object to identify the caller.
+     * @return mixed The configuration value identified by the given key.
+     */
+    public function getValueDetails(string $key, $defaultValue, User $user = null): EvaluationDetails;
+
+    /**
      * Gets the Variation ID (analytics) of a feature flag or setting by the given key.
      *
      * @param string $key The identifier of the configuration value.
@@ -62,5 +72,39 @@ interface ClientInterface
     /**
      * Initiates a force refresh on the cached configuration.
      */
-    public function forceRefresh(): void;
+    public function forceRefresh(): RefreshResult;
+
+    /**
+     * Sets the default user.
+     *
+     * @param User $user The default user.
+     */
+    public function setDefaultUser(User $user);
+
+    /**
+     * Sets the default user to null.
+     */
+    public function clearDefaultUser();
+
+    /**
+     * Gets the Hooks object for subscribing to SDK events.
+     *
+     * @return Hooks for subscribing to SDK events.
+     */
+    public function hooks(): Hooks;
+
+    /**
+     * Configures the SDK to not initiate HTTP requests.
+     */
+    public function setOffline();
+
+    /**
+     * Configures the SDK to allow HTTP requests.
+     */
+    public function setOnline();
+
+    /**
+     * Indicates whether the SDK should be initialized in offline mode or not.
+     */
+    public function isOffline(): bool;
 }

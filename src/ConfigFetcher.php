@@ -15,6 +15,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class ConfigFetcher This class is used to fetch the latest configuration.
  * @package ConfigCat
+ * @internal
  */
 final class ConfigFetcher
 {
@@ -40,6 +41,8 @@ final class ConfigFetcher
     private $baseUrl;
     /** @var bool */
     private $urlIsCustom = false;
+    /** @var Client */
+    private $client;
 
     /**
      * ConfigFetcher constructor.
@@ -100,6 +103,8 @@ final class ConfigFetcher
         $this->clientOptions = isset($options[ClientOptions::CUSTOM_HANDLER])
             ? ['handler' => $options[ClientOptions::CUSTOM_HANDLER]]
             : [];
+
+        $this->client = new Client($this->clientOptions);
     }
 
     /**
@@ -165,8 +170,8 @@ final class ConfigFetcher
         }
 
         try {
-            $client = $this->createClient($url);
-            $response = $client->get($this->urlPath, $this->requestOptions);
+            $configJsonUrl = sprintf("%s/%s", $url, $this->urlPath);
+            $response = $this->client->get($configJsonUrl, $this->requestOptions);
             $statusCode = $response->getStatusCode();
 
             if ($statusCode >= 200 && $statusCode < 300) {
@@ -174,8 +179,9 @@ final class ConfigFetcher
 
                 $body = json_decode($response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    $this->logger->error(json_last_error_msg());
-                    return new FetchResponse(FetchResponse::FAILED);
+                    $message = json_last_error_msg();
+                    $this->logger->error($message);
+                    return FetchResponse::failure($message);
                 }
 
                 if ($response->hasHeader(self::ETAG_HEADER)) {
@@ -187,37 +193,30 @@ final class ConfigFetcher
                     $newUrl = $body[Config::PREFERENCES][Preferences::BASE_URL];
                 }
 
-                return new FetchResponse(FetchResponse::FETCHED, $etag, $body, $newUrl);
+                return FetchResponse::success($etag, $body, $newUrl);
             } elseif ($statusCode === 304) {
                 $this->logger->debug("Fetch was successful: config not modified.");
-                return new FetchResponse(FetchResponse::NOT_MODIFIED);
+                return FetchResponse::notModified();
             }
 
-            $this->logger->error("Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
-                "Received unexpected response: " . $statusCode);
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
+                "Received unexpected response: " . $statusCode;
+            $this->logger->error($message);
+            return FetchResponse::failure($message);
         } catch (ConnectException $exception) {
             $connTimeout = $this->requestOptions[RequestOptions::CONNECT_TIMEOUT];
             $timeout = $this->requestOptions[RequestOptions::TIMEOUT];
-            $this->logger->error(
-                "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]",
-                ['exception' => $exception]
-            );
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]";
+            $this->logger->error($message, ['exception' => $exception]);
+            return FetchResponse::failure($message);
         } catch (GuzzleException $exception) {
-            $this->logger->error("HTTP exception: ". $exception->getMessage(), ['exception' => $exception]);
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "HTTP exception: ". $exception->getMessage();
+            $this->logger->error($message, ['exception' => $exception]);
+            return FetchResponse::failure($message);
         } catch (Exception $exception) {
-            $this->logger->error("Exception during fetch: "
-                . $exception->getMessage(), ['exception' => $exception]);
-            return new FetchResponse(FetchResponse::FAILED);
+            $message = "Exception during fetch: " . $exception->getMessage();
+            $this->logger->error($message, ['exception' => $exception]);
+            return FetchResponse::failure($message);
         }
-    }
-
-    private function createClient(string $baseUrl): Client
-    {
-        return new Client(array_merge([
-            'base_uri' => $baseUrl
-        ], $this->clientOptions));
     }
 }
