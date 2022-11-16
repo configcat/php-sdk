@@ -2,6 +2,8 @@
 
 namespace ConfigCat\Tests;
 
+use ConfigCat\ClientOptions;
+use ConfigCat\ConfigCatClient;
 use ConfigCat\Hooks;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
@@ -441,6 +443,50 @@ class LoggerTest extends TestCase
         $logger->info("");
         $logger->debug("");
         $logger->warning("");
+    }
+
+    public function testClientNoLog()
+    {
+        $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
+
+        $client = new ConfigCatClient("not-existing", [
+           ClientOptions::LOGGER => $mockLogger,
+           ClientOptions::LOG_LEVEL => LogLevel::NO_LOG
+        ]);
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("emergency");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("alert");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("critical");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("error");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("warning");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("notice");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("info");
+
+        $mockLogger
+            ->expects(self::never())
+            ->method("debug");
+
+        $client->getValue("fake", false);
     }
 
     public function testLoggerBypassesLogWhenExceptionIsIgnored()

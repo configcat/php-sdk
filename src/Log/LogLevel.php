@@ -31,6 +31,7 @@ class LogLevel
             $level == self::ERROR ||
             $level == self::CRITICAL ||
             $level == self::ALERT ||
-            $level == self::EMERGENCY;
+            $level == self::EMERGENCY ||
+            $level == self::NO_LOG;
     }
 }
