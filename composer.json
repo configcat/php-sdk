@@ -14,10 +14,10 @@
   ],
   "require": {
     "php": ">=8.1",
-    "guzzlehttp/guzzle": "^6.5|^7.4",
+    "guzzlehttp/guzzle": "^6.5 || ^7.4",
     "psr/log": "^2.0 || ^3.0",
     "ext-json": "*",
-    "monolog/monolog": "^3.0",
+    "monolog/monolog": "^2.0 || ^3.0",
     "z4kn4fein/php-semver": "^2.0"
   },
   "require-dev": {
