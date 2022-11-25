@@ -1,6 +1,10 @@
 {
+    "name": "configcat/vanilla-php-sample",
+    "description": "Sample: ConfigCat integration into vanilla PHP.",
     "require": {
-        "configcat/configcat-client": "^6",
-        "monolog/monolog": "^1.0"
-    }
+        "php": "^8.1",
+        "configcat/configcat-client": "^7"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
