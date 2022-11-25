@@ -42,5 +42,4 @@
     "psr/simple-cache": "When using any PSR16 SimpleCache implementation, a pre-built cache adapter \\ConfigCat\\Psr16Cache can be used as the main cache of the library.",
     "laravel/framework": "When using laravel, a pre-built cache adapter \\ConfigCat\\LaravelCache can be used as the main cache of the library."
   }
-  }
 }
