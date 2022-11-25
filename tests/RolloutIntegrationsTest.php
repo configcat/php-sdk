@@ -10,23 +10,19 @@ use PHPUnit\Framework\TestCase;
 
 class RolloutIntegrationsTest extends TestCase
 {
-    const valueKind = 0;
-    const variationKind = 1;
+    final public const valueKind = 0;
+    final public const variationKind = 1;
 
     /**
-     * @param $file
-     * @param $sdkKey
-     * @param $kind
-     *
      * @dataProvider rolloutTestData
      */
     public function testRolloutIntegration($file, $sdkKey, $kind)
     {
-        $rows = self::readCsv("tests/" . $file);
-        $settingKeys = array_slice($rows[0], 4);
+        $rows = self::readCsv('tests/'.$file);
+        $settingKeys = \array_slice($rows[0], 4);
         $customKey = $rows[0][3];
         $client = new ConfigCatClient($sdkKey, [
-            ClientOptions::LOG_LEVEL => LogLevel::WARNING
+            ClientOptions::LOG_LEVEL => LogLevel::WARNING,
         ]);
 
         $errors = [];
@@ -34,32 +30,32 @@ class RolloutIntegrationsTest extends TestCase
         $keys = $client->getAllKeys();
         $diff = array_diff($settingKeys, $keys);
         if (!empty($diff)) {
-            $errors[] = sprintf("Not all keys are found, Expected: %s, Result: %s, Diff: %s",
+            $errors[] = sprintf('Not all keys are found, Expected: %s, Result: %s, Diff: %s',
                 print_r($settingKeys, true),
                 print_r($keys, true),
                 print_r($diff, true));
         }
 
-        foreach (range(1, count($rows) - 1) as $i) {
+        foreach (range(1, \count($rows) - 1) as $i) {
             $testObjects = $rows[$i];
 
             $user = null;
-            if ($testObjects[0] !== "##null##") {
+            if ('##null##' !== $testObjects[0]) {
                 $identifier = $testObjects[0];
 
-                $email = "";
-                $country = "";
+                $email = '';
+                $country = '';
 
-                if (!empty($testObjects[1]) && $testObjects[1] !== "##null##") {
+                if (!empty($testObjects[1]) && '##null##' !== $testObjects[1]) {
                     $email = $testObjects[1];
                 }
 
-                if (!empty($testObjects[2]) && $testObjects[2] !== "##null##") {
+                if (!empty($testObjects[2]) && '##null##' !== $testObjects[2]) {
                     $country = $testObjects[2];
                 }
 
                 $custom = [];
-                if (!empty($testObjects[3]) && $testObjects[3] !== "##null##") {
+                if (!empty($testObjects[3]) && '##null##' !== $testObjects[3]) {
                     $custom[$customKey] = $testObjects[3];
                 } elseif (is_numeric($testObjects[3])) {
                     $custom[$customKey] = $testObjects[3];
@@ -71,36 +67,36 @@ class RolloutIntegrationsTest extends TestCase
             $count = 0;
             foreach ($settingKeys as $key) {
                 $expected = $testObjects[$count + 4];
-                $actual = $kind == self::valueKind
+                $actual = self::valueKind == $kind
                     ? $client->getValue($key, null, $user)
                     : $client->getVariationId($key, null, $user);
 
-                if (is_bool($actual)) {
-                    $actual = $actual ? "True" : "False";
+                if (\is_bool($actual)) {
+                    $actual = $actual ? 'True' : 'False';
                 }
 
-                if (is_int($actual)) {
-                    $expected = intval($expected);
+                if (\is_int($actual)) {
+                    $expected = (int) $expected;
                 }
 
-                if (is_double($actual)) {
-                    $expected = floatval($expected);
+                if (\is_float($actual)) {
+                    $expected = (float) $expected;
                 }
 
                 if ($expected !== $actual) {
-                    $errors[] = sprintf("Identifier: %s, SettingKey: %s, UV: %s, Expected: %s, Result: %s", $testObjects[0], $key, $testObjects[3], $expected, $actual);
+                    $errors[] = sprintf('Identifier: %s, SettingKey: %s, UV: %s, Expected: %s, Result: %s', $testObjects[0], $key, $testObjects[3], $expected, $actual);
                 }
-                $count++;
+                ++$count;
             }
         }
 
-        $this->assertEquals(0, count($errors));
+        $this->assertEquals(0, \count($errors));
     }
 
     private static function readCsv($file): array
     {
         $rows = [];
-        if (($handle = fopen($file, "r")) !== false) {
+        if (($handle = fopen($file, 'r')) !== false) {
             while (($data = fgetcsv($handle, 1200, ';')) !== false) {
                 $rows[] = $data;
             }
@@ -113,12 +109,12 @@ class RolloutIntegrationsTest extends TestCase
     public function rolloutTestData(): array
     {
         return [
-            ["testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", self::valueKind],
-            ["testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", self::valueKind],
-            ["testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", self::valueKind],
-            ["testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", self::valueKind],
-            ["testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", self::valueKind],
-            ["testmatrix_variationId.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", self::variationKind],
+            ['testmatrix.csv', 'PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A', self::valueKind],
+            ['testmatrix_semantic.csv', 'PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA', self::valueKind],
+            ['testmatrix_number.csv', 'PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw', self::valueKind],
+            ['testmatrix_semantic_2.csv', 'PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w', self::valueKind],
+            ['testmatrix_sensitive.csv', 'PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA', self::valueKind],
+            ['testmatrix_variationId.csv', 'PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA', self::variationKind],
         ];
     }
 }

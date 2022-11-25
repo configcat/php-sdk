@@ -5,10 +5,9 @@ namespace ConfigCat;
 /**
  * @internal
  */
-class EvaluationLogCollector
+class EvaluationLogCollector implements \Stringable
 {
-    /** @var array */
-    private $entries = [];
+    private array $entries = [];
 
     public function add($entry): void
     {
@@ -17,6 +16,6 @@ class EvaluationLogCollector
 
     public function __toString(): string
     {
-        return join(PHP_EOL, $this->entries);
+        return implode(\PHP_EOL, $this->entries);
     }
 }

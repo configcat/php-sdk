@@ -8,21 +8,20 @@ use InvalidArgumentException;
 
 /**
  * Describes a local file override data source.
- * @package ConfigCat
  */
 class LocalFileDataSource extends OverrideDataSource
 {
-    /** @var string */
-    private $filePath;
+    private readonly string $filePath;
 
     /**
      * Constructs a local file data source.
-     * @param $filePath string The path to the file.
+     *
+     * @param $filePath string The path to the file
      */
     public function __construct(string $filePath)
     {
         if (!file_exists($filePath)) {
-            throw new InvalidArgumentException("The file '" . $filePath . "' doesn't exist.");
+            throw new InvalidArgumentException("The file '".$filePath."' doesn't exist.");
         }
 
         $this->filePath = $filePath;
@@ -30,21 +29,24 @@ class LocalFileDataSource extends OverrideDataSource
 
     /**
      * Gets the overrides.
-     * @return array The overrides.
+     *
+     * @return array|null the overrides
      */
     public function getOverrides(): ?array
     {
         $content = file_get_contents($this->filePath);
-        if ($content === false) {
-            $this->logger->error("Could not read the contents of the file " . $this->filePath . ".");
+        if (false === $content) {
+            $this->logger->error('Could not read the contents of the file '.$this->filePath.'.');
+
             return null;
         }
 
         $json = json_decode($content, true);
 
-        if ($json == null) {
-            $this->logger->error("Could not decode json from file " . $this->filePath . ". JSON error: 
-                " . json_last_error_msg() . "");
+        if (null == $json) {
+            $this->logger->error('Could not decode json from file '.$this->filePath.'. JSON error:
+                '.json_last_error_msg().'');
+
             return null;
         }
 
@@ -52,11 +54,13 @@ class LocalFileDataSource extends OverrideDataSource
             $result = [];
             foreach ($json['flags'] as $key => $value) {
                 $result[$key] = [
-                    SettingAttributes::VALUE => $value
+                    SettingAttributes::VALUE => $value,
                 ];
             }
+
             return $result;
         }
+
         return $json[Config::ENTRIES];
     }
 }

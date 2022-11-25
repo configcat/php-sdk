@@ -4,13 +4,12 @@ namespace ConfigCat\Attributes;
 
 /**
  * Represents the JSON keys of a ConfigCat setting.
- * @package ConfigCat
  */
 class SettingAttributes
 {
-    const VALUE = "v";
-    const TYPE = "t";
-    const ROLLOUT_PERCENTAGE_ITEMS = "p";
-    const ROLLOUT_RULES = "r";
-    const VARIATION_ID = "i";
+    final public const VALUE = 'v';
+    final public const TYPE = 't';
+    final public const ROLLOUT_PERCENTAGE_ITEMS = 'p';
+    final public const ROLLOUT_RULES = 'r';
+    final public const VARIATION_ID = 'i';
 }
