@@ -16,7 +16,7 @@ interface ClientInterface
      * @param User|null $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValue(string $key, $defaultValue, User $user = null);
+    public function getValue(string $key, mixed $defaultValue, User $user = null): mixed;
 
     /**
      * Gets the value and evaluation details of a feature flag or setting identified by the given key.
@@ -26,7 +26,7 @@ interface ClientInterface
      * @param User|null $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValueDetails(string $key, $defaultValue, User $user = null): EvaluationDetails;
+    public function getValueDetails(string $key, mixed $defaultValue, User $user = null): EvaluationDetails;
 
     /**
      * Gets the Variation ID (analytics) of a feature flag or setting by the given key.
@@ -36,7 +36,7 @@ interface ClientInterface
      * @param User|null $user The user object to identify the caller.
      * @return mixed The Variation ID identified by the given key.
      */
-    public function getVariationId(string $key, $defaultVariationId, User $user = null);
+    public function getVariationId(string $key, mixed $defaultVariationId, User $user = null): mixed;
 
     /**
      * Gets the Variation IDs (analytics) of all feature flags or settings.

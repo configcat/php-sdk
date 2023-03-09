@@ -4,48 +4,20 @@ namespace ConfigCat;
 
 class EvaluationDetails
 {
-    /** @var string */
-    private $key;
-    /** @var string|null */
-    private $variationId;
-    /** @var mixed */
-    private $value;
-    /** @var User|null */
-    private $user;
-    /** @var bool */
-    private $isDefaultValue;
-    /** @var string */
-    private $error;
-    /** @var int */
-    private $fetchTimeUnixSeconds;
-    /** @var array|null */
-    private $matchedEvaluationRule;
-    /** @var array|null */
-    private $matchedEvaluationPercentageRule;
-
     /**
      * @internal
      */
     public function __construct(
-        string $key,
-        ?string $variationId,
-        $value,
-        ?User $user,
-        bool $isDefaultValue,
-        ?string $error,
-        int $fetchTimeUnixSeconds,
-        ?array $matchedEvaluationRule,
-        ?array $matchedEvaluationPercentageRule
+        private readonly string $key,
+        private readonly ?string $variationId,
+        private readonly mixed $value,
+        private readonly ?User $user,
+        private readonly bool $isDefaultValue,
+        private readonly ?string $error,
+        private readonly int $fetchTimeUnixSeconds,
+        private readonly ?array $matchedEvaluationRule,
+        private readonly ?array $matchedEvaluationPercentageRule
     ) {
-        $this->key = $key;
-        $this->variationId = $variationId;
-        $this->value = $value;
-        $this->user = $user;
-        $this->isDefaultValue = $isDefaultValue;
-        $this->error = $error;
-        $this->fetchTimeUnixSeconds = $fetchTimeUnixSeconds;
-        $this->matchedEvaluationRule = $matchedEvaluationRule;
-        $this->matchedEvaluationPercentageRule = $matchedEvaluationPercentageRule;
     }
 
     /**
@@ -75,7 +47,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return string the variation ID (analytics)
+     * @return ?string the variation ID (analytics)
      */
     public function getVariationId(): ?string
     {
@@ -85,13 +57,13 @@ class EvaluationDetails
     /**
      * @return mixed the evaluated value of the feature flag or setting.
      */
-    public function getValue()
+    public function getValue(): mixed
     {
         return $this->value;
     }
 
     /**
-     * @return User the user object that was used for evaluation.
+     * @return ?User the user object that was used for evaluation.
      */
     public function getUser(): ?User
     {
@@ -107,7 +79,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return string in case of an error, the error message.
+     * @return ?string in case of an error, the error message.
      */
     public function getError(): ?string
     {
@@ -123,7 +95,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return array the targeting rule the evaluation was based on.
+     * @return ?array the targeting rule the evaluation was based on.
      */
     public function getMatchedEvaluationRule(): ?array
     {
@@ -131,7 +103,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return array the percentage rule the evaluation was based on.
+     * @return ?array the percentage rule the evaluation was based on.
      */
     public function getMatchedEvaluationPercentageRule(): ?array
     {

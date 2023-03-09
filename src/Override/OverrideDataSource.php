@@ -11,12 +11,11 @@ use Psr\Log\LoggerInterface;
  */
 abstract class OverrideDataSource implements LoggerAwareInterface
 {
-    /** @var LoggerInterface */
-    protected $logger;
+    protected LoggerInterface $logger;
 
     /**
      * Gets the overrides.
-     * @return array The overrides.
+     * @return ?array The overrides.
      */
     abstract public function getOverrides(): ?array;
 
@@ -24,7 +23,7 @@ abstract class OverrideDataSource implements LoggerAwareInterface
      * Sets the logger.
      * @param LoggerInterface $logger The logger.
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }

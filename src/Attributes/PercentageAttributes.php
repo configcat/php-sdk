@@ -8,7 +8,7 @@ namespace ConfigCat\Attributes;
  */
 class PercentageAttributes
 {
-    const VALUE = "v";
-    const PERCENTAGE = "p";
-    const VARIATION_ID = "i";
+    public const VALUE = "v";
+    public const PERCENTAGE = "p";
+    public const VARIATION_ID = "i";
 }

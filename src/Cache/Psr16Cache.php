@@ -7,19 +7,15 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class Psr16Cache extends ConfigCache
 {
-    /** @var CacheInterface */
-    private $cache;
-
-    public function __construct(CacheInterface $cache)
+    public function __construct(private readonly CacheInterface $cache)
     {
-        $this->cache = $cache;
     }
 
     /**
      * Reads the value identified by the given $key from the underlying cache.
      *
      * @param string $key Identifier for the cached value.
-     * @return string|null Cached value for the given key, or null if it's missing.
+     * @return ?string Cached value for the given key, or null if it's missing.
      *
      * @throws InvalidArgumentException If the $key is not a legal value.
      */

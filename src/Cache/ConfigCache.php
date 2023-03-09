@@ -13,8 +13,7 @@ use Psr\Log\LoggerInterface;
  */
 abstract class ConfigCache implements LoggerAwareInterface
 {
-    /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * Reads the value identified by the given $key from the underlying cache.
@@ -58,7 +57,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * Reads the value identified by the given $key from the underlying cache.
      *
      * @param string $key Identifier for the cached value.
-     * @return CacheItem|null Cached value for the given key, or null if it's missing.
+     * @return ?CacheItem Cached value for the given key, or null if it's missing.
      *
      * @throws InvalidArgumentException
      *   If the $key is not a legal value.

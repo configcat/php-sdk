@@ -8,9 +8,9 @@ namespace ConfigCat\Attributes;
  */
 class SettingAttributes
 {
-    const VALUE = "v";
-    const TYPE = "t";
-    const ROLLOUT_PERCENTAGE_ITEMS = "p";
-    const ROLLOUT_RULES = "r";
-    const VARIATION_ID = "i";
+    public const VALUE = "v";
+    public const TYPE = "t";
+    public const ROLLOUT_PERCENTAGE_ITEMS = "p";
+    public const ROLLOUT_RULES = "r";
+    public const VARIATION_ID = "i";
 }

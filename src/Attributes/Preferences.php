@@ -8,6 +8,6 @@ namespace ConfigCat\Attributes;
  */
 class Preferences
 {
-    const BASE_URL = "u";
-    const REDIRECT = "r";
+    public const BASE_URL = "u";
+    public const REDIRECT = "r";
 }

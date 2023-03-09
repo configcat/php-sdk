@@ -7,16 +7,15 @@ namespace ConfigCat;
  */
 class EvaluationLogCollector
 {
-    /** @var array */
-    private $entries = [];
+    private array $entries = [];
 
-    public function add($entry): void
+    public function add(string $entry): void
     {
         $this->entries[] = $entry;
     }
 
     public function __toString(): string
     {
-        return join(PHP_EOL, $this->entries);
+        return implode(PHP_EOL, $this->entries);
     }
 }

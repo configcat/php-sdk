@@ -8,15 +8,15 @@ namespace ConfigCat\Log;
  */
 class LogLevel
 {
-    const DEBUG = 10;
-    const INFO = 20;
-    const NOTICE = 30;
-    const WARNING = 40;
-    const ERROR = 50;
-    const CRITICAL = 60;
-    const ALERT = 70;
-    const EMERGENCY = 80;
-    const NO_LOG = 90;
+    public const DEBUG = 10;
+    public const INFO = 20;
+    public const NOTICE = 30;
+    public const WARNING = 40;
+    public const ERROR = 50;
+    public const CRITICAL = 60;
+    public const ALERT = 70;
+    public const EMERGENCY = 80;
+    public const NO_LOG = 90;
 
     public static function isValid($level): bool
     {

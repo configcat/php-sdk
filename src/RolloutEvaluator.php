@@ -17,10 +17,7 @@ use z4kn4fein\SemVer\SemverException;
  */
 final class RolloutEvaluator
 {
-    /** @var LoggerInterface */
-    private $logger;
-
-    private $comparatorTexts = [
+    private array $comparatorTexts = [
         "IS ONE OF",
         "IS NOT ONE OF",
         "CONTAINS",
@@ -46,9 +43,8 @@ final class RolloutEvaluator
      *
      * @param LoggerInterface $logger The logger instance.
      */
-    public function __construct(LoggerInterface $logger)
+    public function __construct(private readonly LoggerInterface $logger)
     {
-        $this->logger = $logger;
     }
 
     /**
@@ -57,16 +53,16 @@ final class RolloutEvaluator
      * @param string $key The key of the desired value.
      * @param array $json The decoded JSON configuration.
      * @param EvaluationLogCollector $logCollector The evaluation log collector.
-     * @param User|null $user Optional. The user to identify the caller.
+     * @param ?User $user Optional. The user to identify the caller.
      * @return EvaluationResult The evaluation result.
      */
     public function evaluate(
         string $key,
         array $json,
         EvaluationLogCollector $logCollector,
-        User $user = null
+        ?User $user = null
     ): EvaluationResult {
-        if (is_null($user)) {
+        if ($user === null) {
             if (isset($json[SettingAttributes::ROLLOUT_RULES]) &&
                 !empty($json[SettingAttributes::ROLLOUT_RULES]) ||
                 isset($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS]) &&
@@ -177,7 +173,7 @@ final class RolloutEvaluator
                                 ));
                                 return new EvaluationResult($value, $variationId, $rule, null);
                             }
-                        } catch (SemverException $exception) {
+                        } catch (SemverException) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,

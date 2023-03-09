@@ -8,18 +8,15 @@ namespace ConfigCat;
  */
 final class Hooks
 {
-    /** @var array */
-    private $onConfigChanged = [];
-    /** @var array */
-    private $onFlagEvaluated = [];
-    /** @var array */
-    private $onError = [];
+    private array $onConfigChanged = [];
+    private array $onFlagEvaluated = [];
+    private array $onError = [];
 
     /**
      * This event is sent when the SDK loads a valid config.json into memory from cache,
      * and each subsequent time when the loaded config.json changes via HTTP.
      */
-    public function addOnConfigChanged(callable $callback)
+    public function addOnConfigChanged(callable $callback): void
     {
         $this->onConfigChanged[] = $callback;
     }
@@ -28,7 +25,7 @@ final class Hooks
      * This event is sent each time when the SDK evaluates a feature flag or setting. The event sends
      * the same evaluation details that you would get from [ConfigCatClient.getValueDetails].
      */
-    public function addOnFlagEvaluated(callable $callback)
+    public function addOnFlagEvaluated(callable $callback): void
     {
         $this->onFlagEvaluated[] = $callback;
     }
@@ -36,7 +33,7 @@ final class Hooks
     /**
      * This event is sent when an error occurs within the SDK.
      */
-    public function addOnError(callable $callback)
+    public function addOnError(callable $callback): void
     {
         $this->onError[] = $callback;
     }
@@ -44,7 +41,7 @@ final class Hooks
     /**
      * @internal
      */
-    public function fireOnConfigChanged(array $settings)
+    public function fireOnConfigChanged(array $settings): void
     {
         foreach ($this->onConfigChanged as $callback) {
             call_user_func($callback, $settings);
@@ -54,7 +51,7 @@ final class Hooks
     /**
      * @internal
      */
-    public function fireOnFlagEvaluated(EvaluationDetails $details)
+    public function fireOnFlagEvaluated(EvaluationDetails $details): void
     {
         foreach ($this->onFlagEvaluated as $callback) {
             call_user_func($callback, $details);
@@ -64,7 +61,7 @@ final class Hooks
     /**
      * @internal
      */
-    public function fireOnError(string $error)
+    public function fireOnError(string $error): void
     {
         foreach ($this->onError as $callback) {
             call_user_func($callback, $error);

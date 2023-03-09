@@ -26,29 +26,18 @@ use Psr\Log\LoggerInterface;
  */
 final class ConfigCatClient implements ClientInterface
 {
-    /** @var string */
-    const SDK_VERSION = "6.2.0";
+    public const SDK_VERSION = '6.2.0';
 
-    /** @var LoggerInterface */
-    private $logger;
-    /** @var ConfigCache */
-    private $cache;
-    /** @var ConfigFetcher */
-    private $fetcher;
-    /** @var int */
-    private $cacheRefreshInterval = 60;
-    /** @var string */
-    private $cacheKey;
-    /** @var RolloutEvaluator */
-    private $evaluator;
-    /** @var FlagOverrides */
-    private $overrides;
-    /** @var User */
-    private $defaultUser;
-    /** @var Hooks */
-    private $hooks;
-    /** @var bool */
-    private $offline = false;
+    private LoggerInterface $logger;
+    private ConfigCache $cache;
+    private ConfigFetcher $fetcher;
+    private int $cacheRefreshInterval = 60;
+    private string $cacheKey;
+    private RolloutEvaluator $evaluator;
+    private ?FlagOverrides $overrides;
+    private ?User $defaultUser;
+    private Hooks $hooks;
+    private bool $offline = false;
 
     /**
      * Creates a new ConfigCatClient.
@@ -121,9 +110,7 @@ final class ConfigCatClient implements ClientInterface
             $this->cacheRefreshInterval = $options[ClientOptions::CACHE_REFRESH_INTERVAL];
         }
 
-        if (!is_null($this->overrides)) {
-            $this->overrides->setLogger($this->logger);
-        }
+        $this->overrides?->setLogger($this->logger);
 
         if (isset($options[ClientOptions::OFFLINE]) && $options[ClientOptions::OFFLINE] === true) {
             $this->offline = true;
@@ -139,10 +126,10 @@ final class ConfigCatClient implements ClientInterface
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValue(string $key, $defaultValue, User $user = null)
+    public function getValue(string $key, mixed $defaultValue, ?User $user = null): mixed
     {
         try {
             $settingsResult = $this->getSettings();
@@ -184,10 +171,10 @@ final class ConfigCatClient implements ClientInterface
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValueDetails(string $key, $defaultValue, User $user = null): EvaluationDetails
+    public function getValueDetails(string $key, mixed $defaultValue, ?User $user = null): EvaluationDetails
     {
         try {
             $settingsResult = $this->getSettings();
@@ -227,10 +214,10 @@ final class ConfigCatClient implements ClientInterface
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultVariationId In case of any failure, this value will be returned.
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return mixed The Variation ID identified by the given key.
      */
-    public function getVariationId(string $key, $defaultVariationId, User $user = null)
+    public function getVariationId(string $key, mixed $defaultVariationId, ?User $user = null): mixed
     {
         try {
             $settingsResult = $this->getSettings();
@@ -264,14 +251,14 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Gets the Variation IDs (analytics) of all feature flags or settings.
      *
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return array of all Variation IDs.
      */
-    public function getAllVariationIds(User $user = null): array
+    public function getAllVariationIds(?User $user = null): array
     {
         try {
             $settingsResult = $this->getSettings();
-            return is_null($settingsResult->settings) ? [] : $this->parseVariationIds($settingsResult, $user);
+            return empty($settingsResult->settings) ? [] : $this->parseVariationIds($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during getting all the variation ids. Returning empty array. "
                 . $exception->getMessage(), ['exception' => $exception]);
@@ -283,13 +270,13 @@ final class ConfigCatClient implements ClientInterface
      * Gets the key of a setting and its value identified by the given Variation ID (analytics).
      *
      * @param string $variationId The Variation ID.
-     * @return Pair|null of the key and value of a setting.
+     * @return ?Pair of the key and value of a setting.
      */
     public function getKeyAndValue(string $variationId): ?Pair
     {
         try {
             $settingsResult = $this->getSettings();
-            return is_null($settingsResult->settings)
+            return empty($settingsResult->settings)
                 ? null
                 : $this->parseKeyAndValue($settingsResult->settings, $variationId);
         } catch (Exception $exception) {
@@ -308,7 +295,7 @@ final class ConfigCatClient implements ClientInterface
     {
         try {
             $settingsResult = $this->getSettings();
-            return is_null($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
+            return empty($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during the deserialization. Returning empty array. "
                 . $exception->getMessage(), ['exception' => $exception]);
@@ -319,14 +306,14 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Gets the values of all feature flags or settings.
      *
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return array of values.
      */
-    public function getAllValues(User $user = null): array
+    public function getAllValues(?User $user = null): array
     {
         try {
             $settingsResult = $this->getSettings();
-            return is_null($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
+            return empty($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("An error occurred during getting all values. Returning empty array. "
                 . $exception->getMessage(), ['exception' => $exception]);
@@ -339,7 +326,7 @@ final class ConfigCatClient implements ClientInterface
      */
     public function forceRefresh(): RefreshResult
     {
-        if (!is_null($this->overrides) && $this->overrides->getBehaviour() == OverrideBehaviour::LOCAL_ONLY) {
+        if ($this->overrides !== null && OverrideBehaviour::LOCAL_ONLY == $this->overrides->getBehaviour()) {
             return new RefreshResult(
                 false,
                 "The ConfigCat SDK is in local-only mode. Calling .forceRefresh() has no effect."
@@ -353,7 +340,7 @@ final class ConfigCatClient implements ClientInterface
         }
 
         $cacheItem = $this->cache->load($this->cacheKey);
-        if (is_null($cacheItem)) {
+        if ($cacheItem === null) {
             $cacheItem = new CacheItem();
         }
 
@@ -447,7 +434,7 @@ final class ConfigCatClient implements ClientInterface
 
     private function evaluate(string $key, array $setting, ?User $user, int $fetchTime): EvaluationDetails
     {
-        $actualUser = is_null($user) ? $this->defaultUser : $user;
+        $actualUser = $user === null ? $this->defaultUser : $user;
         $collector = new EvaluationLogCollector();
         $collector->add("Evaluating " . $key . ".");
         $result = $this->evaluator->evaluate($key, $setting, $collector, $actualUser);
@@ -499,7 +486,7 @@ final class ConfigCatClient implements ClientInterface
      */
     private function getSettings(): SettingsResult
     {
-        if (!is_null($this->overrides)) {
+        if ($this->overrides !== null) {
             switch ($this->overrides->getBehaviour()) {
                 case OverrideBehaviour::LOCAL_ONLY:
                     return new SettingsResult($this->overrides->getDataSource()->getOverrides(), 0);
@@ -525,7 +512,7 @@ final class ConfigCatClient implements ClientInterface
     private function getRemoteSettings(): SettingsResult
     {
         $cacheItem = $this->cache->load($this->cacheKey);
-        if (is_null($cacheItem)) {
+        if ($cacheItem === null) {
             $cacheItem = new CacheItem();
         }
 

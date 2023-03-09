@@ -8,6 +8,6 @@ namespace ConfigCat\Attributes;
  */
 class Config
 {
-    const PREFERENCES = "p";
-    const ENTRIES = "f";
+    public const PREFERENCES = "p";
+    public const ENTRIES = "f";
 }

@@ -10,7 +10,7 @@ namespace ConfigCat;
 final class Utils
 {
     /**
-     * Determines that a string contains an other.
+     * Determines that a string contains another string.
      *
      * @param string $haystack The string in we search for the other.
      * @param string $needle The string we search.
@@ -18,7 +18,7 @@ final class Utils
      */
     public static function strContains(string $haystack, string $needle): bool
     {
-        return strpos($haystack, $needle) !== false;
+        return str_contains($haystack, $needle);
     }
 
     /**
@@ -39,7 +39,7 @@ final class Utils
      * @param mixed $value The value.
      * @return string The result string.
      */
-    public static function getStringRepresentation($value): string
+    public static function getStringRepresentation(mixed $value): string
     {
         if (is_bool($value) === true) {
             return $value ? "true" : "false";

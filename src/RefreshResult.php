@@ -7,20 +7,13 @@ namespace ConfigCat;
  */
 class RefreshResult
 {
-    /** @var bool */
-    private $isSuccess;
-    /** @var string|null */
-    private $error;
-
     /**
      * @param bool $isSuccess
      * @param string|null $error
      * @internal
      */
-    public function __construct(bool $isSuccess, ?string $error)
+    public function __construct(private readonly bool $isSuccess, private readonly ?string $error)
     {
-        $this->isSuccess = $isSuccess;
-        $this->error = $error;
     }
 
     /**
