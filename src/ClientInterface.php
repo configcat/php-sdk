@@ -13,61 +13,75 @@ interface ClientInterface
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValue(string $key, mixed $defaultValue, User $user = null): mixed;
+    public function getValue(string $key, mixed $defaultValue, ?User $user = null): mixed;
 
     /**
      * Gets the value and evaluation details of a feature flag or setting identified by the given key.
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultValue In case of any failure, this value will be returned.
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValueDetails(string $key, mixed $defaultValue, User $user = null): EvaluationDetails;
+    public function getValueDetails(string $key, mixed $defaultValue, ?User $user = null): EvaluationDetails;
 
     /**
      * Gets the Variation ID (analytics) of a feature flag or setting by the given key.
      *
      * @param string $key The identifier of the configuration value.
      * @param mixed $defaultVariationId In case of any failure, this value will be returned.
-     * @param User|null $user The user object to identify the caller.
-     * @return mixed The Variation ID identified by the given key.
+     * @param ?User $user The user object to identify the caller.
+     * @return ?string The Variation ID identified by the given key.
+     *
+     * @deprecated This method is obsolete and will be removed in a future major version.
+     * Please use getValueDetails() instead.
      */
-    public function getVariationId(string $key, mixed $defaultVariationId, User $user = null): mixed;
+    public function getVariationId(string $key, ?string $defaultVariationId, ?User $user = null): ?string;
 
     /**
      * Gets the Variation IDs (analytics) of all feature flags or settings.
      *
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return array of all Variation IDs.
+     *
+     * @deprecated This method is obsolete and will be removed in a future major version.
+     * Please use getAllValueDetails() instead.
      */
-    public function getAllVariationIds(User $user = null): array;
+    public function getAllVariationIds(?User $user = null): array;
 
     /**
      * Gets the key of a setting and its value identified by the given Variation ID (analytics).
      *
      * @param string $variationId The Variation ID.
-     * @return Pair|null of the key and value of a setting.
+     * @return ?Pair of the key and value of a setting.
      */
     public function getKeyAndValue(string $variationId): ?Pair;
 
     /**
      * Gets a collection of all setting keys.
      *
-     * @return array of keys.
+     * @return string[] of keys.
      */
     public function getAllKeys(): array;
 
     /**
      * Gets the values of all feature flags or settings.
      *
-     * @param User|null $user The user object to identify the caller.
+     * @param ?User $user The user object to identify the caller.
      * @return array of values.
      */
-    public function getAllValues(User $user = null): array;
+    public function getAllValues(?User $user = null): array;
+
+    /**
+     * Gets the values along with evaluation details of all feature flags and settings.
+     *
+     * @param ?User $user The user object to identify the caller.
+     * @return EvaluationDetails[] of evaluation details of all feature flags and settings.
+     */
+    public function getAllValueDetails(?User $user = null): array;
 
     /**
      * Initiates a force refresh on the cached configuration.

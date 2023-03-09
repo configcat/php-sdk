@@ -207,6 +207,19 @@ class ConfigCatClientTest extends TestCase
         $this->assertEquals(["first" => false, "second" => true], $value);
     }
 
+    public function testGetAllValueDetails()
+    {
+        $client = new ConfigCatClient("testGetAllValueDetails", [
+            ClientOptions::CUSTOM_HANDLER => new MockHandler(
+                [new Response(200, [], self::TEST_JSON)]
+            ),
+        ]);
+        $value = $client->getAllValueDetails();
+
+        $this->assertFalse($value["first"]->getValue());
+        $this->assertTrue($value["second"]->getValue());
+    }
+
     public function testDefaultUser()
     {
         $client = new ConfigCatClient("testDefaultUser", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
