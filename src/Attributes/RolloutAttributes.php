@@ -8,9 +8,9 @@ namespace ConfigCat\Attributes;
  */
 class RolloutAttributes
 {
-    const VALUE = "v";
-    const COMPARISON_ATTRIBUTE = "a";
-    const COMPARATOR = "t";
-    const COMPARISON_VALUE = "c";
-    const VARIATION_ID = "i";
+    public const VALUE = "v";
+    public const COMPARISON_ATTRIBUTE = "a";
+    public const COMPARATOR = "t";
+    public const COMPARISON_VALUE = "c";
+    public const VARIATION_ID = "i";
 }

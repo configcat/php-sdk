@@ -11,20 +11,12 @@ use InvalidArgumentException;
  */
 class ArrayDataSource extends OverrideDataSource
 {
-    /** @var array */
-    private $overrides;
-
     /**
      * Constructs an array data source.
      * @param $overrides array The array that contains the overrides.
      */
-    public function __construct(array $overrides)
+    public function __construct(private readonly array $overrides)
     {
-        if (!is_array($overrides)) {
-            throw new InvalidArgumentException("The overrides is not a valid array.");
-        }
-
-        $this->overrides = $overrides;
     }
 
     /**

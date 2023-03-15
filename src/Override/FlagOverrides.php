@@ -11,11 +11,6 @@ use Psr\Log\LoggerInterface;
  */
 class FlagOverrides implements LoggerAwareInterface
 {
-    /** @var int */
-    private $behaviour;
-    /** @var OverrideDataSource */
-    private $dataSource;
-
     /**
      * Constructs the feature flag overrides.
      * @param $dataSource OverrideDataSource The data source of the feature flag overrides.
@@ -23,14 +18,11 @@ class FlagOverrides implements LoggerAwareInterface
      *                       override the remote values, or use local values only when a remote value doesn't exist,
      *                       or use it for local only mode.
      */
-    public function __construct(OverrideDataSource $dataSource, int $behaviour)
+    public function __construct(private readonly OverrideDataSource $dataSource, private readonly int $behaviour)
     {
         if (!OverrideBehaviour::isValid($behaviour)) {
             throw new InvalidArgumentException("The behaviour argument is not valid.");
         }
-
-        $this->behaviour = $behaviour;
-        $this->dataSource = $dataSource;
     }
 
     /**

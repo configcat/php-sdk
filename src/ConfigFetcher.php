@@ -19,30 +19,23 @@ use Psr\Log\LoggerInterface;
  */
 final class ConfigFetcher
 {
-    const ETAG_HEADER = "ETag";
-    const CONFIG_JSON_NAME = "config_v5";
+    public const ETAG_HEADER = "ETag";
+    public const CONFIG_JSON_NAME = "config_v5";
 
-    const GLOBAL_URL = "https://cdn-global.configcat.com";
-    const EU_ONLY_URL = "https://cdn-eu.configcat.com";
+    public const GLOBAL_URL = "https://cdn-global.configcat.com";
+    public const EU_ONLY_URL = "https://cdn-eu.configcat.com";
 
-    const NO_REDIRECT = 0;
-    const SHOULD_REDIRECT = 1;
-    const FORCE_REDIRECT = 2;
+    public const NO_REDIRECT = 0;
+    public const SHOULD_REDIRECT = 1;
+    public const FORCE_REDIRECT = 2;
 
-    /** @var LoggerInterface */
-    private $logger;
-    /** @var array */
-    private $requestOptions;
-    /** @var array */
-    private $clientOptions;
-    /** @var string */
-    private $urlPath;
-    /** @var string */
-    private $baseUrl;
-    /** @var bool */
-    private $urlIsCustom = false;
-    /** @var Client */
-    private $client;
+    private LoggerInterface $logger;
+    private array $requestOptions;
+    private array $clientOptions;
+    private string $urlPath;
+    private string $baseUrl;
+    private bool $urlIsCustom = false;
+    private Client $client;
 
     /**
      * ConfigFetcher constructor.
@@ -110,8 +103,8 @@ final class ConfigFetcher
     /**
      * Gets the latest configuration from the network.
      *
-     * @param string|null $etag The ETag.
-     * @param string|null $cachedUrl The cached cdn url.
+     * @param ?string $etag The ETag.
+     * @param ?string $cachedUrl The cached cdn url.
      *
      * @return FetchResponse An object describing the result of the fetch.
      */

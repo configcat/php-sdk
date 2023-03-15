@@ -13,29 +13,12 @@ use Psr\Log\LoggerInterface;
  */
 class InternalLogger implements LoggerInterface
 {
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-    /**
-     * @var int
-     */
-    private $globalLevel;
-    /**
-     * @var array
-     */
-    private $exceptionsToIgnore;
-    /**
-     * @var Hooks
-     */
-    private $hooks;
-
-    public function __construct(LoggerInterface $logger, $globalLevel, array $exceptionsToIgnore, Hooks $hooks)
-    {
-        $this->logger = $logger;
-        $this->globalLevel = $globalLevel;
-        $this->exceptionsToIgnore = $exceptionsToIgnore;
-        $this->hooks = $hooks;
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly int $globalLevel,
+        private readonly array $exceptionsToIgnore,
+        private readonly Hooks $hooks
+    ) {
     }
 
     public function emergency($message, array $context = []): void
@@ -105,11 +88,7 @@ class InternalLogger implements LoggerInterface
 
     private function shouldLog($currentLevel, array $context): bool
     {
-        if ($currentLevel >= $this->globalLevel && !$this->hasAnythingToIgnore($context)) {
-            return true;
-        }
-
-        return false;
+        return $currentLevel >= $this->globalLevel && !$this->hasAnythingToIgnore($context);
     }
 
     private function hasAnythingToIgnore(array $context): bool
@@ -120,10 +99,6 @@ class InternalLogger implements LoggerInterface
             return false;
         }
 
-        if (in_array(get_class($context['exception']), $this->exceptionsToIgnore)) {
-            return true;
-        }
-
-        return false;
+        return in_array(get_class($context['exception']), $this->exceptionsToIgnore);
     }
 }

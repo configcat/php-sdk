@@ -10,35 +10,19 @@ namespace ConfigCat;
 final class FetchResponse
 {
     /** @var int */
-    const FETCHED = 0;
+    public const FETCHED = 0;
     /** @var int */
-    const NOT_MODIFIED = 1;
+    public const NOT_MODIFIED = 1;
     /** @var int */
-    const FAILED = 3;
-
-    /** @var array|null */
-    private $body;
-    /** @var int */
-    private $status;
-    /** @var string|null */
-    private $etag;
-    /** @var string */
-    private $url;
-    /** @var string|null */
-    private $error;
+    public const FAILED = 3;
 
     private function __construct(
-        int $status,
-        ?string $etag = null,
-        ?array $body = null,
-        ?string $url = null,
-        ?string $error = null
+        private readonly int $status,
+        private readonly ?string $etag = null,
+        private readonly ?array $body = null,
+        private readonly ?string $url = null,
+        private readonly ?string $error = null
     ) {
-        $this->status = $status;
-        $this->body = $body;
-        $this->etag = $etag;
-        $this->url = $url;
-        $this->error = $error;
     }
 
     /**
@@ -108,7 +92,7 @@ final class FetchResponse
     /**
      * Returns the response body.
      *
-     * @return array|null The fetched response body.
+     * @return ?array The fetched response body.
      */
     public function getBody(): ?array
     {
@@ -118,7 +102,7 @@ final class FetchResponse
     /**
      * Returns the ETag.
      *
-     * @return string|null The received ETag.
+     * @return ?string The received ETag.
      */
     public function getETag(): ?string
     {
@@ -128,7 +112,7 @@ final class FetchResponse
     /**
      * Returns the proper cdn url.
      *
-     * @return string|null The cdn url.
+     * @return ?string The cdn url.
      */
     public function getUrl(): ?string
     {
@@ -138,7 +122,7 @@ final class FetchResponse
     /**
      * Returns the error if the fetch failed.
      *
-     * @return string|null The error.
+     * @return ?string The error.
      */
     public function getError(): ?string
     {

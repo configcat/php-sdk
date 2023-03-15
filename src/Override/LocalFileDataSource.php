@@ -12,25 +12,20 @@ use InvalidArgumentException;
  */
 class LocalFileDataSource extends OverrideDataSource
 {
-    /** @var string */
-    private $filePath;
-
     /**
      * Constructs a local file data source.
      * @param $filePath string The path to the file.
      */
-    public function __construct(string $filePath)
+    public function __construct(private readonly string $filePath)
     {
         if (!file_exists($filePath)) {
             throw new InvalidArgumentException("The file '" . $filePath . "' doesn't exist.");
         }
-
-        $this->filePath = $filePath;
     }
 
     /**
      * Gets the overrides.
-     * @return array The overrides.
+     * @return ?array The overrides.
      */
     public function getOverrides(): ?array
     {
@@ -44,7 +39,7 @@ class LocalFileDataSource extends OverrideDataSource
 
         if ($json == null) {
             $this->logger->error("Could not decode json from file " . $this->filePath . ". JSON error: 
-                " . json_last_error_msg() . "");
+                " . json_last_error_msg());
             return null;
         }
 

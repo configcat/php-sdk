@@ -8,10 +8,8 @@ namespace ConfigCat;
  */
 final class User
 {
-    /** @var array */
-    private $attributes = [];
-    /** @var string */
-    private $identifier;
+    private string $identifier;
+    private array $attributes = [];
 
     /**
      * User constructor.
@@ -21,8 +19,12 @@ final class User
      * @param string $country Optional. The country attribute of the user.
      * @param array $custom Custom user attributes.
      */
-    public function __construct(string $identifier, string $email = "", string $country = "", array $custom = [])
-    {
+    public function __construct(
+        string $identifier,
+        string $email = "",
+        string $country = "",
+        array $custom = []
+    ) {
         $this->identifier = $this->attributes['Identifier'] = $identifier;
 
         if (!empty($email)) {

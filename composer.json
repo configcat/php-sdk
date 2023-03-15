@@ -13,19 +13,19 @@
     }
   ],
   "require": {
-    "php": ">=7.1",
+    "php": ">=8.1",
     "guzzlehttp/guzzle": "^6.3|^7.0",
-    "psr/log": "^1.1",
+    "psr/log": "^2.0|^3.0",
     "ext-json": "*",
-    "monolog/monolog": "^1.6|^2.0",
+    "monolog/monolog": "2.0|^3.0",
     "z4kn4fein/php-semver": "^2.0"
   },
   "require-dev": {
     "phpunit/phpunit": "~7.0|^8",
-    "illuminate/cache": "^5.0",
-    "psr/simple-cache": "^1.0",
+    "illuminate/cache": "^9.0",
+    "psr/simple-cache": "^3.0",
     "psr/cache": "^1.0",
-    "squizlabs/php_codesniffer": "3.5.1"
+    "squizlabs/php_codesniffer": "^3.7"
   },
   "autoload": {
     "psr-4": {
@@ -41,5 +41,10 @@
     "psr/cache": "When using any PSR6 Cache implementation, a pre-built cache adapter \\ConfigCat\\Psr6Cache can be used as the main cache of the library.",
     "psr/simple-cache": "When using any PSR16 SimpleCache implementation, a pre-built cache adapter \\ConfigCat\\Psr16Cache can be used as the main cache of the library.",
     "laravel/framework": "When using laravel, a pre-built cache adapter \\ConfigCat\\LaravelCache can be used as the main cache of the library."
+  },
+  "config": {
+    "allow-plugins": {
+      "kylekatarnls/update-helper": false
+    }
   }
 }

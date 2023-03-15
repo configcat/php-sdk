@@ -13,6 +13,11 @@ ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature fl
 [![Total Downloads](https://poser.pugx.org/configcat/configcat-client/downloads)](https://packagist.org/packages/configcat/configcat-client)
 [![Latest Unstable Version](https://poser.pugx.org/configcat/configcat-client/v/unstable)](https://packagist.org/packages/configcat/configcat-client)
 
+## Requirements
+- PHP >= 8.1
+
+ConfigCat SDK for PHP >= 7.1 is available [here](https://github.com/configcat/php7-sdk).
+
 ## Getting started
 
 ### 1. Install the package with [Composer](https://getcomposer.org/)

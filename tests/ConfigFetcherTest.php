@@ -16,9 +16,9 @@ use Psr\Log\NullLogger;
 
 class ConfigFetcherTest extends TestCase
 {
-    private $mockSdkKey = "testSdkKey";
-    private $mockEtag = "testEtag";
-    private $mockBody = "{\"key\": \"value\"}";
+    private string $mockSdkKey = "testSdkKey";
+    private string $mockEtag = "testEtag";
+    private string $mockBody = "{\"key\": \"value\"}";
 
     public function testFetchOk()
     {

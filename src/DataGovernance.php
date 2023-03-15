@@ -9,9 +9,9 @@ namespace ConfigCat;
 final class DataGovernance
 {
     /** @var int Select this if your feature flags are published to all global CDN nodes. */
-    const GLOBAL_ = 0;
+    public const GLOBAL_ = 0;
     /** @var int Select this if your feature flags are published to CDN nodes only in the EU. */
-    const EU_ONLY = 1;
+    public const EU_ONLY = 1;
 
     public static function isValid($value): bool
     {

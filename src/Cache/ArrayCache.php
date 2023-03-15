@@ -8,18 +8,17 @@ namespace ConfigCat\Cache;
  */
 final class ArrayCache extends ConfigCache
 {
-    /** @var array */
-    private static $arrayCache = [];
+    private static array $arrayCache = [];
 
     /**
      * Reads the value identified by the given $key from the underlying cache.
      *
      * @param string $key Identifier for the cached value.
-     * @return string|null Cached value for the given key, or null if it's missing.
+     * @return ?string Cached value for the given key, or null if it's missing.
      */
     protected function get(string $key): ?string
     {
-        return array_key_exists($key, self::$arrayCache) ? self::$arrayCache[$key] : null;
+        return self::$arrayCache[$key] ?? null;
     }
 
     /**
