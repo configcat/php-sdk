@@ -12,7 +12,6 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 class ConfigFetcherTest extends TestCase
 {
@@ -75,7 +74,7 @@ class ConfigFetcherTest extends TestCase
     public function testConstructEmptySdkKey()
     {
         $this->expectException(InvalidArgumentException::class);
-        new ConfigFetcher("", new NullLogger());
+        new ConfigFetcher("", Utils::getNullLogger());
     }
 
     public function testConstructDefaults()

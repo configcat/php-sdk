@@ -18,7 +18,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 use ReflectionException;
 
 class ConfigCatClientTest extends TestCase
@@ -53,7 +52,7 @@ class ConfigCatClientTest extends TestCase
      */
     public function testConstructLoggerOption()
     {
-        $logger = new NullLogger();
+        $logger = Utils::getNullLogger();
         $client = new ConfigCatClient("testConstructLoggerOption", [
             ClientOptions::LOGGER => $logger,
             ClientOptions::LOG_LEVEL => LogLevel::ERROR,
@@ -383,11 +382,11 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertTrue($evaluated);
         $this->assertTrue($error);
-        $this->assertEquals("Double-check your SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400", $message);
+        $this->assertEquals("Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400", $message);
         $this->assertTrue($changed);
 
         $this->assertFalse($result->isSuccess());
-        $this->assertEquals("Double-check your SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400", $result->getError());
+        $this->assertEquals("Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400", $result->getError());
     }
 
     public function testEvalDetails()
