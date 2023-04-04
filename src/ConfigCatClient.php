@@ -135,9 +135,11 @@ final class ConfigCatClient implements ClientInterface
         try {
             $settingsResult = $this->getSettings();
             if (empty($settingsResult->settings)) {
-                $message = "Config JSON is not present. Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
+                $message = "Config JSON is not present when evaluating setting '{KEY}'. " .
+                    "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
                 $messageCtx = [
                     'event_id' => 1000,
+                    'KEY' => $key,
                     'DEFAULT_PARAM_NAME' => '$defaultValue', 'DEFAULT_PARAM_VALUE' => Utils::getStringRepresentation($defaultValue)
                 ];
                 $this->logger->error($message, $messageCtx);
@@ -194,9 +196,11 @@ final class ConfigCatClient implements ClientInterface
         try {
             $settingsResult = $this->getSettings();
             if (empty($settingsResult->settings)) {
-                $message = "Config JSON is not present. Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
+                $message = "Config JSON is not present when evaluating setting '{KEY}'. " .
+                    "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
                 $messageCtx = [
                     'event_id' => 1000,
+                    'KEY' => $key,
                     'DEFAULT_PARAM_NAME' => '$defaultValue', 'DEFAULT_PARAM_VALUE' => Utils::getStringRepresentation($defaultValue)
                 ];
                 $this->logger->error($message, $messageCtx);
