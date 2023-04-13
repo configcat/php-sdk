@@ -3,6 +3,10 @@
 namespace ConfigCat\Log;
 
 use ConfigCat\Hooks;
+use Monolog\DateTimeImmutable;
+use Monolog\Level;
+use Monolog\LogRecord;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -123,15 +127,14 @@ class InternalLogger implements LoggerInterface
         // (see https://www.php-fig.org/psr/psr-3/#12-message).
         static $psrProcessor = null;
         if (is_null($psrProcessor)) {
-            $psrProcessor = new \Monolog\Processor\PsrLogMessageProcessor();
+            $psrProcessor = new PsrLogMessageProcessor();
         }
 
         // Before v3.0, Monolog didn't have the LogRecord class but used a simple array.
         if (class_exists('\Monolog\LogRecord')) {
-            $rec = new \Monolog\LogRecord(new \Monolog\DateTimeImmutable('@0'), "", \Monolog\Level::Notice, $message, $context);
+            $rec = new LogRecord(new DateTimeImmutable('@0'), "", Level::Notice, $message, $context);
             $message = $psrProcessor->__invoke($rec)->message;
-        }
-        else {
+        } else {
             $rec = ['message' => $message, 'context' => $context];
             $message = $psrProcessor->__invoke($rec)['message'];
         }
