@@ -133,8 +133,8 @@ final class ConfigCatClient implements ClientInterface
     public function getValue(string $key, mixed $defaultValue, ?User $user = null): mixed
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
+            $settingsResult = $this->getSettingsResult();
+            if ($settingsResult->settings === null) {
                 $message = "Config JSON is not present when evaluating setting '{KEY}'. " .
                     "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
                 $messageCtx = [
@@ -208,8 +208,8 @@ final class ConfigCatClient implements ClientInterface
     public function getValueDetails(string $key, mixed $defaultValue, ?User $user = null): EvaluationDetails
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
+            $settingsResult = $this->getSettingsResult();
+            if ($settingsResult->settings === null) {
                 $message = "Config JSON is not present when evaluating setting '{KEY}'. " .
                     "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
                 $messageCtx = [
@@ -269,8 +269,8 @@ final class ConfigCatClient implements ClientInterface
     public function getVariationId(string $key, ?string $defaultVariationId, ?User $user = null): ?string
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
+            $settingsResult = $this->getSettingsResult();
+            if ($settingsResult->settings === null) {
                 return $defaultVariationId;
             }
 
@@ -315,8 +315,8 @@ final class ConfigCatClient implements ClientInterface
     public function getAllVariationIds(?User $user = null): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings) ? [] : $this->parseVariationIds($settingsResult, $user);
+            $settingsResult = $this->getSettingsResult();
+            return $settingsResult->settings === null ? [] : $this->parseVariationIds($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
                 'event_id' => 1002, 'exception' => $exception,
@@ -335,8 +335,8 @@ final class ConfigCatClient implements ClientInterface
     public function getKeyAndValue(string $variationId): ?Pair
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings)
+            $settingsResult = $this->getSettingsResult();
+            return $settingsResult->settings === null
                 ? null
                 : $this->parseKeyAndValue($settingsResult->settings, $variationId);
         } catch (Exception $exception) {
@@ -356,8 +356,8 @@ final class ConfigCatClient implements ClientInterface
     public function getAllKeys(): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
+            $settingsResult = $this->getSettingsResult();
+            return $settingsResult->settings === null ? [] : array_keys($settingsResult->settings);
         } catch (Exception $exception) {
             $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
                 'event_id' => 1002, 'exception' => $exception,
@@ -376,8 +376,8 @@ final class ConfigCatClient implements ClientInterface
     public function getAllValues(?User $user = null): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
+            $settingsResult = $this->getSettingsResult();
+            return $settingsResult->settings === null ? [] : $this->parseValues($settingsResult, $user);
         } catch (Exception $exception) {
             $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
                 'event_id' => 1002, 'exception' => $exception,
@@ -396,8 +396,8 @@ final class ConfigCatClient implements ClientInterface
     public function getAllValueDetails(?User $user = null): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
+            $settingsResult = $this->getSettingsResult();
+            if ($settingsResult->settings === null) {
                 return [];
             }
             $keys = array_keys($settingsResult->settings);
@@ -458,7 +458,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Sets the default user.
      */
-    public function setDefaultUser(User $user)
+    public function setDefaultUser(User $user): void
     {
         $this->defaultUser = $user;
     }
@@ -466,7 +466,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Sets the default user to null.
      */
-    public function clearDefaultUser()
+    public function clearDefaultUser(): void
     {
         $this->defaultUser = null;
     }
@@ -484,7 +484,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Configures the SDK to not initiate HTTP requests.
      */
-    public function setOffline()
+    public function setOffline(): void
     {
         $this->offline = true;
     }
@@ -492,7 +492,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Configures the SDK to allow HTTP requests.
      */
-    public function setOnline()
+    public function setOnline(): void
     {
         $this->offline = false;
     }
@@ -592,10 +592,7 @@ final class ConfigCatClient implements ClientInterface
         return null;
     }
 
-    /**
-     * @throws ConfigCatClientException
-     */
-    private function getSettings(): SettingsResult
+    private function getSettingsResult(): SettingsResult
     {
         if ($this->overrides !== null) {
             switch ($this->overrides->getBehaviour()) {
@@ -603,24 +600,19 @@ final class ConfigCatClient implements ClientInterface
                     return new SettingsResult($this->overrides->getDataSource()->getOverrides(), 0);
                 case OverrideBehaviour::LOCAL_OVER_REMOTE:
                     $local = $this->overrides->getDataSource()->getOverrides();
-                    $remote = $this->getRemoteSettings();
+                    $remote = $this->getRemoteSettingsResult();
                     return new SettingsResult(array_merge($remote->settings, $local), $remote->fetchTime);
-                case OverrideBehaviour::REMOTE_OVER_LOCAL:
+                default: // remote over local
                     $local = $this->overrides->getDataSource()->getOverrides();
-                    $remote = $this->getRemoteSettings();
+                    $remote = $this->getRemoteSettingsResult();
                     return new SettingsResult(array_merge($local, $remote->settings), $remote->fetchTime);
-                default:
-                    throw new InvalidArgumentException("Invalid override behaviour.");
             }
         }
 
-        return $this->getRemoteSettings();
+        return $this->getRemoteSettingsResult();
     }
 
-    /**
-     * @throws ConfigCatClientException
-     */
-    private function getRemoteSettings(): SettingsResult
+    private function getRemoteSettingsResult(): SettingsResult
     {
         $cacheItem = $this->cache->load($this->cacheKey);
         if ($cacheItem === null) {
@@ -633,14 +625,13 @@ final class ConfigCatClient implements ClientInterface
         }
 
         if (empty($cacheItem->config)) {
-            throw new ConfigCatClientException("Could not retrieve the config.json " .
-                "from either the cache or HTTP.");
+            return new SettingsResult(null, 0);
         }
 
         return new SettingsResult($cacheItem->config[Config::ENTRIES], $cacheItem->lastRefreshed);
     }
 
-    private function handleResponse(FetchResponse $response, CacheItem $cacheItem)
+    private function handleResponse(FetchResponse $response, CacheItem $cacheItem): void
     {
         if (!$response->isFailed()) {
             if ($response->isFetched()) {
