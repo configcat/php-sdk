@@ -4,13 +4,13 @@ namespace ConfigCat;
 
 use ConfigCat\Attributes\Config;
 use ConfigCat\Attributes\Preferences;
+use ConfigCat\Log\InternalLogger;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use InvalidArgumentException;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class ConfigFetcher This class is used to fetch the latest configuration.
@@ -29,7 +29,7 @@ final class ConfigFetcher
     public const SHOULD_REDIRECT = 1;
     public const FORCE_REDIRECT = 2;
 
-    private LoggerInterface $logger;
+    private InternalLogger $logger;
     private array $requestOptions;
     private array $clientOptions;
     private string $urlPath;
@@ -41,7 +41,7 @@ final class ConfigFetcher
      * ConfigFetcher constructor.
      *
      * @param string $sdkKey The SDK Key used to communicate with the ConfigCat services.
-     * @param LoggerInterface $logger The logger instance.
+     * @param InternalLogger $logger The logger instance.
      * @param array $options The additional configuration options:
      *     - base-url: The base ConfigCat CDN url.
      *     - data-governance: Default: Global. Set this parameter to be in sync with the Data Governance.
@@ -52,7 +52,7 @@ final class ConfigFetcher
      * @throws InvalidArgumentException
      *   When the $sdkKey, the $logger or the $cache is not legal.
      */
-    public function __construct(string $sdkKey, LoggerInterface $logger, array $options = [])
+    public function __construct(string $sdkKey, InternalLogger $logger, array $options = [])
     {
         if (empty($sdkKey)) {
             throw new InvalidArgumentException("sdkKey cannot be empty.");
@@ -142,17 +142,23 @@ final class ConfigFetcher
         }
 
         if ($redirect == self::SHOULD_REDIRECT) {
-            $this->logger->warning("Your data-governance parameter at ConfigCatClient " .
-                "initialization is not in sync with your preferences on the ConfigCat " .
-                "Dashboard: https://app.configcat.com/organization/data-governance. " .
-                "Only Organization Admins can access this preference.");
+            $this->logger->warning(
+                "The `dataGovernance` parameter specified at the client initialization is ".
+                "not in sync with the preferences on the ConfigCat Dashboard. " .
+                "Read more: https://configcat.com/docs/advanced/data-governance/",
+                [
+                    'event_id' => 3002
+                ]
+            );
         }
 
         if ($executionCount > 0) {
             return $this->executeFetch($etag, $newUrl, $executionCount - 1);
         }
 
-        $this->logger->error("Redirect loop during config.json fetch. Please contact support@configcat.com.");
+        $this->logger->error("Redirection loop encountered while trying to fetch config JSON. Please contact us at https://configcat.com/support/", [
+            'event_id' => 1104
+        ]);
         return $response;
     }
 
@@ -172,9 +178,13 @@ final class ConfigFetcher
 
                 $body = json_decode($response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    $message = json_last_error_msg();
-                    $this->logger->error($message);
-                    return FetchResponse::failure($message);
+                    $message = "Fetching config JSON was successful but the HTTP response content was invalid. JSON error: {JSON_ERROR}";
+                    $messageCtx = [
+                        'event_id' => 1105,
+                        'JSON_ERROR' => json_last_error_msg()
+                    ];
+                    $this->logger->error($message, $messageCtx);
+                    return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
                 }
 
                 if ($response->hasHeader(self::ETAG_HEADER)) {
@@ -192,23 +202,33 @@ final class ConfigFetcher
                 return FetchResponse::notModified();
             }
 
-            $message = "Double-check your SDK Key at https://app.configcat.com/sdkkey. " .
-                "Received unexpected response: " . $statusCode;
-            $this->logger->error($message);
-            return FetchResponse::failure($message);
+            $message = "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. " .
+                "Received unexpected response: {STATUS_CODE}";
+            $messageCtx = [
+                'event_id' => 1100,
+                'STATUS_CODE' => $statusCode
+            ];
+            $this->logger->error($message, $messageCtx);
+            return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
         } catch (ConnectException $exception) {
             $connTimeout = $this->requestOptions[RequestOptions::CONNECT_TIMEOUT];
             $timeout = $this->requestOptions[RequestOptions::TIMEOUT];
-            $message = "Request timed out. Timeout values: [connect: ". $connTimeout ."s, timeout:" . $timeout . "s]";
-            $this->logger->error($message, ['exception' => $exception]);
-            return FetchResponse::failure($message);
+            $message = "Request timed out while trying to fetch config JSON. Timeout values: [connect: {CONN_TIMEOUT}s, timeout: {TIMEOUT}s]";
+            $messageCtx = [
+                'event_id' => 1102, 'exception' => $exception,
+                'CONN_TIMEOUT' => $connTimeout, 'TIMEOUT' => $timeout,
+            ];
+            $this->logger->error($message, $messageCtx);
+            return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
         } catch (GuzzleException $exception) {
-            $message = "HTTP exception: ". $exception->getMessage();
-            $this->logger->error($message, ['exception' => $exception]);
+            $message = "Unexpected HTTP response was received while trying to fetch config JSON.";
+            $messageCtx = ['event_id' => 1101, 'exception' => $exception];
+            $this->logger->error($message, $messageCtx);
             return FetchResponse::failure($message);
         } catch (Exception $exception) {
-            $message = "Exception during fetch: " . $exception->getMessage();
-            $this->logger->error($message, ['exception' => $exception]);
+            $message = "Unexpected error occurred while trying to fetch config JSON.";
+            $messageCtx = ['event_id' => 1103, 'exception' => $exception];
+            $this->logger->error($message, $messageCtx);
             return FetchResponse::failure($message);
         }
     }

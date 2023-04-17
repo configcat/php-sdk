@@ -11,4 +11,10 @@
     <exclude-pattern>*/src/Hash/*</exclude-pattern>
 
     <rule ref="PSR2"/>
+
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="150"/>
+        </properties>
+    </rule>
 </ruleset>

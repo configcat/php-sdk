@@ -93,12 +93,12 @@ interface ClientInterface
      *
      * @param User $user The default user.
      */
-    public function setDefaultUser(User $user);
+    public function setDefaultUser(User $user): void;
 
     /**
      * Sets the default user to null.
      */
-    public function clearDefaultUser();
+    public function clearDefaultUser(): void;
 
     /**
      * Gets the Hooks object for subscribing to SDK events.
@@ -110,12 +110,12 @@ interface ClientInterface
     /**
      * Configures the SDK to not initiate HTTP requests.
      */
-    public function setOffline();
+    public function setOffline(): void;
 
     /**
      * Configures the SDK to allow HTTP requests.
      */
-    public function setOnline();
+    public function setOnline(): void;
 
     /**
      * Indicates whether the SDK should be initialized in offline mode or not.

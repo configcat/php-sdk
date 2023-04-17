@@ -5,8 +5,8 @@ namespace ConfigCat;
 use ConfigCat\Attributes\PercentageAttributes;
 use ConfigCat\Attributes\RolloutAttributes;
 use ConfigCat\Attributes\SettingAttributes;
+use ConfigCat\Log\InternalLogger;
 use Exception;
-use Psr\Log\LoggerInterface;
 use z4kn4fein\SemVer\Version;
 use z4kn4fein\SemVer\SemverException;
 
@@ -41,9 +41,9 @@ final class RolloutEvaluator
     /**
      * RolloutEvaluator constructor.
      *
-     * @param LoggerInterface $logger The logger instance.
+     * @param InternalLogger $logger The logger instance.
      */
-    public function __construct(private readonly LoggerInterface $logger)
+    public function __construct(private readonly InternalLogger $logger)
     {
     }
 
@@ -67,9 +67,12 @@ final class RolloutEvaluator
                 !empty($json[SettingAttributes::ROLLOUT_RULES]) ||
                 isset($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS]) &&
                 !empty($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])) {
-                $this->logger->warning("UserObject missing! You should pass a " .
-                    "UserObject to getValue() in order to make targeting work properly. " .
-                    "Read more: https://configcat.com/docs/advanced/user-object.");
+                $this->logger->warning("Cannot evaluate targeting rules and % options for setting '{KEY}' (User Object is missing). " .
+                    "You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. " .
+                    "Read more: https://configcat.com/docs/advanced/user-object/", [
+                        'event_id' => 3001,
+                        'KEY' => $key
+                    ]);
             }
 
             $result = $json[SettingAttributes::VALUE];

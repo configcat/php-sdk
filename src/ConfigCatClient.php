@@ -18,6 +18,7 @@ use InvalidArgumentException;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -28,7 +29,7 @@ final class ConfigCatClient implements ClientInterface
 {
     public const SDK_VERSION = '7.0.1';
 
-    private LoggerInterface $logger;
+    private InternalLogger $logger;
     private ConfigCache $cache;
     private ConfigFetcher $fetcher;
     private int $cacheRefreshInterval = 60;
@@ -132,21 +133,14 @@ final class ConfigCatClient implements ClientInterface
     public function getValue(string $key, mixed $defaultValue, ?User $user = null): mixed
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
-                $message = "Config JSON is not present. Returning defaultValue: '" . $defaultValue . "'.";
-                $this->logger->error($message);
-                $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError($key, $defaultValue, $user, $message));
-                return $defaultValue;
-            }
-
-            if (!array_key_exists($key, $settingsResult->settings)) {
-                $message = "Evaluating getValue('" . $key . "') failed. " .
-                    "Value not found for key " . $key . ". " .
-                    "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". " .
-                    "Here are the available keys: " . implode(", ", array_keys($settingsResult->settings));
-                $this->logger->error($message);
-                $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError($key, $defaultValue, $user, $message));
+            $settingsResult = $this->getSettingsResult();
+            $errorMessage = $this->checkSettingAvailable($settingsResult, $key, '$defaultValue', $defaultValue);
+            if ($errorMessage !== null) {
+                $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError(
+                    $key,
+                    $defaultValue,
+                    $user,
+                    $errorMessage));
                 return $defaultValue;
             }
 
@@ -157,11 +151,20 @@ final class ConfigCatClient implements ClientInterface
                 $settingsResult->fetchTime
             )->getValue();
         } catch (Exception $exception) {
-            $message = "Evaluating getValue('" . $key . "') failed. " .
-                "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". "
-                . $exception->getMessage();
-            $this->logger->error($message, ['exception' => $exception]);
-            $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError($key, $defaultValue, $user, $message));
+            $message = "Error occurred in the `{METHOD_NAME}` method while evaluating setting '{KEY}'. " .
+                "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
+            $messageCtx = [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getValue', 'KEY' => $key,
+                'DEFAULT_PARAM_NAME' => '$defaultValue', 'DEFAULT_PARAM_VALUE' => Utils::getStringRepresentation($defaultValue)
+            ];
+            $this->logger->error($message, $messageCtx);
+            $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError(
+                $key,
+                $defaultValue,
+                $user,
+                InternalLogger::format($message, $messageCtx)
+            ));
             return $defaultValue;
         }
     }
@@ -177,33 +180,28 @@ final class ConfigCatClient implements ClientInterface
     public function getValueDetails(string $key, mixed $defaultValue, ?User $user = null): EvaluationDetails
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
-                $message = "Config JSON is not present. Returning defaultValue: '" . $defaultValue . "'.";
-                $this->logger->error($message);
-                $details = EvaluationDetails::fromError($key, $defaultValue, $user, $message);
-                $this->hooks->fireOnFlagEvaluated($details);
-                return $details;
-            }
-
-            if (!array_key_exists($key, $settingsResult->settings)) {
-                $message = "Evaluating getValueDetails('" . $key . "') failed. " .
-                    "Value not found for key " . $key . ". " .
-                    "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". " .
-                    "Here are the available keys: " . implode(", ", array_keys($settingsResult->settings));
-                $this->logger->error($message);
-                $details = EvaluationDetails::fromError($key, $defaultValue, $user, $message);
-                $this->hooks->fireOnFlagEvaluated($details);
-                return $details;
+            $settingsResult = $this->getSettingsResult();
+            $errorMessage = $this->checkSettingAvailable($settingsResult, $key, '$defaultValue', $defaultValue);
+            if ($errorMessage !== null) {
+                $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError(
+                    $key,
+                    $defaultValue,
+                    $user,
+                    $errorMessage));
+                return $defaultValue;
             }
 
             return $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime);
         } catch (Exception $exception) {
-            $message = "Evaluating getValueDetails('" . $key . "') failed. " .
-                "Returning defaultValue: " . Utils::getStringRepresentation($defaultValue) . ". "
-                . $exception->getMessage();
-            $this->logger->error($message, ['exception' => $exception]);
-            $details = EvaluationDetails::fromError($key, $defaultValue, $user, $message);
+            $message = "Error occurred in the `{METHOD_NAME}` method while evaluating setting '{KEY}'. " .
+                "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
+            $messageCtx = [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getValueDetails', 'KEY' => $key,
+                'DEFAULT_PARAM_NAME' => '$defaultValue', 'DEFAULT_PARAM_VALUE' => Utils::getStringRepresentation($defaultValue)
+            ];
+            $this->logger->error($message, $messageCtx);
+            $details = EvaluationDetails::fromError($key, $defaultValue, $user, InternalLogger::format($message, $messageCtx));
             $this->hooks->fireOnFlagEvaluated($details);
             return $details;
         }
@@ -223,17 +221,9 @@ final class ConfigCatClient implements ClientInterface
     public function getVariationId(string $key, ?string $defaultVariationId, ?User $user = null): ?string
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
-                return $defaultVariationId;
-            }
-
-            if (!array_key_exists($key, $settingsResult->settings)) {
-                $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
-                    "Value not found for key " . $key . ". " .
-                    "Returning defaultVariationId: " . $defaultVariationId . ". Here are the available keys: " .
-                    implode(", ", array_keys($settingsResult->settings)));
-
+            $settingsResult = $this->getSettingsResult();
+            $errorMessage = $this->checkSettingAvailable($settingsResult, $key, '$defaultVariationId', $defaultVariationId);
+            if ($errorMessage !== null) {
                 return $defaultVariationId;
             }
 
@@ -244,9 +234,12 @@ final class ConfigCatClient implements ClientInterface
                 $settingsResult->fetchTime
             )->getVariationId();
         } catch (Exception $exception) {
-            $this->logger->error("Evaluating getVariationId('" . $key . "') failed. " .
-                "Returning defaultVariationId: " . $defaultVariationId . ". "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method while evaluating setting '{KEY}'. " .
+                "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.", [
+                    'event_id' => 1002, 'exception' => $exception,
+                    'METHOD_NAME' => 'getVariationId', 'KEY' => $key,
+                    'DEFAULT_PARAM_NAME' => '$defaultVariationId', 'DEFAULT_PARAM_VALUE' => $defaultVariationId
+                ]);
             return $defaultVariationId;
         }
     }
@@ -263,11 +256,18 @@ final class ConfigCatClient implements ClientInterface
     public function getAllVariationIds(?User $user = null): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings) ? [] : $this->parseVariationIds($settingsResult, $user);
+            $settingsResult = $this->getSettingsResult();
+            if (!$this->checkSettingsAvailable($settingsResult, "empty array")) {
+                return [];
+            }
+
+            return $settingsResult->settings === null ? [] : $this->parseVariationIds($settingsResult, $user);
         } catch (Exception $exception) {
-            $this->logger->error("An error occurred during getting all the variation ids. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getAllVariationIds',
+                'DEFAULT_RETURN_VALUE' => "empty array"
+            ]);
             return [];
         }
     }
@@ -281,13 +281,20 @@ final class ConfigCatClient implements ClientInterface
     public function getKeyAndValue(string $variationId): ?Pair
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings)
+            $settingsResult = $this->getSettingsResult();
+            if (!$this->checkSettingsAvailable($settingsResult, "null")) {
+                return null;
+            }
+
+            return $settingsResult->settings === null
                 ? null
                 : $this->parseKeyAndValue($settingsResult->settings, $variationId);
         } catch (Exception $exception) {
-            $this->logger->error("Could not find the setting for the given variation ID: " . $variationId . ". "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getKeyAndValue',
+                'DEFAULT_RETURN_VALUE' => "null"
+            ]);
             return null;
         }
     }
@@ -300,11 +307,18 @@ final class ConfigCatClient implements ClientInterface
     public function getAllKeys(): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
+            $settingsResult = $this->getSettingsResult();
+            if (!$this->checkSettingsAvailable($settingsResult, "empty array")) {
+                return [];
+            }
+
+            return $settingsResult->settings === null ? [] : array_keys($settingsResult->settings);
         } catch (Exception $exception) {
-            $this->logger->error("An error occurred during the deserialization. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getAllKeys',
+                'DEFAULT_RETURN_VALUE' => "empty array"
+            ]);
             return [];
         }
     }
@@ -318,11 +332,18 @@ final class ConfigCatClient implements ClientInterface
     public function getAllValues(?User $user = null): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            return empty($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
+            $settingsResult = $this->getSettingsResult();
+            if (!$this->checkSettingsAvailable($settingsResult, "empty array")) {
+                return [];
+            }
+            
+            return $settingsResult->settings === null ? [] : $this->parseValues($settingsResult, $user);
         } catch (Exception $exception) {
-            $this->logger->error("An error occurred during getting all values. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getAllValues',
+                'DEFAULT_RETURN_VALUE' => "empty array"
+            ]);
             return [];
         }
     }
@@ -336,10 +357,11 @@ final class ConfigCatClient implements ClientInterface
     public function getAllValueDetails(?User $user = null): array
     {
         try {
-            $settingsResult = $this->getSettings();
-            if (empty($settingsResult->settings)) {
+            $settingsResult = $this->getSettingsResult();
+            if (!$this->checkSettingsAvailable($settingsResult, "empty array")) {
                 return [];
             }
+
             $keys = array_keys($settingsResult->settings);
             $result = [];
             foreach ($keys as $key) {
@@ -352,8 +374,11 @@ final class ConfigCatClient implements ClientInterface
             }
             return $result;
         } catch (Exception $exception) {
-            $this->logger->error("An error occurred during getting all value details. Returning empty array. "
-                . $exception->getMessage(), ['exception' => $exception]);
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1002, 'exception' => $exception,
+                'METHOD_NAME' => 'getAllValueDetails',
+                'DEFAULT_RETURN_VALUE' => "empty array"
+            ]);
             return [];
         }
     }
@@ -364,15 +389,21 @@ final class ConfigCatClient implements ClientInterface
     public function forceRefresh(): RefreshResult
     {
         if ($this->overrides !== null && OverrideBehaviour::LOCAL_ONLY == $this->overrides->getBehaviour()) {
-            return new RefreshResult(
-                false,
-                "The ConfigCat SDK is in local-only mode. Calling .forceRefresh() has no effect."
-            );
+            $message = "Client is configured to use the `{OVERRIDE_BEHAVIOR}` override behavior, thus `{METHOD_NAME}()` has no effect.";
+            $messageCtx = [
+                'event_id' => 3202,
+                'OVERRIDE_BEHAVIOR' => 'LOCAL_ONLY',
+                'METHOD_NAME' => 'forceRefresh'
+            ];
+            $this->logger->warning($message, $messageCtx);
+            return new RefreshResult(false, InternalLogger::format($message, $messageCtx));
         }
 
         if ($this->offline) {
-            $message = "The SDK is in offline mode, it can't initiate HTTP calls.";
-            $this->logger->warning($message);
+            $message = "Client is in offline mode, it cannot initiate HTTP calls.";
+            $this->logger->warning($message, [
+                'event_id' => 3200
+            ]);
             return new RefreshResult(false, $message);
         }
 
@@ -390,7 +421,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Sets the default user.
      */
-    public function setDefaultUser(User $user)
+    public function setDefaultUser(User $user): void
     {
         $this->defaultUser = $user;
     }
@@ -398,7 +429,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Sets the default user to null.
      */
-    public function clearDefaultUser()
+    public function clearDefaultUser(): void
     {
         $this->defaultUser = null;
     }
@@ -416,7 +447,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Configures the SDK to not initiate HTTP requests.
      */
-    public function setOffline()
+    public function setOffline(): void
     {
         $this->offline = true;
     }
@@ -424,7 +455,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * Configures the SDK to allow HTTP requests.
      */
-    public function setOnline()
+    public function setOnline(): void
     {
         $this->offline = false;
     }
@@ -435,6 +466,50 @@ final class ConfigCatClient implements ClientInterface
     public function isOffline(): bool
     {
         return $this->offline;
+    }
+
+    private function checkSettingsAvailable(SettingsResult $settingsResult, string $defaultReturnValue): bool
+    {
+        if ($settingsResult->settings === null) {
+            $this->logger->error("Config JSON is not present. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1000,
+                'DEFAULT_RETURN_VALUE' => $defaultReturnValue
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    private function checkSettingAvailable(SettingsResult $settingsResult, string $key, string $defaultValueParam, mixed $defaultValue): ?string
+    {
+        if ($settingsResult->settings === null) {
+            $message = "Config JSON is not present when evaluating setting '{KEY}'. " .
+                "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.";
+            $messageCtx = [
+                'event_id' => 1000,
+                'KEY' => $key,
+                'DEFAULT_PARAM_NAME' => $defaultValueParam, 'DEFAULT_PARAM_VALUE' => Utils::getStringRepresentation($defaultValue)
+            ];
+            $this->logger->error($message, $messageCtx);
+            return InternalLogger::format($message, $messageCtx);
+        }
+
+        if (!array_key_exists($key, $settingsResult->settings)) {
+            $message = "Failed to evaluate setting '{KEY}' (the key was not found in config JSON). " .
+                "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'. " .
+                "Available keys: [{AVAILABLE_KEYS}].";
+            $messageCtx = [
+                'event_id' => 1001,
+                'KEY' => $key,
+                'DEFAULT_PARAM_NAME' => $defaultValueParam, 'DEFAULT_PARAM_VALUE' => Utils::getStringRepresentation($defaultValue),
+                'AVAILABLE_KEYS' => !empty($settingsResult->settings) ? "'".implode("', '", array_keys($settingsResult->settings))."'" : ""
+            ];
+            $this->logger->error($message, $messageCtx);
+            return InternalLogger::format($message, $messageCtx);
+        }
+
+        return null;
     }
 
     private function parseValues(SettingsResult $settingsResult, User $user = null): array
@@ -475,7 +550,10 @@ final class ConfigCatClient implements ClientInterface
         $collector = new EvaluationLogCollector();
         $collector->add("Evaluating " . $key . ".");
         $result = $this->evaluator->evaluate($key, $setting, $collector, $actualUser);
-        $this->logger->info($collector);
+        $this->logger->info("{EVALUATE_LOG}", [
+            'event_id' => 5000,
+            'EVALUATE_LOG' => $collector
+        ]);
         $details = new EvaluationDetails(
             $key,
             $result->variationId,
@@ -514,14 +592,14 @@ final class ConfigCatClient implements ClientInterface
             }
         }
 
-        $this->logger->error("Could not find the setting for the given variation ID: " . $variationId);
+        $this->logger->error("Could not find the setting for the specified variation ID: '{VARIATION_ID}'.", [
+            'event_id' => 2011,
+            'VARIATION_ID' => $variationId
+        ]);
         return null;
     }
 
-    /**
-     * @throws ConfigCatClientException
-     */
-    private function getSettings(): SettingsResult
+    private function getSettingsResult(): SettingsResult
     {
         if ($this->overrides !== null) {
             switch ($this->overrides->getBehaviour()) {
@@ -529,24 +607,19 @@ final class ConfigCatClient implements ClientInterface
                     return new SettingsResult($this->overrides->getDataSource()->getOverrides(), 0);
                 case OverrideBehaviour::LOCAL_OVER_REMOTE:
                     $local = $this->overrides->getDataSource()->getOverrides();
-                    $remote = $this->getRemoteSettings();
+                    $remote = $this->getRemoteSettingsResult();
                     return new SettingsResult(array_merge($remote->settings, $local), $remote->fetchTime);
-                case OverrideBehaviour::REMOTE_OVER_LOCAL:
+                default: // remote over local
                     $local = $this->overrides->getDataSource()->getOverrides();
-                    $remote = $this->getRemoteSettings();
+                    $remote = $this->getRemoteSettingsResult();
                     return new SettingsResult(array_merge($local, $remote->settings), $remote->fetchTime);
-                default:
-                    throw new InvalidArgumentException("Invalid override behaviour.");
             }
         }
 
-        return $this->getRemoteSettings();
+        return $this->getRemoteSettingsResult();
     }
 
-    /**
-     * @throws ConfigCatClientException
-     */
-    private function getRemoteSettings(): SettingsResult
+    private function getRemoteSettingsResult(): SettingsResult
     {
         $cacheItem = $this->cache->load($this->cacheKey);
         if ($cacheItem === null) {
@@ -559,14 +632,13 @@ final class ConfigCatClient implements ClientInterface
         }
 
         if (empty($cacheItem->config)) {
-            throw new ConfigCatClientException("Could not retrieve the config.json " .
-                "from either the cache or HTTP.");
+            return new SettingsResult(null, 0);
         }
 
         return new SettingsResult($cacheItem->config[Config::ENTRIES], $cacheItem->lastRefreshed);
     }
 
-    private function handleResponse(FetchResponse $response, CacheItem $cacheItem)
+    private function handleResponse(FetchResponse $response, CacheItem $cacheItem): void
     {
         if (!$response->isFailed()) {
             if ($response->isFetched()) {
@@ -584,8 +656,20 @@ final class ConfigCatClient implements ClientInterface
     private function getMonolog(): Logger
     {
         $handler = new ErrorLogHandler();
-        $formatter = new LineFormatter(null, null, true, true);
+        // This is a slightly modified version of the default log message format used by LineFormatter
+        // (see https://github.com/Seldaek/monolog/blob/3.3.1/src/Monolog/Formatter/LineFormatter.php#L28),
+        // we just add the event ID.
+        $formatter = new LineFormatter(
+            "[%datetime%] %channel%.%level_name%: [%context.event_id%] %message% %context% %extra%\n",
+            null,
+            true,
+            true
+        );
         $handler->setFormatter($formatter);
-        return new Logger("ConfigCat", [$handler]);
+        // We use placeholders for message arguments as defined by the PSR-3 standard
+        // (see https://www.php-fig.org/psr/psr-3/#12-message). Since `true` is passed
+        // as the 2nd argument, placeholder values will be removed from the context array.
+        $psrProcessor = new PsrLogMessageProcessor(null, true);
+        return new Logger("ConfigCat", [$handler], [$psrProcessor]);
     }
 }
