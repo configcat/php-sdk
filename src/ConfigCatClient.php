@@ -263,9 +263,10 @@ final class ConfigCatClient implements ClientInterface
 
             return $settingsResult->settings === null ? [] : $this->parseVariationIds($settingsResult, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
                 'event_id' => 1002, 'exception' => $exception,
-                'METHOD_NAME' => 'getAllVariationIds'
+                'METHOD_NAME' => 'getAllVariationIds',
+                'DEFAULT_RETURN_VALUE' => "empty array"
             ]);
             return [];
         }
@@ -289,9 +290,10 @@ final class ConfigCatClient implements ClientInterface
                 ? null
                 : $this->parseKeyAndValue($settingsResult->settings, $variationId);
         } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning null.", [
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
                 'event_id' => 1002, 'exception' => $exception,
-                'METHOD_NAME' => 'getKeyAndValue'
+                'METHOD_NAME' => 'getKeyAndValue',
+                'DEFAULT_RETURN_VALUE' => "null"
             ]);
             return null;
         }
@@ -312,9 +314,10 @@ final class ConfigCatClient implements ClientInterface
 
             return $settingsResult->settings === null ? [] : array_keys($settingsResult->settings);
         } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
                 'event_id' => 1002, 'exception' => $exception,
-                'METHOD_NAME' => 'getAllKeys'
+                'METHOD_NAME' => 'getAllKeys',
+                'DEFAULT_RETURN_VALUE' => "empty array"
             ]);
             return [];
         }
@@ -336,9 +339,10 @@ final class ConfigCatClient implements ClientInterface
             
             return $settingsResult->settings === null ? [] : $this->parseValues($settingsResult, $user);
         } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
                 'event_id' => 1002, 'exception' => $exception,
-                'METHOD_NAME' => 'getAllValues'
+                'METHOD_NAME' => 'getAllValues',
+                'DEFAULT_RETURN_VALUE' => "empty array"
             ]);
             return [];
         }
@@ -370,9 +374,10 @@ final class ConfigCatClient implements ClientInterface
             }
             return $result;
         } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning empty array.", [
+            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
                 'event_id' => 1002, 'exception' => $exception,
-                'METHOD_NAME' => 'getAllValueDetails'
+                'METHOD_NAME' => 'getAllValueDetails',
+                'DEFAULT_RETURN_VALUE' => "empty array"
             ]);
             return [];
         }
@@ -466,8 +471,9 @@ final class ConfigCatClient implements ClientInterface
     private function checkSettingsAvailable(SettingsResult $settingsResult, string $defaultReturnValue): bool
     {
         if ($settingsResult->settings === null) {
-            $this->logger->error("Config JSON is not present. Returning " . $defaultReturnValue . ".", [
-                'event_id' => 1000
+            $this->logger->error("Config JSON is not present. Returning {DEFAULT_RETURN_VALUE}.", [
+                'event_id' => 1000,
+                'DEFAULT_RETURN_VALUE' => $defaultReturnValue
             ]);
             return false;
         }
