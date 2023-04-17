@@ -608,11 +608,11 @@ final class ConfigCatClient implements ClientInterface
                 case OverrideBehaviour::LOCAL_OVER_REMOTE:
                     $local = $this->overrides->getDataSource()->getOverrides();
                     $remote = $this->getRemoteSettingsResult();
-                    return new SettingsResult(array_merge($remote->settings, $local), $remote->fetchTime);
+                    return new SettingsResult(array_merge($remote->settings ?? [], $local), $remote->fetchTime);
                 default: // remote over local
                     $local = $this->overrides->getDataSource()->getOverrides();
                     $remote = $this->getRemoteSettingsResult();
-                    return new SettingsResult(array_merge($local, $remote->settings), $remote->fetchTime);
+                    return new SettingsResult(array_merge($local, $remote->settings ?? []), $remote->fetchTime);
             }
         }
 
