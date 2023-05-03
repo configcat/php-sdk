@@ -1,2 +1,11 @@
-/tests export-ignore
+/.github export-ignore
+/media export-ignore
 /samples export-ignore
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.sonarcloud.properties export-ignore
+/CONTRIBUTING.md export-ignore
+/DEPLOY.md export-ignore
+/phpcs.xml export-ignore
+/phpunit.xml export-ignore
