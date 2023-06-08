@@ -644,7 +644,6 @@ final class ConfigCatClient implements ClientInterface
             if ($response->isFetched()) {
                 $cacheItem->config = $response->getBody();
                 $cacheItem->etag = $response->getETag();
-                $cacheItem->url = $response->getUrl();
                 $this->hooks->fireOnConfigChanged($cacheItem->config[Config::ENTRIES]);
             }
 
