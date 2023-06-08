@@ -412,7 +412,7 @@ final class ConfigCatClient implements ClientInterface
             $cacheItem = new CacheItem();
         }
 
-        $response = $this->fetcher->fetch("", $cacheItem->url);
+        $response = $this->fetcher->fetch("");
         $this->handleResponse($response, $cacheItem);
 
         return new RefreshResult(!$response->isFailed(), $response->getError());
@@ -627,7 +627,7 @@ final class ConfigCatClient implements ClientInterface
         }
 
         if (!$this->offline && $cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
-            $response = $this->fetcher->fetch($cacheItem->etag, $cacheItem->url);
+            $response = $this->fetcher->fetch($cacheItem->etag);
             $this->handleResponse($response, $cacheItem);
         }
 

@@ -104,13 +104,12 @@ final class ConfigFetcher
      * Gets the latest configuration from the network.
      *
      * @param ?string $etag The ETag.
-     * @param ?string $cachedUrl The cached cdn url.
      *
      * @return FetchResponse An object describing the result of the fetch.
      */
-    public function fetch(?string $etag, ?string $cachedUrl): FetchResponse
+    public function fetch(?string $etag): FetchResponse
     {
-        return $this->executeFetch($etag, !empty($cachedUrl) ? $cachedUrl : $this->baseUrl, 2);
+        return $this->executeFetch($etag, $this->baseUrl, 2);
     }
 
     public function getRequestOptions(): array

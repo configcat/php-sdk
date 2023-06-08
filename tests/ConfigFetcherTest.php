@@ -25,7 +25,7 @@ class ConfigFetcherTest extends TestCase
             new Response(200, [ConfigFetcher::ETAG_HEADER => $this->mockEtag], $this->mockBody)
         ]))]);
 
-        $response = $fetcher->fetch("old_etag", "");
+        $response = $fetcher->fetch("old_etag");
 
         $this->assertTrue($response->isFetched());
         $this->assertEquals($this->mockEtag, $response->getETag());
@@ -38,7 +38,7 @@ class ConfigFetcherTest extends TestCase
             new Response(304, [ConfigFetcher::ETAG_HEADER => $this->mockEtag])
         ]))]);
 
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isNotModified());
         $this->assertNull($response->getETag());
@@ -51,7 +51,7 @@ class ConfigFetcherTest extends TestCase
             new Response(400)
         ]))]);
 
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isFailed());
         $this->assertNull($response->getETag());
@@ -64,7 +64,7 @@ class ConfigFetcherTest extends TestCase
             new Response(200, [], "{\"key\": value}")
         ]))]);
 
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isFailed());
         $this->assertNull($response->getETag());
@@ -110,18 +110,18 @@ class ConfigFetcherTest extends TestCase
         $fetcher = new ConfigFetcher("api", Utils::getTestLogger(), [ClientOptions::CUSTOM_HANDLER => HandlerStack::create(new MockHandler([
             new ConnectException("timeout", new Request("GET", "test"))
         ]))]);
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
         $this->assertTrue($response->isFailed());
     }
 
     public function testIntegration()
     {
         $fetcher = new ConfigFetcher("PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA", Utils::getTestLogger());
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isFetched());
 
-        $notModifiedResponse = $fetcher->fetch($response->getETag(), "");
+        $notModifiedResponse = $fetcher->fetch($response->getETag());
 
         $this->assertTrue($notModifiedResponse->isNotModified());
     }

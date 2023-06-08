@@ -27,7 +27,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(1, count($requests));
@@ -47,7 +47,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(1, count($requests));
@@ -67,7 +67,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(1, count($requests));
@@ -89,7 +89,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(2, count($requests));
@@ -112,35 +112,12 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(2, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
-        $this->assertEquals(json_decode($secondBody, true), $response->getBody());
-    }
-
-    public function testShouldRedirectToAnotherServerWhenWrongIsCached() {
-        // Arrange
-        $requests = [];
-        $firstBody = sprintf(self::JSON_TEMPLATE, ConfigFetcher::GLOBAL_URL, 1);
-        $secondBody = sprintf(self::JSON_TEMPLATE, ConfigFetcher::GLOBAL_URL, 0);
-        $responses = [
-            new Response(200, [], $firstBody),
-            new Response(200, [], $secondBody),
-        ];
-
-        $handler = $this->getHandlerStack($responses, $requests);
-        $fetcher = $this->getFetcher($handler);
-
-        // Act
-        $response = $fetcher->fetch("", ConfigFetcher::EU_ONLY_URL);
-
-        // Assert
-        $this->assertEquals(2, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($secondBody, true), $response->getBody());
     }
 
@@ -159,7 +136,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(3, count($requests));
@@ -184,7 +161,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(3, count($requests));
@@ -199,6 +176,7 @@ class DataGovernanceTest extends TestCase
         $requests = [];
         $firstBody = sprintf(self::JSON_TEMPLATE, ConfigFetcher::GLOBAL_URL, 1);
         $responses = [
+            new Response(200, [], $firstBody),
             new Response(200, [], $firstBody)
         ];
 
@@ -206,11 +184,19 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler, self::CUSTOM_CDN_URL);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(1, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
+        $this->assertEquals(json_decode($firstBody, true), $response->getBody());
+
+        // Act
+        $response = $fetcher->fetch("");
+
+        // Assert
+        $this->assertEquals(2, count($requests));
+        $this->assertContains($requests[1]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertEquals(json_decode($firstBody, true), $response->getBody());
     }
 
@@ -228,7 +214,7 @@ class DataGovernanceTest extends TestCase
         $fetcher = $this->getFetcher($handler, self::CUSTOM_CDN_URL);
 
         // Act
-        $response = $fetcher->fetch("", "");
+        $response = $fetcher->fetch("");
 
         // Assert
         $this->assertEquals(2, count($requests));
