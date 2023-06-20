@@ -410,6 +410,24 @@ class ConfigCatClientTest extends TestCase
         $this->assertFalse($details->isDefaultValue());
     }
 
+    public function testEvalDetails_Non_Existent_Flag()
+    {
+        $client = new ConfigCatClient("testEvalDetails", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+            new Response(200, [], Utils::formatConfigWithRules())
+        ])]);
+
+        $details = $client->getValueDetails("non-existent", "", new User("test@test1.com"));
+
+        $this->assertEquals("", $details->getValue());
+        $this->assertEquals("", $details->getVariationId());
+        $this->assertNotNull($details->getError());
+        $this->assertEquals("non-existent", $details->getKey());
+        $this->assertEquals("test@test1.com", $details->getUser()->getIdentifier());
+        $this->assertNull($details->getMatchedEvaluationRule());
+        $this->assertNull($details->getMatchedEvaluationPercentageRule());
+        $this->assertTrue($details->isDefaultValue());
+    }
+
     public function testEvalDetailsHook()
     {
         $client = new ConfigCatClient("testEvalDetailsHook", [ClientOptions::CUSTOM_HANDLER => new MockHandler([

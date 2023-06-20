@@ -27,7 +27,7 @@ use Psr\Log\LoggerInterface;
  */
 final class ConfigCatClient implements ClientInterface
 {
-    public const SDK_VERSION = '7.1.0';
+    public const SDK_VERSION = '7.1.1';
 
     private InternalLogger $logger;
     private ConfigCache $cache;
@@ -140,7 +140,8 @@ final class ConfigCatClient implements ClientInterface
                     $key,
                     $defaultValue,
                     $user,
-                    $errorMessage));
+                    $errorMessage
+                ));
                 return $defaultValue;
             }
 
@@ -183,12 +184,14 @@ final class ConfigCatClient implements ClientInterface
             $settingsResult = $this->getSettingsResult();
             $errorMessage = $this->checkSettingAvailable($settingsResult, $key, '$defaultValue', $defaultValue);
             if ($errorMessage !== null) {
-                $this->hooks->fireOnFlagEvaluated(EvaluationDetails::fromError(
+                $details = EvaluationDetails::fromError(
                     $key,
                     $defaultValue,
                     $user,
-                    $errorMessage));
-                return $defaultValue;
+                    $errorMessage
+                );
+                $this->hooks->fireOnFlagEvaluated($details);
+                return $details;
             }
 
             return $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime);
