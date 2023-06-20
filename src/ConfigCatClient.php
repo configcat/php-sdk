@@ -177,7 +177,7 @@ final class ConfigCatClient implements ClientInterface
      * @param ?User $user The user object to identify the caller.
      * @return mixed The configuration value identified by the given key.
      */
-    public function getValueDetails(string $key, mixed $defaultValue, ?User $user = null): EvaluationDetails
+    public function getValueDetails(string $key, mixed $defaultValue, ?User $user = null): mixed
     {
         try {
             $settingsResult = $this->getSettingsResult();

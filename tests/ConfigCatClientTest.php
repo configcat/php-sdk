@@ -410,6 +410,15 @@ class ConfigCatClientTest extends TestCase
         $this->assertFalse($details->isDefaultValue());
     }
 
+    public function testEvalMissingDetails()
+    {
+        $client = new ConfigCatClient("testEvalDetails", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+            new Response(200, [], Utils::formatConfigWithRules())
+        ])]);
+
+        $this->assertNull($client->getValueDetails("unknown-key", null));
+    }
+
     public function testEvalDetailsHook()
     {
         $client = new ConfigCatClient("testEvalDetailsHook", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
