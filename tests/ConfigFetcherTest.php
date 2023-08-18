@@ -28,8 +28,8 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch("old_etag");
 
         $this->assertTrue($response->isFetched());
-        $this->assertEquals($this->mockEtag, $response->getETag());
-        $this->assertEquals("value", $response->getBody()['key']);
+        $this->assertEquals($this->mockEtag, $response->getConfigEntry()->getEtag());
+        $this->assertEquals("value", $response->getConfigEntry()->getConfig()['key']);
     }
 
     public function testFetchNotModified()
@@ -41,8 +41,8 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isNotModified());
-        $this->assertNull($response->getETag());
-        $this->assertNull($response->getBody());
+        $this->assertEmpty($response->getConfigEntry()->getETag());
+        $this->assertEmpty($response->getConfigEntry()->getConfig());
     }
 
     public function testFetchFailed()
@@ -54,8 +54,8 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isFailed());
-        $this->assertNull($response->getETag());
-        $this->assertNull($response->getBody());
+        $this->assertEmpty($response->getConfigEntry()->getETag());
+        $this->assertEmpty($response->getConfigEntry()->getConfig());
     }
 
     public function testFetchInvalidJson()
@@ -67,8 +67,8 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch("");
 
         $this->assertTrue($response->isFailed());
-        $this->assertNull($response->getETag());
-        $this->assertNull($response->getBody());
+        $this->assertEmpty($response->getConfigEntry()->getETag());
+        $this->assertEmpty($response->getConfigEntry()->getConfig());
     }
 
     public function testConstructEmptySdkKey()
@@ -121,7 +121,7 @@ class ConfigFetcherTest extends TestCase
 
         $this->assertTrue($response->isFetched());
 
-        $notModifiedResponse = $fetcher->fetch($response->getETag());
+        $notModifiedResponse = $fetcher->fetch($response->getConfigEntry()->getEtag());
 
         $this->assertTrue($notModifiedResponse->isNotModified());
     }

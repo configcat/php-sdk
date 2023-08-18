@@ -4,6 +4,7 @@ namespace ConfigCat;
 
 use ConfigCat\Attributes\Config;
 use ConfigCat\Attributes\Preferences;
+use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\Log\InternalLogger;
 use Exception;
 use GuzzleHttp\Client;
@@ -20,7 +21,7 @@ use InvalidArgumentException;
 final class ConfigFetcher
 {
     public const ETAG_HEADER = "ETag";
-    public const CONFIG_JSON_NAME = "config_v5";
+    public const CONFIG_JSON_NAME = "config_v5.json";
 
     public const GLOBAL_URL = "https://cdn-global.configcat.com";
     public const EU_ONLY_URL = "https://cdn-eu.configcat.com";
@@ -58,7 +59,7 @@ final class ConfigFetcher
             throw new InvalidArgumentException("sdkKey cannot be empty.");
         }
 
-        $this->urlPath = sprintf("configuration-files/%s/" . self::CONFIG_JSON_NAME . ".json", $sdkKey);
+        $this->urlPath = sprintf("configuration-files/%s/" . self::CONFIG_JSON_NAME, $sdkKey);
 
         if (isset($options[ClientOptions::BASE_URL]) && !empty($options[ClientOptions::BASE_URL])) {
             $this->baseUrl = $options[ClientOptions::BASE_URL];
@@ -121,16 +122,19 @@ final class ConfigFetcher
     {
         $response = $this->sendConfigFetchRequest($etag, $url);
 
-        if (!$response->isFetched() || !isset($response->getBody()[Config::PREFERENCES])) {
+        if (!$response->isFetched() || !isset($response->getConfigEntry()->getConfig()[Config::PREFERENCES])) {
             return $response;
         }
 
-        $newUrl = $response->getUrl();
+        $newUrl = "";
+        if (isset($response->getConfigEntry()->getConfig()[Config::PREFERENCES][Preferences::BASE_URL])) {
+            $newUrl = $response->getConfigEntry()->getConfig()[Config::PREFERENCES][Preferences::BASE_URL];
+        }
         if (empty($newUrl) || $newUrl == $url) {
             return $response;
         }
 
-        $preferences = $response->getBody()[Config::PREFERENCES];
+        $preferences = $response->getConfigEntry()->getConfig()[Config::PREFERENCES];
         $redirect = $preferences[Preferences::REDIRECT];
         if ($this->urlIsCustom && $redirect != self::FORCE_REDIRECT) {
             return $response;
@@ -172,10 +176,14 @@ final class ConfigFetcher
             $response = $this->client->get($configJsonUrl, $this->requestOptions);
             $statusCode = $response->getStatusCode();
 
+            if ($response->hasHeader(self::ETAG_HEADER)) {
+                $etag = $response->getHeader(self::ETAG_HEADER)[0];
+            }
+
             if ($statusCode >= 200 && $statusCode < 300) {
                 $this->logger->debug("Fetch was successful: new config fetched.");
 
-                $body = json_decode($response->getBody(), true);
+                $entry = ConfigEntry::fromConfigJson($response->getBody(), $etag, time());
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $message = "Fetching config JSON was successful but the HTTP response content was invalid. JSON error: {JSON_ERROR}";
                     $messageCtx = [
@@ -186,16 +194,7 @@ final class ConfigFetcher
                     return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
                 }
 
-                if ($response->hasHeader(self::ETAG_HEADER)) {
-                    $etag = $response->getHeader(self::ETAG_HEADER)[0];
-                }
-
-                $newUrl = "";
-                if (isset($body[Config::PREFERENCES]) && isset($body[Config::PREFERENCES][Preferences::BASE_URL])) {
-                    $newUrl = $body[Config::PREFERENCES][Preferences::BASE_URL];
-                }
-
-                return FetchResponse::success($etag, $body, $newUrl);
+                return FetchResponse::success($entry);
             } elseif ($statusCode === 304) {
                 $this->logger->debug("Fetch was successful: config not modified.");
                 return FetchResponse::notModified();

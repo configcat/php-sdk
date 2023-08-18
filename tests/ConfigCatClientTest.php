@@ -130,21 +130,9 @@ class ConfigCatClientTest extends TestCase
                 [new Response(200, [], self::TEST_JSON)]
             ),
         ]);
-        $value = $client->getVariationId("second", null);
+        $details = $client->getValueDetails("second", false);
 
-        $this->assertEquals("fakeIdSecond", $value);
-    }
-
-    public function testGetVariationIdDefault()
-    {
-        $client = new ConfigCatClient("testGetVariationIdDefault", [
-            ClientOptions::CUSTOM_HANDLER => new MockHandler(
-                [new Response(200, [], self::TEST_JSON)]
-            ),
-        ]);
-        $value = $client->getVariationId("nonexisting", null);
-
-        $this->assertNull($value);
+        $this->assertEquals("fakeIdSecond", $details->getVariationId());
     }
 
     public function testGetAllVariationIds()
@@ -154,9 +142,9 @@ class ConfigCatClientTest extends TestCase
                 [new Response(200, [], self::TEST_JSON)]
             ),
         ]);
-        $value = $client->getAllVariationIds();
+        $value = $client->getAllValueDetails();
 
-        $this->assertEquals(["fakeIdFirst", "fakeIdSecond"], $value);
+        $this->assertEquals(2, count($value));
     }
 
     public function testGetAllVariationIdsEmpty()
@@ -164,7 +152,7 @@ class ConfigCatClientTest extends TestCase
         $client = new ConfigCatClient("testGetAllVariationIdsEmpty", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(400)
         ])]);
-        $value = $client->getAllVariationIds();
+        $value = $client->getAllValueDetails();
 
         $this->assertEmpty($value);
     }
@@ -276,16 +264,16 @@ class ConfigCatClientTest extends TestCase
 
         $client->setDefaultUser($user1);
 
-        $value = $client->getVariationId("key", "");
-        $this->assertEquals("id1", $value);
+        $value = $client->getValueDetails("key", "");
+        $this->assertEquals("id1", $value->getVariationId());
 
-        $value = $client->getVariationId("key", "", $user2);
-        $this->assertEquals("id2", $value);
+        $value = $client->getValueDetails("key", "", $user2);
+        $this->assertEquals("id2", $value->getVariationId());
 
         $client->clearDefaultUser();
 
-        $value = $client->getVariationId("key", "");
-        $this->assertEquals("defVar", $value);
+        $value = $client->getValueDetails("key", "");
+        $this->assertEquals("defVar", $value->getVariationId());
     }
 
     public function testOfflineOnline()

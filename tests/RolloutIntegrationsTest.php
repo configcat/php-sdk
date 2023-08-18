@@ -73,7 +73,7 @@ class RolloutIntegrationsTest extends TestCase
                 $expected = $testObjects[$count + 4];
                 $actual = $kind == self::valueKind
                     ? $client->getValue($key, null, $user)
-                    : $client->getVariationId($key, null, $user);
+                    : $client->getValueDetails($key, null, $user)->getVariationId();
 
                 if (is_bool($actual)) {
                     $actual = $actual ? "True" : "False";
