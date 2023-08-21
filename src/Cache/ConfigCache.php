@@ -72,7 +72,7 @@ abstract class ConfigCache implements LoggerAwareInterface
 
         try {
             $cached = $this->get($key);
-            if (!$cached) {
+            if (empty($cached)) {
                 return ConfigEntry::empty();
             }
             
