@@ -10,6 +10,8 @@ use UnexpectedValueException;
  */
 class ConfigEntry
 {
+    private static ?ConfigEntry $empty = null;
+
     private function __construct(
         private readonly string $configJson,
         private readonly array $config,
@@ -50,7 +52,11 @@ class ConfigEntry
 
     public static function empty(): ConfigEntry
     {
-        return new ConfigEntry("", [], "", 0);
+        if (self::$empty == null) {
+            self::$empty = new ConfigEntry("", [], "", 0);
+        }
+
+        return self::$empty;
     }
 
     public static function fromConfigJson(string $configJson, string $etag, int $fetchTime): ConfigEntry
