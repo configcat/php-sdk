@@ -7,7 +7,7 @@ namespace ConfigCat;
  */
 class SettingsResult
 {
-    public function __construct(public ?array $settings, public int $fetchTime)
+    public function __construct(public ?array $settings, public float $fetchTime)
     {
     }
 }

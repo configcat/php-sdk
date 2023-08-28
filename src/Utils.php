@@ -47,4 +47,13 @@ final class Utils
 
         return (string)$value;
     }
+
+    /**
+     * Returns the Unix timestamp in milliseconds.
+     *
+     * @return float Milliseconds since epoch.
+     */
+    public static function getUnixMilliseconds(): float {
+        return floor(microtime(true) * 1000);
+    }
 }

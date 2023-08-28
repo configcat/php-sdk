@@ -14,7 +14,7 @@ class EvaluationDetails
         private readonly ?User $user,
         private readonly bool $isDefaultValue,
         private readonly ?string $error,
-        private readonly int $fetchTimeUnixSeconds,
+        private readonly float $fetchTimeUnixSeconds,
         private readonly ?array $matchedEvaluationRule,
         private readonly ?array $matchedEvaluationPercentageRule
     ) {

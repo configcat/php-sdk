@@ -6,6 +6,7 @@ use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
+use DateTime;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
@@ -18,10 +19,12 @@ class CacheTest extends TestCase
     {
         $testJson = "{\"p\":{\"u\":\"https://cdn-global.configcat.com\",\"r\":0},\"f\":{\"testKey\":{\"v\":\"testValue\",\"t\":1,\"p\":[],\"r\":[]}}}";
 
-        $time = strtotime("2023-06-14T15:27:15.8440000Z");
+        $dateTime = new DateTime('2023-06-14T15:27:15.8440000Z');
+
+        $time = (float)$dateTime->format('Uv');
         $etag = "test-etag";
 
-        $expectedPayload = "1686756435000\ntest-etag\n" . $testJson;
+        $expectedPayload = "1686756435844\ntest-etag\n" . $testJson;
 
         $entry = ConfigEntry::fromConfigJson($testJson, $etag, $time);
 

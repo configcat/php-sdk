@@ -463,7 +463,7 @@ final class ConfigCatClient implements ClientInterface
         return $result;
     }
 
-    private function evaluate(string $key, array $setting, ?User $user, int $fetchTime): EvaluationDetails
+    private function evaluate(string $key, array $setting, ?User $user, float $fetchTime): EvaluationDetails
     {
         $actualUser = $user === null ? $this->defaultUser : $user;
         $collector = new EvaluationLogCollector();
@@ -541,7 +541,7 @@ final class ConfigCatClient implements ClientInterface
     private function getRemoteSettingsResult(): SettingsResult
     {
         $cacheEntry = $this->cache->load($this->cacheKey);
-        if (!$this->offline && $cacheEntry->getFetchTime() + $this->cacheRefreshInterval < time()) {
+        if (!$this->offline && $cacheEntry->getFetchTime() + $this->cacheRefreshInterval < Utils::getUnixMilliseconds()) {
             $response = $this->fetcher->fetch($cacheEntry->getEtag());
             $cacheEntry = $this->handleResponse($response, $cacheEntry);
         }
@@ -560,7 +560,7 @@ final class ConfigCatClient implements ClientInterface
             $this->cache->store($this->cacheKey, $response->getConfigEntry());
             return $response->getConfigEntry();
         } elseif ($response->isNotModified()) {
-            $newEntry = $cacheEntry->withTime(time());
+            $newEntry = $cacheEntry->withTime(Utils::getUnixMilliseconds());
             $this->cache->store($this->cacheKey, $newEntry);
             return $newEntry;
         }

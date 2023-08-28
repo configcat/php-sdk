@@ -183,7 +183,7 @@ final class ConfigFetcher
             if ($statusCode >= 200 && $statusCode < 300) {
                 $this->logger->debug("Fetch was successful: new config fetched.");
 
-                $entry = ConfigEntry::fromConfigJson($response->getBody(), $etag, time());
+                $entry = ConfigEntry::fromConfigJson($response->getBody(), $etag, Utils::getUnixMilliseconds());
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $message = "Fetching config JSON was successful but the HTTP response content was invalid. JSON error: {JSON_ERROR}";
                     $messageCtx = [

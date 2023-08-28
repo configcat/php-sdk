@@ -16,7 +16,7 @@ class ConfigEntry
         private readonly string $configJson,
         private readonly array $config,
         private readonly string $etag,
-        private readonly int $fetchTime,
+        private readonly float $fetchTime,
     ) {
     }
 
@@ -35,17 +35,17 @@ class ConfigEntry
         return $this->etag;
     }
 
-    public function getFetchTime(): int
+    public function getFetchTime(): float
     {
         return $this->fetchTime;
     }
 
     public function serialize(): string
     {
-        return ($this->fetchTime * 1000) . "\n" . $this->etag . "\n" . $this->configJson;
+        return $this->fetchTime . "\n" . $this->etag . "\n" . $this->configJson;
     }
 
-    public function withTime(int $time): ConfigEntry
+    public function withTime(float $time): ConfigEntry
     {
         return new ConfigEntry($this->configJson, $this->config, $this->etag, $time);
     }
@@ -59,7 +59,7 @@ class ConfigEntry
         return self::$empty;
     }
 
-    public static function fromConfigJson(string $configJson, string $etag, int $fetchTime): ConfigEntry
+    public static function fromConfigJson(string $configJson, string $etag, float $fetchTime): ConfigEntry
     {
         $deserialized = json_decode($configJson, true);
         if ($deserialized == null) {
@@ -79,15 +79,15 @@ class ConfigEntry
         }
 
         $fetchTimeString = substr($cached, 0, $timePos);
-        $fetchTime = intval($fetchTimeString);
+        $fetchTime = floatval($fetchTimeString);
 
-        if ($fetchTime === 0) {
+        if ($fetchTime == 0) {
             throw new UnexpectedValueException("Invalid fetch time: " . $fetchTimeString);
         }
 
         $etag = substr($cached, $timePos + 1, $etagPos - $timePos - 1);
         $configJson = substr($cached, $etagPos + 1);
 
-        return self::fromConfigJson($configJson, $etag, $fetchTime / 1000);
+        return self::fromConfigJson($configJson, $etag, $fetchTime);
     }
 }
