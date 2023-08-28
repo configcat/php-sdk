@@ -4,6 +4,7 @@ namespace ConfigCat\Tests;
 
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\ConfigCache;
+use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
 use ConfigCat\EvaluationDetails;
@@ -121,6 +122,35 @@ class ConfigCatClientTest extends TestCase
         $value = $client->getValue("nonExistingKey", false);
 
         $this->assertFalse($value);
+    }
+
+    public function testCacheExpiration()
+    {
+        $cache = $this->getMockBuilder(ConfigCache::class)->getMock();
+        $mockHandler = new MockHandler(
+            [new Response(200, [], self::TEST_JSON)]
+        );
+        $client = new ConfigCatClient("testCacheExpiration", [
+            ClientOptions::CACHE => $cache,
+            ClientOptions::CUSTOM_HANDLER => $mockHandler,
+            ClientOptions::CACHE_REFRESH_INTERVAL => 1
+        ]);
+
+        $cache
+            ->method('load')
+            ->willReturn(ConfigEntry::fromConfigJson(self::TEST_JSON, "", \ConfigCat\Utils::getUnixMilliseconds() - 500));
+
+        $value = $client->getValue("second", false);
+
+        $this->assertTrue($value);
+        $this->assertNull($mockHandler->getLastRequest());
+
+        sleep(1);
+
+        $value = $client->getValue("second", false);
+
+        $this->assertTrue($value);
+        $this->assertNotNull($mockHandler->getLastRequest());
     }
 
     public function testGetVariationId()
@@ -394,7 +424,7 @@ class ConfigCatClientTest extends TestCase
         $this->assertEquals("@test1.com", $details->getMatchedEvaluationRule()["c"]);
         $this->assertEquals(2, $details->getMatchedEvaluationRule()["t"]);
         $this->assertNull($details->getMatchedEvaluationPercentageRule());
-        $this->assertTrue($details->getFetchTimeUnixSeconds() > 0);
+        $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
         $this->assertFalse($details->isDefaultValue());
     }
 
@@ -434,7 +464,7 @@ class ConfigCatClientTest extends TestCase
             $this->assertEquals(2, $details->getMatchedEvaluationRule()["t"]);
             $this->assertNull($details->getMatchedEvaluationPercentageRule());
             $this->assertFalse($details->isDefaultValue());
-            $this->assertTrue($details->getFetchTimeUnixSeconds() > 0);
+            $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
             $called = true;
         });
 

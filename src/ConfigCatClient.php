@@ -49,7 +49,7 @@ final class ConfigCatClient implements ClientInterface
      *     - base-url: The base ConfigCat CDN url.
      *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
      *     - cache: A \ConfigCat\ConfigCache implementation used for caching the latest feature flag and setting values.
-     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
+     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed in seconds.
      *     - request-options: Additional options for Guzzle http requests.
      *                        https://docs.guzzlephp.org/en/stable/request-options.html
      *     - custom-handler: A custom callable Guzzle http handler.
@@ -541,7 +541,7 @@ final class ConfigCatClient implements ClientInterface
     private function getRemoteSettingsResult(): SettingsResult
     {
         $cacheEntry = $this->cache->load($this->cacheKey);
-        if (!$this->offline && $cacheEntry->getFetchTime() + $this->cacheRefreshInterval < Utils::getUnixMilliseconds()) {
+        if (!$this->offline && $cacheEntry->getFetchTime() + ($this->cacheRefreshInterval * 1000) < Utils::getUnixMilliseconds()) {
             $response = $this->fetcher->fetch($cacheEntry->getEtag());
             $cacheEntry = $this->handleResponse($response, $cacheEntry);
         }
