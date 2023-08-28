@@ -7,7 +7,7 @@ use ConfigCat\Attributes\PercentageAttributes;
 use ConfigCat\Attributes\RolloutAttributes;
 use ConfigCat\Attributes\SettingAttributes;
 use ConfigCat\Cache\ArrayCache;
-use ConfigCat\Cache\CacheItem;
+use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
@@ -27,7 +27,8 @@ use Psr\Log\LoggerInterface;
  */
 final class ConfigCatClient implements ClientInterface
 {
-    public const SDK_VERSION = '7.1.1';
+    public const SDK_VERSION = "8.0.0";
+    private const CONFIG_JSON_CACHE_VERSION = "v2";
 
     private InternalLogger $logger;
     private ConfigCache $cache;
@@ -48,7 +49,7 @@ final class ConfigCatClient implements ClientInterface
      *     - base-url: The base ConfigCat CDN url.
      *     - logger: A \Psr\Log\LoggerInterface implementation used for logging.
      *     - cache: A \ConfigCat\ConfigCache implementation used for caching the latest feature flag and setting values.
-     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed.
+     *     - cache-refresh-interval: Sets how frequent the cached configuration should be refreshed in seconds.
      *     - request-options: Additional options for Guzzle http requests.
      *                        https://docs.guzzlephp.org/en/stable/request-options.html
      *     - custom-handler: A custom callable Guzzle http handler.
@@ -72,7 +73,7 @@ final class ConfigCatClient implements ClientInterface
         }
 
         $this->hooks = new Hooks();
-        $this->cacheKey = sha1(sprintf("php_" . ConfigFetcher::CONFIG_JSON_NAME . "_%s", $sdkKey));
+        $this->cacheKey = sha1(sprintf("%s_" . ConfigFetcher::CONFIG_JSON_NAME . "_" . self::CONFIG_JSON_CACHE_VERSION, $sdkKey));
 
         $externalLogger = (isset($options[ClientOptions::LOGGER]) &&
             $options[ClientOptions::LOGGER] instanceof LoggerInterface)
@@ -211,71 +212,6 @@ final class ConfigCatClient implements ClientInterface
     }
 
     /**
-     * Gets the Variation ID (analytics) of a feature flag or setting by the given key.
-     *
-     * @param string $key The identifier of the configuration value.
-     * @param mixed $defaultVariationId In case of any failure, this value will be returned.
-     * @param ?User $user The user object to identify the caller.
-     * @return ?string The Variation ID identified by the given key.
-     *
-     * @deprecated This method is obsolete and will be removed in a future major version.
-     * Please use getValueDetails() instead.
-     */
-    public function getVariationId(string $key, ?string $defaultVariationId, ?User $user = null): ?string
-    {
-        try {
-            $settingsResult = $this->getSettingsResult();
-            $errorMessage = $this->checkSettingAvailable($settingsResult, $key, '$defaultVariationId', $defaultVariationId);
-            if ($errorMessage !== null) {
-                return $defaultVariationId;
-            }
-
-            return $this->evaluate(
-                $key,
-                $settingsResult->settings[$key],
-                $user,
-                $settingsResult->fetchTime
-            )->getVariationId();
-        } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method while evaluating setting '{KEY}'. " .
-                "Returning the `{DEFAULT_PARAM_NAME}` parameter that you specified in your application: '{DEFAULT_PARAM_VALUE}'.", [
-                    'event_id' => 1002, 'exception' => $exception,
-                    'METHOD_NAME' => 'getVariationId', 'KEY' => $key,
-                    'DEFAULT_PARAM_NAME' => '$defaultVariationId', 'DEFAULT_PARAM_VALUE' => $defaultVariationId
-                ]);
-            return $defaultVariationId;
-        }
-    }
-
-    /**
-     * Gets the Variation IDs (analytics) of all feature flags or settings.
-     *
-     * @param ?User $user The user object to identify the caller.
-     * @return array of all Variation IDs.
-     *
-     * @deprecated This method is obsolete and will be removed in a future major version.
-     * Please use getAllValueDetails() instead.
-     */
-    public function getAllVariationIds(?User $user = null): array
-    {
-        try {
-            $settingsResult = $this->getSettingsResult();
-            if (!$this->checkSettingsAvailable($settingsResult, "empty array")) {
-                return [];
-            }
-
-            return $settingsResult->settings === null ? [] : $this->parseVariationIds($settingsResult, $user);
-        } catch (Exception $exception) {
-            $this->logger->error("Error occurred in the `{METHOD_NAME}` method. Returning {DEFAULT_RETURN_VALUE}.", [
-                'event_id' => 1002, 'exception' => $exception,
-                'METHOD_NAME' => 'getAllVariationIds',
-                'DEFAULT_RETURN_VALUE' => "empty array"
-            ]);
-            return [];
-        }
-    }
-
-    /**
      * Gets the key of a setting and its value identified by the given Variation ID (analytics).
      *
      * @param string $variationId The Variation ID.
@@ -410,13 +346,9 @@ final class ConfigCatClient implements ClientInterface
             return new RefreshResult(false, $message);
         }
 
-        $cacheItem = $this->cache->load($this->cacheKey);
-        if ($cacheItem === null) {
-            $cacheItem = new CacheItem();
-        }
-
-        $response = $this->fetcher->fetch("");
-        $this->handleResponse($response, $cacheItem);
+        $cacheEntry = $this->cache->load($this->cacheKey);
+        $response = $this->fetcher->fetch($cacheEntry->getEtag());
+        $this->handleResponse($response, $cacheEntry);
 
         return new RefreshResult(!$response->isFailed(), $response->getError());
     }
@@ -531,23 +463,7 @@ final class ConfigCatClient implements ClientInterface
         return $result;
     }
 
-    private function parseVariationIds(SettingsResult $settingsResult, User $user = null): array
-    {
-        $keys = array_keys($settingsResult->settings);
-        $result = [];
-        foreach ($keys as $key) {
-            $result[] = $this->evaluate(
-                $key,
-                $settingsResult->settings[$key],
-                $user,
-                $settingsResult->fetchTime
-            )->getVariationId();
-        }
-
-        return $result;
-    }
-
-    private function evaluate(string $key, array $setting, ?User $user, int $fetchTime): EvaluationDetails
+    private function evaluate(string $key, array $setting, ?User $user, float $fetchTime): EvaluationDetails
     {
         $actualUser = $user === null ? $this->defaultUser : $user;
         $collector = new EvaluationLogCollector();
@@ -624,35 +540,31 @@ final class ConfigCatClient implements ClientInterface
 
     private function getRemoteSettingsResult(): SettingsResult
     {
-        $cacheItem = $this->cache->load($this->cacheKey);
-        if ($cacheItem === null) {
-            $cacheItem = new CacheItem();
+        $cacheEntry = $this->cache->load($this->cacheKey);
+        if (!$this->offline && $cacheEntry->getFetchTime() + ($this->cacheRefreshInterval * 1000) < Utils::getUnixMilliseconds()) {
+            $response = $this->fetcher->fetch($cacheEntry->getEtag());
+            $cacheEntry = $this->handleResponse($response, $cacheEntry);
         }
 
-        if (!$this->offline && $cacheItem->lastRefreshed + $this->cacheRefreshInterval < time()) {
-            $response = $this->fetcher->fetch($cacheItem->etag);
-            $this->handleResponse($response, $cacheItem);
-        }
-
-        if (empty($cacheItem->config)) {
+        if (empty($cacheEntry->getConfig())) {
             return new SettingsResult(null, 0);
         }
 
-        return new SettingsResult($cacheItem->config[Config::ENTRIES], $cacheItem->lastRefreshed);
+        return new SettingsResult($cacheEntry->getConfig()[Config::ENTRIES], $cacheEntry->getFetchTime());
     }
 
-    private function handleResponse(FetchResponse $response, CacheItem $cacheItem): void
+    private function handleResponse(FetchResponse $response, ConfigEntry $cacheEntry): ConfigEntry
     {
-        if (!$response->isFailed()) {
-            if ($response->isFetched()) {
-                $cacheItem->config = $response->getBody();
-                $cacheItem->etag = $response->getETag();
-                $this->hooks->fireOnConfigChanged($cacheItem->config[Config::ENTRIES]);
-            }
-
-            $cacheItem->lastRefreshed = time();
-            $this->cache->store($this->cacheKey, $cacheItem);
+        if ($response->isFetched()) {
+            $this->hooks->fireOnConfigChanged($response->getConfigEntry()->getConfig()[Config::ENTRIES]);
+            $this->cache->store($this->cacheKey, $response->getConfigEntry());
+            return $response->getConfigEntry();
+        } elseif ($response->isNotModified()) {
+            $newEntry = $cacheEntry->withTime(Utils::getUnixMilliseconds());
+            $this->cache->store($this->cacheKey, $newEntry);
+            return $newEntry;
         }
+        return $cacheEntry;
     }
 
     private function getMonolog(): Logger

@@ -33,7 +33,7 @@ final class ClientOptions
     public const EXCEPTIONS_TO_IGNORE = "exceptions-to-ignore";
 
     /**
-     * Sets how frequent the cached configuration should be refreshed.
+     * Sets how frequent the cached configuration should be refreshed in seconds.
      */
     public const CACHE_REFRESH_INTERVAL = "cache-refresh-interval";
 

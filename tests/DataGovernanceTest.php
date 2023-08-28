@@ -32,7 +32,7 @@ class DataGovernanceTest extends TestCase
         // Assert
         $this->assertEquals(1, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertEquals(json_decode($body, true), $response->getBody());
+        $this->assertEquals(json_decode($body, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldStayOnSameUrlWithRedirect() {
@@ -52,7 +52,7 @@ class DataGovernanceTest extends TestCase
         // Assert
         $this->assertEquals(1, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertEquals(json_decode($body, true), $response->getBody());
+        $this->assertEquals(json_decode($body, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldStayOnSameUrlEvenWhenForced() {
@@ -72,7 +72,7 @@ class DataGovernanceTest extends TestCase
         // Assert
         $this->assertEquals(1, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertEquals(json_decode($body, true), $response->getBody());
+        $this->assertEquals(json_decode($body, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldRedirectToAnotherServer() {
@@ -95,7 +95,7 @@ class DataGovernanceTest extends TestCase
         $this->assertEquals(2, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
-        $this->assertEquals(json_decode($secondBody, true), $response->getBody());
+        $this->assertEquals(json_decode($secondBody, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldRedirectToAnotherServerWhenForced() {
@@ -118,7 +118,7 @@ class DataGovernanceTest extends TestCase
         $this->assertEquals(2, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
-        $this->assertEquals(json_decode($secondBody, true), $response->getBody());
+        $this->assertEquals(json_decode($secondBody, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldBreakRedirectLoop() {
@@ -143,7 +143,7 @@ class DataGovernanceTest extends TestCase
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertContains($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertEquals(json_decode($firstBody, true), $response->getBody());
+        $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldBreakRedirectLoopWhenForced() {
@@ -168,7 +168,7 @@ class DataGovernanceTest extends TestCase
         $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertContains($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertEquals(json_decode($firstBody, true), $response->getBody());
+        $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldRespectCustomUrlWhenNotForced() {
@@ -189,7 +189,7 @@ class DataGovernanceTest extends TestCase
         // Assert
         $this->assertEquals(1, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
-        $this->assertEquals(json_decode($firstBody, true), $response->getBody());
+        $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
 
         // Act
         $response = $fetcher->fetch("");
@@ -197,7 +197,7 @@ class DataGovernanceTest extends TestCase
         // Assert
         $this->assertEquals(2, count($requests));
         $this->assertContains($requests[1]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
-        $this->assertEquals(json_decode($firstBody, true), $response->getBody());
+        $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
     }
 
     public function testShouldNotRespectCustomUrlWhenForced() {
@@ -220,7 +220,7 @@ class DataGovernanceTest extends TestCase
         $this->assertEquals(2, count($requests));
         $this->assertContains($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertEquals(json_decode($secondBody, true), $response->getBody());
+        $this->assertEquals(json_decode($secondBody, true), $response->getConfigEntry()->getConfig());
     }
 
     private function getHandlerStack(array $responses, array &$container = []) {

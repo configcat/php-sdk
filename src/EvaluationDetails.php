@@ -14,7 +14,7 @@ class EvaluationDetails
         private readonly ?User $user,
         private readonly bool $isDefaultValue,
         private readonly ?string $error,
-        private readonly int $fetchTimeUnixSeconds,
+        private readonly float $fetchTimeUnixMilliseconds,
         private readonly ?array $matchedEvaluationRule,
         private readonly ?array $matchedEvaluationPercentageRule
     ) {
@@ -87,11 +87,11 @@ class EvaluationDetails
     }
 
     /**
-     * @return int the last download time of the current config in unix seconds format.
+     * @return float the last download time of the current config in unix milliseconds format.
      */
-    public function getFetchTimeUnixSeconds(): int
+    public function getFetchTimeUnixMilliseconds(): float
     {
-        return $this->fetchTimeUnixSeconds;
+        return $this->fetchTimeUnixMilliseconds;
     }
 
     /**

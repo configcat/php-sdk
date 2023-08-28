@@ -4,6 +4,7 @@ namespace ConfigCat\Tests;
 
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\ConfigCache;
+use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
 use ConfigCat\EvaluationDetails;
@@ -123,6 +124,35 @@ class ConfigCatClientTest extends TestCase
         $this->assertFalse($value);
     }
 
+    public function testCacheExpiration()
+    {
+        $cache = $this->getMockBuilder(ConfigCache::class)->getMock();
+        $mockHandler = new MockHandler(
+            [new Response(200, [], self::TEST_JSON)]
+        );
+        $client = new ConfigCatClient("testCacheExpiration", [
+            ClientOptions::CACHE => $cache,
+            ClientOptions::CUSTOM_HANDLER => $mockHandler,
+            ClientOptions::CACHE_REFRESH_INTERVAL => 1
+        ]);
+
+        $cache
+            ->method('load')
+            ->willReturn(ConfigEntry::fromConfigJson(self::TEST_JSON, "", \ConfigCat\Utils::getUnixMilliseconds() - 500));
+
+        $value = $client->getValue("second", false);
+
+        $this->assertTrue($value);
+        $this->assertNull($mockHandler->getLastRequest());
+
+        sleep(1);
+
+        $value = $client->getValue("second", false);
+
+        $this->assertTrue($value);
+        $this->assertNotNull($mockHandler->getLastRequest());
+    }
+
     public function testGetVariationId()
     {
         $client = new ConfigCatClient("testGetVariationId", [
@@ -130,21 +160,9 @@ class ConfigCatClientTest extends TestCase
                 [new Response(200, [], self::TEST_JSON)]
             ),
         ]);
-        $value = $client->getVariationId("second", null);
+        $details = $client->getValueDetails("second", false);
 
-        $this->assertEquals("fakeIdSecond", $value);
-    }
-
-    public function testGetVariationIdDefault()
-    {
-        $client = new ConfigCatClient("testGetVariationIdDefault", [
-            ClientOptions::CUSTOM_HANDLER => new MockHandler(
-                [new Response(200, [], self::TEST_JSON)]
-            ),
-        ]);
-        $value = $client->getVariationId("nonexisting", null);
-
-        $this->assertNull($value);
+        $this->assertEquals("fakeIdSecond", $details->getVariationId());
     }
 
     public function testGetAllVariationIds()
@@ -154,9 +172,9 @@ class ConfigCatClientTest extends TestCase
                 [new Response(200, [], self::TEST_JSON)]
             ),
         ]);
-        $value = $client->getAllVariationIds();
+        $value = $client->getAllValueDetails();
 
-        $this->assertEquals(["fakeIdFirst", "fakeIdSecond"], $value);
+        $this->assertEquals(2, count($value));
     }
 
     public function testGetAllVariationIdsEmpty()
@@ -164,7 +182,7 @@ class ConfigCatClientTest extends TestCase
         $client = new ConfigCatClient("testGetAllVariationIdsEmpty", [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(400)
         ])]);
-        $value = $client->getAllVariationIds();
+        $value = $client->getAllValueDetails();
 
         $this->assertEmpty($value);
     }
@@ -276,16 +294,16 @@ class ConfigCatClientTest extends TestCase
 
         $client->setDefaultUser($user1);
 
-        $value = $client->getVariationId("key", "");
-        $this->assertEquals("id1", $value);
+        $value = $client->getValueDetails("key", "");
+        $this->assertEquals("id1", $value->getVariationId());
 
-        $value = $client->getVariationId("key", "", $user2);
-        $this->assertEquals("id2", $value);
+        $value = $client->getValueDetails("key", "", $user2);
+        $this->assertEquals("id2", $value->getVariationId());
 
         $client->clearDefaultUser();
 
-        $value = $client->getVariationId("key", "");
-        $this->assertEquals("defVar", $value);
+        $value = $client->getValueDetails("key", "");
+        $this->assertEquals("defVar", $value->getVariationId());
     }
 
     public function testOfflineOnline()
@@ -406,7 +424,7 @@ class ConfigCatClientTest extends TestCase
         $this->assertEquals("@test1.com", $details->getMatchedEvaluationRule()["c"]);
         $this->assertEquals(2, $details->getMatchedEvaluationRule()["t"]);
         $this->assertNull($details->getMatchedEvaluationPercentageRule());
-        $this->assertTrue($details->getFetchTimeUnixSeconds() > 0);
+        $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
         $this->assertFalse($details->isDefaultValue());
     }
 
@@ -446,7 +464,7 @@ class ConfigCatClientTest extends TestCase
             $this->assertEquals(2, $details->getMatchedEvaluationRule()["t"]);
             $this->assertNull($details->getMatchedEvaluationPercentageRule());
             $this->assertFalse($details->isDefaultValue());
-            $this->assertTrue($details->getFetchTimeUnixSeconds() > 0);
+            $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
             $called = true;
         });
 
