@@ -20,18 +20,16 @@ class GuzzleFetchClient implements FetchClientInterface
      */
     private function __construct(array $options = [])
     {
-        $clientOptions = $options;
-
         if (!isset($options[RequestOptions::CONNECT_TIMEOUT])) {
-            $clientOptions[RequestOptions::CONNECT_TIMEOUT] = 10;
+            $options[RequestOptions::CONNECT_TIMEOUT] = 10;
         }
 
         if (!isset($options[RequestOptions::TIMEOUT])) {
-            $clientOptions[RequestOptions::TIMEOUT] = 30;
+            $options[RequestOptions::TIMEOUT] = 30;
         }
 
         if (isset($options[ClientOptions::CUSTOM_HANDLER])) {
-            $clientOptions['handler'] = $options[ClientOptions::CUSTOM_HANDLER];
+            $options['handler'] = $options[ClientOptions::CUSTOM_HANDLER];
         }
 
         $requestOptions = isset($options[ClientOptions::REQUEST_OPTIONS])
@@ -40,7 +38,7 @@ class GuzzleFetchClient implements FetchClientInterface
             ? $options[ClientOptions::REQUEST_OPTIONS]
             : [];
 
-        $this->client = new Client(array_merge($clientOptions, $requestOptions));
+        $this->client = new Client(array_merge($options, $requestOptions));
     }
 
     public function getClient(): ClientInterface

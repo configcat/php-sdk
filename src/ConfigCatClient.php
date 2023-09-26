@@ -71,12 +71,12 @@ final class ConfigCatClient implements ClientInterface
      * - default-user: A \ConfigCat\User as default user.
      * - offline: Default: false. Indicates whether the SDK should be initialized in offline mode or not.
      *
-     * All options are available on the \ConfigCat\ClientOptions class.
-     *
      * @param string  $sdkKey  the SDK Key used to communicate with the ConfigCat services
      * @param mixed[] $options the configuration options
      *
-     * @throws invalidArgumentException if the $sdkKey is not valid
+     * @throws InvalidArgumentException if the $sdkKey is not valid
+     *
+     * @see ClientOptions for the list of all available options.
      */
     public function __construct(string $sdkKey, array $options = [])
     {
