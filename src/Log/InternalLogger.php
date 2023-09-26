@@ -28,75 +28,87 @@ class InternalLogger implements LoggerInterface
 
     public function emergency($message, array $context = []): void
     {
-        $this->hooks->fireOnError(DefaultLogger::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context));
         if ($this->shouldLog(LogLevel::EMERGENCY, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->emergency($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->emergency($enriched, $context);
         }
     }
 
     public function alert($message, array $context = []): void
     {
-        $this->hooks->fireOnError(DefaultLogger::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context));
         if ($this->shouldLog(LogLevel::ALERT, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->alert($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->alert($enriched, $context);
         }
     }
 
     public function critical($message, array $context = []): void
     {
-        $this->hooks->fireOnError(DefaultLogger::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context));
         if ($this->shouldLog(LogLevel::CRITICAL, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->critical($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->critical($enriched, $context);
         }
     }
 
     public function error($message, array $context = []): void
     {
-        $this->hooks->fireOnError(DefaultLogger::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context));
         if ($this->shouldLog(LogLevel::ERROR, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->error($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->error($enriched, $context);
         }
     }
 
     public function warning($message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::WARNING, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->warning($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->warning($enriched, $context);
         }
     }
 
     public function notice($message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::NOTICE, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->notice($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->notice($enriched, $context);
         }
     }
 
     public function info($message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::INFO, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->info($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->info($enriched, $context);
         }
     }
 
     public function debug($message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::DEBUG, $context)) {
-            $this->ensureEventId($context);
-            $this->logger->debug($message, $context);
+            $enriched = $this->enrichMessage($message, $context);
+            $this->logger->debug($enriched, $context);
         }
     }
 
     public function log($level, $message, array $context = []): void
     {
         // Do nothing, only the leveled methods should be used.
+    }
+
+    /**
+     * @param mixed[] $context
+     */
+    public static function format(string|\Stringable $message, array $context = []): string
+    {
+        if (array_key_exists('exception', $context)) {
+            $message = $message.PHP_EOL.$context['exception']->getMessage();
+        }
+
+        return (string) $message;
     }
 
     /**
@@ -124,10 +136,12 @@ class InternalLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    private function ensureEventId(array &$context): void
+    private function enrichMessage(string|\Stringable $message, array &$context): string
     {
         if (!array_key_exists('event_id', $context)) {
             $context['event_id'] = 0;
         }
+
+        return self::format('[{event_id}] '.$message);
     }
 }

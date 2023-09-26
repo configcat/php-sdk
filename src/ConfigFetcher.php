@@ -9,7 +9,6 @@ use ConfigCat\Attributes\Preferences;
 use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\Http\FetchClientInterface;
 use ConfigCat\Http\GuzzleFetchClient;
-use ConfigCat\Log\DefaultLogger;
 use ConfigCat\Log\InternalLogger;
 use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -168,7 +167,7 @@ final class ConfigFetcher
                     ];
                     $this->logger->error($message, $messageCtx);
 
-                    return FetchResponse::failure(DefaultLogger::format($message, $messageCtx));
+                    return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
                 }
 
                 return FetchResponse::success($entry);
@@ -186,7 +185,7 @@ final class ConfigFetcher
             ];
             $this->logger->error($message, $messageCtx);
 
-            return FetchResponse::failure(DefaultLogger::format($message, $messageCtx));
+            return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
         } catch (ClientExceptionInterface $exception) {
             $message = 'Unexpected error occurred while trying to fetch config JSON.';
             $messageCtx = ['event_id' => 1103, 'exception' => $exception];

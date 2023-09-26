@@ -177,7 +177,7 @@ final class ConfigCatClient implements ClientInterface
                 $key,
                 $defaultValue,
                 $user,
-                DefaultLogger::format($message, $messageCtx)
+                InternalLogger::format($message, $messageCtx)
             ));
 
             return $defaultValue;
@@ -219,7 +219,7 @@ final class ConfigCatClient implements ClientInterface
                 'event_id' => 1002, 'exception' => $exception,
             ];
             $this->logger->error($message, $messageCtx);
-            $details = EvaluationDetails::fromError($key, $defaultValue, $user, DefaultLogger::format($message, $messageCtx));
+            $details = EvaluationDetails::fromError($key, $defaultValue, $user, InternalLogger::format($message, $messageCtx));
             $this->hooks->fireOnFlagEvaluated($details);
 
             return $details;
@@ -349,7 +349,7 @@ final class ConfigCatClient implements ClientInterface
             ];
             $this->logger->warning($message, $messageCtx);
 
-            return new RefreshResult(false, DefaultLogger::format($message, $messageCtx));
+            return new RefreshResult(false, InternalLogger::format($message, $messageCtx));
         }
 
         if ($this->offline) {
@@ -442,7 +442,7 @@ final class ConfigCatClient implements ClientInterface
             ];
             $this->logger->error($message, $messageCtx);
 
-            return DefaultLogger::format($message, $messageCtx);
+            return InternalLogger::format($message, $messageCtx);
         }
 
         if (!array_key_exists($key, $settingsResult->settings)) {
@@ -455,7 +455,7 @@ final class ConfigCatClient implements ClientInterface
             ];
             $this->logger->error($message, $messageCtx);
 
-            return DefaultLogger::format($message, $messageCtx);
+            return InternalLogger::format($message, $messageCtx);
         }
 
         return null;

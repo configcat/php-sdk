@@ -10,42 +10,42 @@ class DefaultLogger implements LoggerInterface
 {
     public function emergency($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::EMERGENCY, $message, $context);
+        self::logMsg(LogLevel::EMERGENCY, $message, $context);
     }
 
     public function alert($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::ALERT, $message, $context);
+        self::logMsg(LogLevel::ALERT, $message, $context);
     }
 
     public function critical($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::CRITICAL, $message, $context);
+        self::logMsg(LogLevel::CRITICAL, $message, $context);
     }
 
     public function error($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::ERROR, $message, $context);
+        self::logMsg(LogLevel::ERROR, $message, $context);
     }
 
     public function warning($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::WARNING, $message, $context);
+        self::logMsg(LogLevel::WARNING, $message, $context);
     }
 
     public function notice($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::NOTICE, $message, $context);
+        self::logMsg(LogLevel::NOTICE, $message, $context);
     }
 
     public function info($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::INFO, $message, $context);
+        self::logMsg(LogLevel::INFO, $message, $context);
     }
 
     public function debug($message, array $context = []): void
     {
-        self::logWithLevel(LogLevel::DEBUG, $message, $context);
+        self::logMsg(LogLevel::DEBUG, $message, $context);
     }
 
     public function log($level, $message, array $context = []): void
@@ -56,28 +56,29 @@ class DefaultLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    public static function format(string|\Stringable $message, array $context = []): string
+    private static function logMsg(int $level, string|\Stringable $message, array $context = []): void
     {
-        if (array_key_exists('exception', $context)) {
-            $message = $message.PHP_EOL.$context['exception']->getMessage();
-        }
+        $date = new \DateTimeImmutable();
+        $context['timestamp'] = $date->format('Y-m-d\\TH:i:sP');
+        $context['level'] = LogLevel::asString($level);
 
-        return (string) $message;
+        $final = '[{timestamp}] ConfigCat.{level}: '.$message;
+
+        error_log(self::interpolate($final, $context));
     }
 
     /**
      * @param mixed[] $context
      */
-    private static function logWithLevel(int $level, string|\Stringable $message, array $context = []): void
+    private static function interpolate(string|\Stringable $message, array $context = []): string
     {
-        $date = new \DateTimeImmutable();
-
-        $final = '['.$date->format('Y-m-d\\TH:i:sP').'] ConfigCat.'.LogLevel::asString($level).': ';
-
-        if (array_key_exists('event_id', $context)) {
-            $final = $final.'['.$context['event_id'].'] ';
+        $replace = [];
+        foreach ($context as $key => $val) {
+            if (!is_array($val) && (!is_object($val) || method_exists($val, '__toString'))) {
+                $replace['{'.$key.'}'] = $val;
+            }
         }
 
-        error_log($final.self::format($message, $context));
+        return strtr((string) $message, $replace);
     }
 }
