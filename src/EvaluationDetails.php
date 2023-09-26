@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat;
 
 class EvaluationDetails
 {
     /**
+     * @param null|mixed[] $matchedEvaluationRule
+     * @param null|mixed[] $matchedEvaluationPercentageRule
+     *
      * @internal
      */
     public function __construct(
@@ -23,7 +28,7 @@ class EvaluationDetails
     /**
      * @internal
      */
-    public static function fromError(string $key, $value, ?User $user, string $error): EvaluationDetails
+    public static function fromError(string $key, mixed $value, ?User $user, ?string $error): EvaluationDetails
     {
         return new EvaluationDetails(
             $key,
@@ -39,7 +44,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return string the key of the evaluated feature flag or setting.
+     * @return string the key of the evaluated feature flag or setting
      */
     public function getKey(): string
     {
@@ -55,7 +60,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return mixed the evaluated value of the feature flag or setting.
+     * @return mixed the evaluated value of the feature flag or setting
      */
     public function getValue(): mixed
     {
@@ -63,7 +68,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return ?User the user object that was used for evaluation.
+     * @return ?User the user object that was used for evaluation
      */
     public function getUser(): ?User
     {
@@ -71,7 +76,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return bool true when the default value passed to getValueDetails() is returned due to an error.
+     * @return bool true when the default value passed to getValueDetails() is returned due to an error
      */
     public function isDefaultValue(): bool
     {
@@ -79,7 +84,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return ?string in case of an error, the error message.
+     * @return ?string in case of an error, the error message
      */
     public function getError(): ?string
     {
@@ -87,7 +92,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return float the last download time of the current config in unix milliseconds format.
+     * @return float the last download time of the current config in unix milliseconds format
      */
     public function getFetchTimeUnixMilliseconds(): float
     {
@@ -95,7 +100,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return ?array the targeting rule the evaluation was based on.
+     * @return null|mixed[] the targeting rule the evaluation was based on
      */
     public function getMatchedEvaluationRule(): ?array
     {
@@ -103,7 +108,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return ?array the percentage rule the evaluation was based on.
+     * @return null|mixed[] the percentage rule the evaluation was based on
      */
     public function getMatchedEvaluationPercentageRule(): ?array
     {

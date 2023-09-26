@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat\Override;
 
 /**
  * Describes how the overrides should behave.
- * @package ConfigCat
  */
 class OverrideBehaviour
 {
@@ -13,12 +14,14 @@ class OverrideBehaviour
      * all feature flags & settings that are loaded from local-override sources.
      */
     public const LOCAL_ONLY = 10;
+
     /**
      * When evaluating values, the SDK will use all feature flags & settings that are downloaded from the ConfigCat CDN,
      * plus all feature flags & settings that are loaded from local-override sources. If a feature flag or a setting is
      * defined both in the fetched and the local-override source then the local-override version will take precedence.
      */
     public const LOCAL_OVER_REMOTE = 20;
+
     /**
      * When evaluating values, the SDK will use all feature flags & settings that are downloaded from the ConfigCat CDN,
      * plus all feature flags & settings that are loaded from local-override sources. If a feature flag or a setting is
@@ -28,13 +31,15 @@ class OverrideBehaviour
 
     /**
      * Checks whether a given value is a valid behaviour.
-     * @param $behaviour int The behaviour value to check.
-     * @return bool True when the given value is a valid override behaviour.
+     *
+     * @param $behaviour int The behaviour value to check
+     *
+     * @return bool true when the given value is a valid override behaviour
      */
     public static function isValid(int $behaviour): bool
     {
-        return $behaviour == self::LOCAL_ONLY ||
-            $behaviour == self::LOCAL_OVER_REMOTE ||
-            $behaviour == self::REMOTE_OVER_LOCAL;
+        return self::LOCAL_ONLY == $behaviour
+            || self::LOCAL_OVER_REMOTE == $behaviour
+            || self::REMOTE_OVER_LOCAL == $behaviour;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat;
 
 /**
@@ -8,8 +10,6 @@ namespace ConfigCat;
 class RefreshResult
 {
     /**
-     * @param bool $isSuccess
-     * @param string|null $error
      * @internal
      */
     public function __construct(private readonly bool $isSuccess, private readonly ?string $error)
@@ -19,7 +19,7 @@ class RefreshResult
     /**
      * Returns true when the refresh was successful.
      *
-     * @return bool true when the refresh was successful.
+     * @return bool true when the refresh was successful
      */
     public function isSuccess(): bool
     {
@@ -29,7 +29,7 @@ class RefreshResult
     /**
      * Returns the reason if the refresh fails.
      *
-     * @return string|null the reason of the failure.
+     * @return null|string the reason of the failure
      */
     public function getError(): ?string
     {

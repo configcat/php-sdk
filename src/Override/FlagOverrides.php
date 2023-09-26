@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat\Override;
 
 use InvalidArgumentException;
@@ -13,21 +15,23 @@ class FlagOverrides implements LoggerAwareInterface
 {
     /**
      * Constructs the feature flag overrides.
-     * @param $dataSource OverrideDataSource The data source of the feature flag overrides.
-     * @param $behaviour int It can be used to set preference on whether the local values should
-     *                       override the remote values, or use local values only when a remote value doesn't exist,
-     *                       or use it for local only mode.
+     *
+     * @param OverrideDataSource $dataSource the data source of the feature flag overrides
+     * @param int                $behaviour  it can be used to set preference on whether the local values should
+     *                                       override the remote values, or use local values only when a remote value doesn't exist,
+     *                                       or use it for local only mode
      */
     public function __construct(private readonly OverrideDataSource $dataSource, private readonly int $behaviour)
     {
         if (!OverrideBehaviour::isValid($behaviour)) {
-            throw new InvalidArgumentException("The behaviour argument is not valid.");
+            throw new InvalidArgumentException('The behaviour argument is not valid.');
         }
     }
 
     /**
      * Gets the override behaviour.
-     * @return int The override behaviour.
+     *
+     * @return int the override behaviour
      */
     public function getBehaviour(): int
     {
@@ -36,7 +40,8 @@ class FlagOverrides implements LoggerAwareInterface
 
     /**
      * Gets the override data source.
-     * @return OverrideDataSource The override data source.
+     *
+     * @return OverrideDataSource the override data source
      */
     public function getDataSource(): OverrideDataSource
     {
@@ -45,7 +50,8 @@ class FlagOverrides implements LoggerAwareInterface
 
     /**
      * Sets the logger.
-     * @param LoggerInterface $logger The logger.
+     *
+     * @param LoggerInterface $logger the logger
      */
     public function setLogger(LoggerInterface $logger): void
     {

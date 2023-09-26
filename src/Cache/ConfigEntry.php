@@ -1,17 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat\Cache;
 
 use UnexpectedValueException;
 
 /**
  * Represents the cached configuration.
- * @package ConfigCat
  */
 class ConfigEntry
 {
     private static ?ConfigEntry $empty = null;
 
+    /**
+     * @param string  $configJson the config JSON
+     * @param mixed[] $config     the deserialized config
+     * @param string  $etag       the ETag related to the current config
+     * @param float   $fetchTime  the time when the current config was fetched
+     */
     private function __construct(
         private readonly string $configJson,
         private readonly array $config,
@@ -20,21 +27,33 @@ class ConfigEntry
     ) {
     }
 
+    /**
+     * @return string the config JSON
+     */
     public function getConfigJson(): string
     {
         return $this->configJson;
     }
 
+    /**
+     * @return mixed[] the deserialized config
+     */
     public function getConfig(): array
     {
         return $this->config;
     }
 
+    /**
+     * @return string the ETag related to the current config
+     */
     public function getEtag(): string
     {
         return $this->etag;
     }
 
+    /**
+     * @return float the time when the current config was fetched
+     */
     public function getFetchTime(): float
     {
         return $this->fetchTime;
@@ -42,7 +61,7 @@ class ConfigEntry
 
     public function serialize(): string
     {
-        return $this->fetchTime . "\n" . $this->etag . "\n" . $this->configJson;
+        return $this->fetchTime."\n".$this->etag."\n".$this->configJson;
     }
 
     public function withTime(float $time): ConfigEntry
@@ -52,8 +71,8 @@ class ConfigEntry
 
     public static function empty(): ConfigEntry
     {
-        if (self::$empty == null) {
-            self::$empty = new ConfigEntry("", [], "", 0);
+        if (null == self::$empty) {
+            self::$empty = new ConfigEntry('', [], '', 0);
         }
 
         return self::$empty;
@@ -62,7 +81,7 @@ class ConfigEntry
     public static function fromConfigJson(string $configJson, string $etag, float $fetchTime): ConfigEntry
     {
         $deserialized = json_decode($configJson, true);
-        if ($deserialized == null) {
+        if (null == $deserialized) {
             return self::empty();
         }
 
@@ -74,15 +93,15 @@ class ConfigEntry
         $timePos = strpos($cached, "\n");
         $etagPos = strpos($cached, "\n", $timePos + 1);
 
-        if ($timePos === false || $etagPos === false) {
-            throw new UnexpectedValueException("Number of values is fewer than expected.");
+        if (false === $timePos || false === $etagPos) {
+            throw new UnexpectedValueException('Number of values is fewer than expected.');
         }
 
         $fetchTimeString = substr($cached, 0, $timePos);
         $fetchTime = floatval($fetchTimeString);
 
-        if ($fetchTime == 0) {
-            throw new UnexpectedValueException("Invalid fetch time: " . $fetchTimeString);
+        if (0 == $fetchTime) {
+            throw new UnexpectedValueException('Invalid fetch time: '.$fetchTimeString);
         }
 
         $etag = substr($cached, $timePos + 1, $etagPos - $timePos - 1);

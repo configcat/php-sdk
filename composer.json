@@ -17,15 +17,16 @@
     "guzzlehttp/guzzle": "^6.3|^7.0",
     "psr/log": "^2.0|^3.0",
     "ext-json": "*",
-    "monolog/monolog": "^2.0|^3.0",
-    "z4kn4fein/php-semver": "^2.0"
+    "z4kn4fein/php-semver": "^2.0",
+    "psr/http-client": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "~7.0|^8",
     "illuminate/cache": "^9.0",
     "psr/simple-cache": "^3.0",
     "psr/cache": "^1.0",
-    "squizlabs/php_codesniffer": "^3.7"
+    "phpstan/phpstan": "^1.0",
+    "friendsofphp/php-cs-fixer": "^3.0"
   },
   "autoload": {
     "psr-4": {
@@ -38,6 +39,7 @@
     }
   },
   "suggest": {
+    "guzzlehttp/guzzle": "When there's no custom \\ConfigCat\\Http\\FetchClientInterface is set. The default implementation uses Guzzle to make HTTP requests.",
     "psr/cache": "When using any PSR6 Cache implementation, a pre-built cache adapter \\ConfigCat\\Psr6Cache can be used as the main cache of the library.",
     "psr/simple-cache": "When using any PSR16 SimpleCache implementation, a pre-built cache adapter \\ConfigCat\\Psr16Cache can be used as the main cache of the library.",
     "laravel/framework": "When using laravel, a pre-built cache adapter \\ConfigCat\\LaravelCache can be used as the main cache of the library."

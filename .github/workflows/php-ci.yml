@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '0 0 * * *'
   push:
-    branches: [ master ]
+    branches: [ * ]
   pull_request:
     branches: [ master ]
     
@@ -43,7 +43,7 @@ jobs:
 
     - name: Execute tests
       run: vendor/bin/phpunit
-      
+
   coverage:
     needs: test
     runs-on: ubuntu-latest
@@ -78,3 +78,63 @@ jobs:
       
     - name: Upload coverage report
       run: bash <(curl -s https://codecov.io/bash)
+
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          ini-values: 'memory_limit=-1'
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: |
+          composer self-update
+          composer install --prefer-dist --no-progress --no-suggest --no-plugins
+
+      - run: vendor/bin/php-cs-fixer fix --ansi --diff --dry-run
+
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          ini-values: 'memory_limit=-1'
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: |
+          composer self-update
+          composer install --prefer-dist --no-progress --no-suggest --no-plugins
+
+      - run: vendor/bin/phpstan analyse --ansi
