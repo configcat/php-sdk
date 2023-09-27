@@ -8,21 +8,17 @@ use ConfigCat\Log\LogLevel;
 use ConfigCat\User;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- * @coversNothing
- */
 class RolloutIntegrationsTest extends TestCase
 {
     const valueKind = 0;
     const variationKind = 1;
 
     /**
-     * @param $file
-     * @param $sdkKey
-     * @param $kind
-     *
      * @dataProvider rolloutTestData
+     *
+     * @param mixed $file
+     * @param mixed $sdkKey
+     * @param mixed $kind
      */
     public function testRolloutIntegration($file, $sdkKey, $kind)
     {

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace ConfigCat\Log;
 
+use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
+use Stringable;
 
 class DefaultLogger implements LoggerInterface
 {
@@ -56,9 +58,9 @@ class DefaultLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    private static function logMsg(int $level, string|\Stringable $message, array $context = []): void
+    private static function logMsg(int $level, string|Stringable $message, array $context = []): void
     {
-        $date = new \DateTimeImmutable();
+        $date = new DateTimeImmutable();
         $context['timestamp'] = $date->format('Y-m-d\\TH:i:sP');
         $context['level'] = LogLevel::asString($level);
 
@@ -70,7 +72,7 @@ class DefaultLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    private static function interpolate(string|\Stringable $message, array $context = []): string
+    private static function interpolate(string|Stringable $message, array $context = []): string
     {
         $replace = [];
         foreach ($context as $key => $val) {

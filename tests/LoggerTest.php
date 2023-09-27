@@ -11,10 +11,6 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-/**
- * @internal
- * @coversNothing
- */
 class LoggerTest extends TestCase
 {
     public function testLoggerBypassesInternalLogicWhenGlobalLevelIsZero()

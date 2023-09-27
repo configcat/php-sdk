@@ -15,9 +15,7 @@ class Pair
      * @param string $key   the key
      * @param mixed  $value The value:
      */
-    public function __construct(private readonly string $key, private readonly mixed $value)
-    {
-    }
+    public function __construct(private readonly string $key, private readonly mixed $value) {}
 
     /**
      * Gets the key.

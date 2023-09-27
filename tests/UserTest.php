@@ -5,10 +5,6 @@ namespace ConfigCat\Tests;
 use ConfigCat\User;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- * @coversNothing
- */
 class UserTest extends TestCase
 {
     public function testConstructEmptyIdentifier()

@@ -16,9 +16,7 @@ class ArrayDataSource extends OverrideDataSource
      *
      * @param array<string, mixed> $overrides the array that contains the overrides
      */
-    public function __construct(private readonly array $overrides)
-    {
-    }
+    public function __construct(private readonly array $overrides) {}
 
     /**
      * Gets the overrides.

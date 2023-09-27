@@ -9,18 +9,16 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class LaravelCache extends ConfigCache
 {
-    public function __construct(private readonly Repository $cache)
-    {
-    }
+    public function __construct(private readonly Repository $cache) {}
 
     /**
      * Reads the value identified by the given $key from the underlying cache.
      *
      * @param string $key identifier for the cached value
      *
-     * @throws InvalidArgumentException if the $key is not a legal value
-     *
      * @return ?string cached value for the given key, or null if it's missing
+     *
+     * @throws InvalidArgumentException if the $key is not a legal value
      */
     protected function get(string $key): ?string
     {

@@ -12,9 +12,7 @@ class RefreshResult
     /**
      * @internal
      */
-    public function __construct(private readonly bool $isSuccess, private readonly ?string $error)
-    {
-    }
+    public function __construct(private readonly bool $isSuccess, private readonly ?string $error) {}
 
     /**
      * Returns true when the refresh was successful.

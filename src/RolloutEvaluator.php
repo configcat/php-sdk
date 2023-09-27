@@ -48,9 +48,7 @@ final class RolloutEvaluator
      *
      * @param InternalLogger $logger the logger instance
      */
-    public function __construct(private readonly InternalLogger $logger)
-    {
-    }
+    public function __construct(private readonly InternalLogger $logger) {}
 
     /**
      * Evaluates a requested value from the configuration by the specified roll-out rules.
@@ -125,6 +123,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // IS NOT ONE OF
                     case 1:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
@@ -141,6 +140,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // CONTAINS
                     case 2:
                         if (Utils::strContains($userValue, $comparisonValue)) {
@@ -156,6 +156,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // DOES NOT CONTAIN
                     case 3:
                         if (!Utils::strContains($userValue, $comparisonValue)) {
@@ -171,6 +172,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // IS ONE OF, IS NOT ONE OF (SemVer)
                     case 4:
                     case 5:
@@ -206,6 +208,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (SemVer)
                     case 6:
                     case 7:
@@ -243,6 +246,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Number)
                     case 10:
                     case 11:
@@ -297,6 +301,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // IS ONE OF (Sensitive)
                     case 16:
                         $split = array_filter(Utils::splitTrim($comparisonValue));
@@ -313,6 +318,7 @@ final class RolloutEvaluator
                         }
 
                         break;
+
                         // IS NOT ONE OF (Sensitive)
                     case 17:
                         $split = array_filter(Utils::splitTrim($comparisonValue));

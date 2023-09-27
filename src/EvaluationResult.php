@@ -18,6 +18,5 @@ final class EvaluationResult
         public string $variationId,
         public ?array $targetingRule,
         public ?array $percentageRule
-    ) {
-    }
+    ) {}
 }

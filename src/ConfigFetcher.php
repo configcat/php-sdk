@@ -44,7 +44,7 @@ final class ConfigFetcher
      * @param InternalLogger $logger  the logger instance
      * @param mixed[]        $options additional configuration options
      *
-     * @throws invalidArgumentException if the $sdkKey, the $logger or the $cache is not legal
+     * @throws InvalidArgumentException if the $sdkKey, the $logger or the $cache is not legal
      */
     public function __construct(string $sdkKey, InternalLogger $logger, array $options = [])
     {

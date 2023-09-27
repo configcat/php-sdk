@@ -12,10 +12,6 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- * @coversNothing
- */
 class ConfigFetcherTest extends TestCase
 {
     private string $mockSdkKey = 'testSdkKey';

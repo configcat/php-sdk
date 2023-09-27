@@ -13,10 +13,6 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- * @coversNothing
- */
 class LocalSourceTest extends TestCase
 {
     const TEST_JSON_BODY = '{ "f" : { "disabled": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "enabled": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';

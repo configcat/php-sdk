@@ -20,12 +20,9 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use ReflectionException;
 
-/**
- * @internal
- * @coversNothing
- */
 class ConfigCatClientTest extends TestCase
 {
     private const TEST_JSON = '{ "f" : { "first": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "second": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';
@@ -72,20 +69,28 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertSame($logger, $externalLogger);
         $this->assertSame(LogLevel::ERROR, $globalLevel);
-        $this->assertArraySubset([InvalidArgumentException::class], $exceptions);
+        $this->assertTrue(in_array(InvalidArgumentException::class, $exceptions));
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testConstructCacheOption()
     {
         $cache = new ArrayCache();
         $client = new ConfigCatClient('testConstructCacheOption', [ClientOptions::CACHE => $cache]);
-        $this->assertAttributeSame($cache, 'cache', $client);
+        $propCache = $this->getReflectedValue($client, 'cache');
+        $this->assertSame($cache, $propCache);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testConstructCacheRefreshIntervalOption()
     {
         $client = new ConfigCatClient('testConstructCacheRefreshIntervalOption', [ClientOptions::CACHE_REFRESH_INTERVAL => 20]);
-        $this->assertAttributeSame(20, 'cacheRefreshInterval', $client);
+        $propInterval = $this->getReflectedValue($client, 'cacheRefreshInterval');
+        $this->assertSame(20, $propInterval);
     }
 
     public function testGetValueFailedFetch()
@@ -189,7 +194,7 @@ class ConfigCatClientTest extends TestCase
         ]);
         $value = $client->getAllValueDetails();
 
-        $this->assertEquals(2, count($value));
+        $this->assertCount(2, $value);
     }
 
     public function testGetAllVariationIdsEmpty()
@@ -532,7 +537,7 @@ class ConfigCatClientTest extends TestCase
      */
     private function getReflectedValue($object, $propertyName)
     {
-        $reflection = new \ReflectionClass($object);
+        $reflection = new ReflectionClass($object);
         $property = $reflection->getProperty($propertyName);
         $property->setAccessible(true);
 

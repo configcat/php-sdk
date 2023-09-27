@@ -10,10 +10,6 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- * @coversNothing
- */
 class DataGovernanceTest extends TestCase
 {
     const JSON_TEMPLATE = '{ "p": { "u": "%s", "r": %d }, "f": {} }';
@@ -36,7 +32,7 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(1, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($body, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -57,7 +53,7 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(1, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($body, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -78,7 +74,7 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(1, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($body, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -101,8 +97,8 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(2, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertEquals(json_decode($secondBody, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -125,8 +121,8 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(2, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertEquals(json_decode($secondBody, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -150,9 +146,9 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(3, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
-        $this->assertContains($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
+        $this->assertStringContainsString($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -176,9 +172,9 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(3, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
-        $this->assertContains($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
+        $this->assertStringContainsString($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -200,7 +196,7 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(1, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
 
         // Act
@@ -208,7 +204,7 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(2, count($requests));
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
+        $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertEquals(json_decode($firstBody, true), $response->getConfigEntry()->getConfig());
     }
 
@@ -231,8 +227,8 @@ class DataGovernanceTest extends TestCase
 
         // Assert
         $this->assertEquals(2, count($requests));
-        $this->assertContains($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
-        $this->assertContains($requests[1]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
+        $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
+        $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(json_decode($secondBody, true), $response->getConfigEntry()->getConfig());
     }
 

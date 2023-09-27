@@ -24,8 +24,7 @@ class ConfigEntry
         private readonly array $config,
         private readonly string $etag,
         private readonly float $fetchTime,
-    ) {
-    }
+    ) {}
 
     /**
      * @return string the config JSON

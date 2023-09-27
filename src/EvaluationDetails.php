@@ -22,8 +22,7 @@ class EvaluationDetails
         private readonly float $fetchTimeUnixMilliseconds,
         private readonly ?array $matchedEvaluationRule,
         private readonly ?array $matchedEvaluationPercentageRule
-    ) {
-    }
+    ) {}
 
     /**
      * @internal

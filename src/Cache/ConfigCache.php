@@ -22,7 +22,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @param string      $key   identifier for the cached value
      * @param ConfigEntry $value the value to cache
      *
-     * @throws invalidArgumentException
+     * @throws InvalidArgumentException
      *                                  If the $key is not a legal value
      */
     public function store(string $key, ConfigEntry $value): void
@@ -45,10 +45,10 @@ abstract class ConfigCache implements LoggerAwareInterface
      *
      * @param string $key identifier for the cached value
      *
-     * @throws invalidArgumentException
-     *                                  If the $key is not a legal value
-     *
      * @return ConfigEntry cached value for the given key, or null if it's missing
+     *
+     * @throws InvalidArgumentException
+     *                                  If the $key is not a legal value
      */
     public function load(string $key): ConfigEntry
     {

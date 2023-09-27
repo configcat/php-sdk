@@ -6,6 +6,7 @@ namespace ConfigCat\Log;
 
 use ConfigCat\Hooks;
 use Psr\Log\LoggerInterface;
+use Stringable;
 
 /**
  * A Psr\Log\LoggerInterface for internal use only.
@@ -23,8 +24,7 @@ class InternalLogger implements LoggerInterface
         private readonly int $globalLevel,
         private readonly array $exceptionsToIgnore,
         private readonly Hooks $hooks
-    ) {
-    }
+    ) {}
 
     public function emergency($message, array $context = []): void
     {
@@ -102,7 +102,7 @@ class InternalLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    public static function format(string|\Stringable $message, array $context = []): string
+    public static function format(string|Stringable $message, array $context = []): string
     {
         if (array_key_exists('exception', $context)) {
             $message = $message.PHP_EOL.$context['exception']->getMessage();
@@ -136,7 +136,7 @@ class InternalLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    private function enrichMessage(string|\Stringable $message, array &$context): string
+    private function enrichMessage(string|Stringable $message, array &$context): string
     {
         if (!array_key_exists('event_id', $context)) {
             $context['event_id'] = 0;

@@ -26,8 +26,7 @@ final class FetchResponse
         private readonly int $status,
         private readonly ConfigEntry $cacheEntry,
         private readonly ?string $error = null
-    ) {
-    }
+    ) {}
 
     /**
      * Creates a new response with FAILED status.

@@ -12,7 +12,5 @@ class SettingsResult
     /**
      * @param mixed[] $settings
      */
-    public function __construct(public array $settings, public float $fetchTime, public bool $hasConfigJson)
-    {
-    }
+    public function __construct(public array $settings, public float $fetchTime, public bool $hasConfigJson) {}
 }
