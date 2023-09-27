@@ -49,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -76,8 +78,11 @@ jobs:
     - name: Execute coverage
       run: vendor/bin/phpunit --coverage-clover clover.xml
       
-    - name: Upload coverage report
-      run: bash <(curl -s https://codecov.io/bash)
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: true
+        files: ./clover.xml
 
   php-cs-fixer:
     runs-on: ubuntu-latest
