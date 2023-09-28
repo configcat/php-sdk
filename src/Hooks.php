@@ -1,15 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat;
 
 /**
  * Events fired by ConfigCatClient.
- * @package ConfigCat
  */
 final class Hooks
 {
+    /**
+     * @var callable[]
+     */
     private array $onConfigChanged = [];
+
+    /**
+     * @var callable[]
+     */
     private array $onFlagEvaluated = [];
+
+    /**
+     * @var callable[]
+     */
     private array $onError = [];
 
     /**
@@ -39,6 +51,8 @@ final class Hooks
     }
 
     /**
+     * @param array<string, mixed> $settings
+     *
      * @internal
      */
     public function fireOnConfigChanged(array $settings): void

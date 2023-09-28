@@ -1,27 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat;
 
 /**
  * Represents a simple key-value pair.
- * @package ConfigCat
  */
 class Pair
 {
     /**
      * Creates a new Pair.
      *
-     * @param string $key The key.
-     * @param mixed $value The value:
+     * @param string $key   the key
+     * @param mixed  $value The value:
      */
-    public function __construct(private readonly string $key, private readonly mixed $value)
-    {
-    }
+    public function __construct(private readonly string $key, private readonly mixed $value) {}
 
     /**
      * Gets the key.
-     *
-     * @return string
      */
     public function getKey(): string
     {
@@ -30,8 +27,6 @@ class Pair
 
     /**
      * Gets the value.
-     *
-     * @return mixed
      */
     public function getValue(): mixed
     {

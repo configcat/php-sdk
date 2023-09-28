@@ -1,0 +1,9 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    ignoreErrors:
+    		-
+    			message: '#PHPDoc tag \@throws with type Psr\\Cache\\InvalidArgumentException is not subtype of Throwable#'
+    			path: src/Cache/Psr6Cache.php
+    			count: 2

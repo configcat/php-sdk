@@ -7,5 +7,6 @@
 /.sonarcloud.properties export-ignore
 /CONTRIBUTING.md export-ignore
 /DEPLOY.md export-ignore
-/phpcs.xml export-ignore
 /phpunit.xml export-ignore
+/.php-cs-fixer.php export-ignore
+/phpstan.neon export-ignore

@@ -21,44 +21,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanDebug()
@@ -69,44 +77,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanInfo()
@@ -117,44 +133,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanNotice()
@@ -165,44 +189,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanWarning()
@@ -213,44 +245,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanError()
@@ -261,44 +301,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanCritical()
@@ -309,44 +357,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::once())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerLogOnlyHigherLevelThanAlert()
@@ -357,44 +413,52 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::once())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testLoggerNoLog()
@@ -405,88 +469,104 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::never())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("");
-        $logger->alert("");
-        $logger->critical("");
-        $logger->error("");
-        $logger->notice("");
-        $logger->info("");
-        $logger->debug("");
-        $logger->warning("");
+        $logger->emergency('');
+        $logger->alert('');
+        $logger->critical('');
+        $logger->error('');
+        $logger->notice('');
+        $logger->info('');
+        $logger->debug('');
+        $logger->warning('');
     }
 
     public function testClientNoLog()
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $client = new ConfigCatClient("not-existing", [
-           ClientOptions::LOGGER => $mockLogger,
-           ClientOptions::LOG_LEVEL => LogLevel::NO_LOG
+        $client = new ConfigCatClient('not-existing', [
+            ClientOptions::LOGGER => $mockLogger,
+            ClientOptions::LOG_LEVEL => LogLevel::NO_LOG,
         ]);
 
         $mockLogger
             ->expects(self::never())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $client->getValue("fake", false);
+        $client->getValue('fake', false);
     }
 
     public function testLoggerBypassesLogWhenExceptionIsIgnored()
@@ -497,43 +577,51 @@ class LoggerTest extends TestCase
 
         $mockLogger
             ->expects(self::never())
-            ->method("emergency");
+            ->method('emergency')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("alert");
+            ->method('alert')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("critical");
+            ->method('critical')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("error");
+            ->method('error')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("warning");
+            ->method('warning')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("notice");
+            ->method('notice')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("info");
+            ->method('info')
+        ;
 
         $mockLogger
             ->expects(self::never())
-            ->method("debug");
+            ->method('debug')
+        ;
 
-        $logger->emergency("", ['exception' => new InvalidArgumentException()]);
-        $logger->alert("", ['exception' => new InvalidArgumentException()]);
-        $logger->critical("", ['exception' => new InvalidArgumentException()]);
-        $logger->error("", ['exception' => new InvalidArgumentException()]);
-        $logger->notice("", ['exception' => new InvalidArgumentException()]);
-        $logger->info("", ['exception' => new InvalidArgumentException()]);
-        $logger->debug("", ['exception' => new InvalidArgumentException()]);
-        $logger->warning("", ['exception' => new InvalidArgumentException()]);
+        $logger->emergency('', ['exception' => new InvalidArgumentException()]);
+        $logger->alert('', ['exception' => new InvalidArgumentException()]);
+        $logger->critical('', ['exception' => new InvalidArgumentException()]);
+        $logger->error('', ['exception' => new InvalidArgumentException()]);
+        $logger->notice('', ['exception' => new InvalidArgumentException()]);
+        $logger->info('', ['exception' => new InvalidArgumentException()]);
+        $logger->debug('', ['exception' => new InvalidArgumentException()]);
+        $logger->warning('', ['exception' => new InvalidArgumentException()]);
     }
 }

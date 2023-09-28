@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat\Log;
 
 /**
  * Determines the current log level of the ConfigCat SDK.
- * @package ConfigCat
  */
 class LogLevel
 {
@@ -18,20 +19,32 @@ class LogLevel
     public const EMERGENCY = 80;
     public const NO_LOG = 90;
 
-    public static function isValid($level): bool
+    public static function isValid(int $level): bool
     {
-        if (!is_int($level)) {
-            return false;
-        }
+        return self::DEBUG == $level
+            || self::INFO == $level
+            || self::NOTICE == $level
+            || self::WARNING == $level
+            || self::ERROR == $level
+            || self::CRITICAL == $level
+            || self::ALERT == $level
+            || self::EMERGENCY == $level
+            || self::NO_LOG == $level;
+    }
 
-        return $level == self::DEBUG ||
-            $level == self::INFO ||
-            $level == self::NOTICE ||
-            $level == self::WARNING ||
-            $level == self::ERROR ||
-            $level == self::CRITICAL ||
-            $level == self::ALERT ||
-            $level == self::EMERGENCY ||
-            $level == self::NO_LOG;
+    public static function asString(int $level): string
+    {
+        return match ($level) {
+            self::DEBUG => 'DEBUG',
+            self::INFO => 'INFO',
+            self::NOTICE => 'NOTICE',
+            self::WARNING => 'WARNING',
+            self::ERROR => 'ERROR',
+            self::CRITICAL => 'CRITICAL',
+            self::ALERT => 'ALERT',
+            self::EMERGENCY => 'EMERGENCY',
+            self::NO_LOG => 'NO_LOG',
+            default => '',
+        };
     }
 }

@@ -1,35 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ConfigCat;
 
 use ConfigCat\Cache\ConfigEntry;
 
 /**
  * Represents a fetch response, including its state and body.
- * @package ConfigCat
+ *
  * @internal
  */
 final class FetchResponse
 {
     /** @var int */
     public const FETCHED = 0;
+
     /** @var int */
     public const NOT_MODIFIED = 1;
+
     /** @var int */
     public const FAILED = 3;
 
     private function __construct(
-        private readonly int         $status,
+        private readonly int $status,
         private readonly ConfigEntry $cacheEntry,
-        private readonly ?string     $error = null
-    ) {
-    }
+        private readonly ?string $error = null
+    ) {}
 
     /**
      * Creates a new response with FAILED status.
      *
-     * @param string $error the reason of the failure.
-     * @return FetchResponse the response.
+     * @param string $error the reason of the failure
+     *
+     * @return FetchResponse the response
      */
     public static function failure(string $error): FetchResponse
     {
@@ -39,7 +43,7 @@ final class FetchResponse
     /**
      * Creates a new response with NOT_MODIFIED status.
      *
-     * @return FetchResponse the response.
+     * @return FetchResponse the response
      */
     public static function notModified(): FetchResponse
     {
@@ -49,8 +53,9 @@ final class FetchResponse
     /**
      * Creates a new response with FETCHED status.
      *
-     * @param ConfigEntry $entry the produced config entry.
-     * @return FetchResponse the response.
+     * @param ConfigEntry $entry the produced config entry
+     *
+     * @return FetchResponse the response
      */
     public static function success(ConfigEntry $entry): FetchResponse
     {
@@ -60,37 +65,37 @@ final class FetchResponse
     /**
      * Returns true when the response is in fetched state.
      *
-     * @return bool True if the fetch succeeded, otherwise false.
+     * @return bool true if the fetch succeeded, otherwise false
      */
     public function isFetched(): bool
     {
-        return $this->status === self::FETCHED;
+        return self::FETCHED === $this->status;
     }
 
     /**
      * Returns true when the response is in not modified state.
      *
-     * @return bool True if the fetched configurations was not modified, otherwise false.
+     * @return bool true if the fetched configurations was not modified, otherwise false
      */
     public function isNotModified(): bool
     {
-        return $this->status === self::NOT_MODIFIED;
+        return self::NOT_MODIFIED === $this->status;
     }
 
     /**
      * Returns true when the response is in failed state.
      *
-     * @return bool True if the fetch failed, otherwise false.
+     * @return bool true if the fetch failed, otherwise false
      */
     public function isFailed(): bool
     {
-        return $this->status === self::FAILED;
+        return self::FAILED === $this->status;
     }
 
     /**
      * Returns the produced config entry.
      *
-     * @return ConfigEntry The produced config entry.
+     * @return ConfigEntry the produced config entry
      */
     public function getConfigEntry(): ConfigEntry
     {
@@ -100,7 +105,7 @@ final class FetchResponse
     /**
      * Returns the error if the fetch failed.
      *
-     * @return ?string The error.
+     * @return ?string the error
      */
     public function getError(): ?string
     {

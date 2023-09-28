@@ -17,15 +17,16 @@
     "guzzlehttp/guzzle": "^6.3|^7.0",
     "psr/log": "^2.0|^3.0",
     "ext-json": "*",
-    "monolog/monolog": "^2.0|^3.0",
-    "z4kn4fein/php-semver": "^2.0"
+    "z4kn4fein/php-semver": "^2.0",
+    "psr/http-client": "^1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "~7.0|^8",
+    "phpunit/phpunit": "^9",
     "illuminate/cache": "^9.0",
     "psr/simple-cache": "^3.0",
     "psr/cache": "^1.0",
-    "squizlabs/php_codesniffer": "^3.7"
+    "phpstan/phpstan": "^1.0",
+    "friendsofphp/php-cs-fixer": "^3.0"
   },
   "autoload": {
     "psr-4": {
