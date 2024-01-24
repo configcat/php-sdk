@@ -1,11 +1,14 @@
 <?php
 
-$finder = PhpCsFixer\Finder::create()
+use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
+
+$finder = Finder::create()
     ->in(__DIR__.'/src')
     ->in(__DIR__.'/tests')
 ;
 
-$config = (new PhpCsFixer\Config())
+$config = (new Config())
     ->setRules([
         '@PhpCsFixer' => true,
         '@PSR2' => true,
