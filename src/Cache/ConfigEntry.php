@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ConfigCat\Cache;
 
+use ConfigCat\ConfigJson\Config;
 use UnexpectedValueException;
 
 /**
@@ -79,10 +80,7 @@ class ConfigEntry
 
     public static function fromConfigJson(string $configJson, string $etag, float $fetchTime): ConfigEntry
     {
-        $deserialized = json_decode($configJson, true);
-        if (null == $deserialized) {
-            return self::empty();
-        }
+        $deserialized = Config::deserialize($configJson);
 
         return new ConfigEntry($configJson, $deserialized, $etag, $fetchTime);
     }

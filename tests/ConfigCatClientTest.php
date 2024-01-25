@@ -25,7 +25,7 @@ use ReflectionException;
 
 class ConfigCatClientTest extends TestCase
 {
-    private const TEST_JSON = '{ "f" : { "first": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "second": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';
+    private const TEST_JSON = '{"f":{"first":{"t":0,"v":{"b":false},"i":"fakeIdFirst"},"second":{"t":0,"v":{"b":true},"i":"fakeIdSecond"}}}';
 
     public function testConstructEmptySdkKey()
     {
@@ -440,9 +440,10 @@ class ConfigCatClientTest extends TestCase
         $this->assertNull($details->getError());
         $this->assertEquals('key', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-        $this->assertEquals('Identifier', $details->getMatchedEvaluationRule()['a']);
-        $this->assertEquals('@test1.com', $details->getMatchedEvaluationRule()['c']);
-        $this->assertEquals(2, $details->getMatchedEvaluationRule()['t']);
+        $condition = $details->getMatchedEvaluationRule()['c'][0]['u'];
+        $this->assertEquals('Identifier', $condition['a']);
+        $this->assertEquals('@test1.com', $condition['l'][0]);
+        $this->assertEquals(2, $condition['c']);
         $this->assertNull($details->getMatchedEvaluationPercentageRule());
         $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
         $this->assertFalse($details->isDefaultValue());
@@ -479,9 +480,10 @@ class ConfigCatClientTest extends TestCase
             $this->assertNull($details->getError());
             $this->assertEquals('key', $details->getKey());
             $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-            $this->assertEquals('Identifier', $details->getMatchedEvaluationRule()['a']);
-            $this->assertEquals('@test1.com', $details->getMatchedEvaluationRule()['c']);
-            $this->assertEquals(2, $details->getMatchedEvaluationRule()['t']);
+            $condition = $details->getMatchedEvaluationRule()['c'][0]['u'];
+            $this->assertEquals('Identifier', $condition['a']);
+            $this->assertEquals('@test1.com', $condition['l'][0]);
+            $this->assertEquals(2, $condition['c']);
             $this->assertNull($details->getMatchedEvaluationPercentageRule());
             $this->assertFalse($details->isDefaultValue());
             $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);

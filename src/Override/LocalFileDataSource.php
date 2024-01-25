@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace ConfigCat\Override;
 
-use ConfigCat\Attributes\Config;
-use ConfigCat\Attributes\SettingAttributes;
+use ConfigCat\ConfigJson\Config;
+use ConfigCat\ConfigJson\Setting;
 use InvalidArgumentException;
+use UnexpectedValueException;
 
 /**
  * Describes a local file override data source.
@@ -44,26 +45,37 @@ class LocalFileDataSource extends OverrideDataSource
         }
 
         $json = json_decode($content, true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $ex = new UnexpectedValueException('JSON error: '.json_last_error_msg());
+        } elseif (is_array($json)) {
+            if (!isset($json['flags'])) {
+                Config::fixup($json);
 
-        if (null == $json) {
-            $this->logger->error("Failed to decode JSON from the local config file '".$this->filePath."'. JSON error: ".json_last_error_msg(), [
-                'event_id' => 2302,
-            ]);
+                try {
+                    return Setting::ensureMap($json[Config::SETTINGS] ?? []);
+                } catch (UnexpectedValueException $ex) {
+                    // intentional no-op
+                }
+            } elseif (is_array($json['flags'])) {
+                $result = [];
 
-            return [];
-        }
+                foreach ($json['flags'] as $key => $value) {
+                    $result[$key] = Setting::fromValue($value);
+                }
 
-        if (isset($json['flags'])) {
-            $result = [];
-            foreach ($json['flags'] as $key => $value) {
-                $result[$key] = [
-                    SettingAttributes::VALUE => $value,
-                ];
+                return $result;
+            } else {
+                $ex = new UnexpectedValueException('Invalid config JSON content: '.$content);
             }
-
-            return $result;
+        } else {
+            $ex = new UnexpectedValueException('Invalid config JSON content: '.$content);
         }
 
-        return $json[Config::ENTRIES];
+        $this->logger->error("Failed to decode JSON from the local config file '".$this->filePath."'.", [
+            'event_id' => 2302,
+            'exception' => $ex,
+        ]);
+
+        return [];
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ConfigCat\Override;
 
-use ConfigCat\Attributes\SettingAttributes;
+use ConfigCat\ConfigJson\Setting;
 
 /**
  * Describes an array override data source.
@@ -27,9 +27,7 @@ class ArrayDataSource extends OverrideDataSource
     {
         $result = [];
         foreach ($this->overrides as $key => $value) {
-            $result[$key] = [
-                SettingAttributes::VALUE => $value,
-            ];
+            $result[$key] = Setting::fromValue($value);
         }
 
         return $result;

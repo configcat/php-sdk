@@ -25,19 +25,6 @@ final class Utils
     }
 
     /**
-     * Splits a given string and trims the result items.
-     *
-     * @param string           $text      the text to split and trim
-     * @param non-empty-string $delimiter the delimiter
-     *
-     * @return string[] the array of split items
-     */
-    public static function splitTrim(string $text, string $delimiter = ','): array
-    {
-        return array_map('trim', explode($delimiter, $text));
-    }
-
-    /**
      * Returns the string representation of a value.
      *
      * @param mixed $value the value

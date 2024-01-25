@@ -1,16 +1,30 @@
 {
   "f": {
     "rolloutFeature": {
-      "v": false,
+      "t": 0,
       "r": [
         {
-          "o": 0,
-          "a": "Identifier",
-          "t": 2,
-          "c": "@example.com",
-          "v": true
+          "c": [
+            {
+              "u": {
+                "a": "Identifier",
+                "c": 2,
+                "l": [
+                  "@example.com"
+                ]
+              }
+            }
+          ],
+          "s": {
+            "v": {
+              "b": true
+            }
+          }
         }
-      ]
+      ],
+      "v": {
+        "b": false
+      }
     }
   }
 }

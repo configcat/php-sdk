@@ -22,21 +22,56 @@ class Utils
 
     public static function formatConfigWithRules(): string
     {
-        return '{ "f": { "key": { "v": "def", "i": "defVar", "p": [], "r": [
-            {
-                "v": "fake1",
-                "i": "id1",
-                "t": 2,
-                "a": "Identifier",
-                "c": "@test1.com"
-            },
-            {
-                "v": "fake2",
-                "i": "id2",
-                "t": 2,
-                "a": "Identifier",
-                "c": "@test2.com"
+        return '{
+            "f": {
+              "key": {
+                "t": 1,
+                "r": [
+                  {
+                    "c": [
+                      {
+                        "u": {
+                          "a": "Identifier",
+                          "c": 2,
+                          "l": [
+                            "@test1.com"
+                          ]
+                        }
+                      }
+                    ],
+                    "s": {
+                      "v": {
+                        "s": "fake1"
+                      },
+                      "i": "id1"
+                    }
+                  },
+                  {
+                    "c": [
+                      {
+                        "u": {
+                          "a": "Identifier",
+                          "c": 2,
+                          "l": [
+                            "@test2.com"
+                          ]
+                        }
+                      }
+                    ],
+                    "s": {
+                      "v": {
+                        "s": "fake2"
+                      },
+                      "i": "id2"
+                    }
+                  }
+                ],
+                "v": {
+                  "s": "def"
+                },
+                "i": "defVar"
+              }
             }
-        ] }}}';
+          }';
     }
 }

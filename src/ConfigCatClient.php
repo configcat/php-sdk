@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
-use ConfigCat\Attributes\Config;
-use ConfigCat\Attributes\PercentageAttributes;
-use ConfigCat\Attributes\RolloutAttributes;
-use ConfigCat\Attributes\SettingAttributes;
 use ConfigCat\Cache\ArrayCache;
 use ConfigCat\Cache\ConfigCache;
 use ConfigCat\Cache\ConfigEntry;
+use ConfigCat\ConfigJson\Config;
+use ConfigCat\ConfigJson\PercentageOption;
+use ConfigCat\ConfigJson\Setting;
+use ConfigCat\ConfigJson\SettingValue;
+use ConfigCat\ConfigJson\SettingValueContainer;
+use ConfigCat\ConfigJson\TargetingRule;
 use ConfigCat\Log\DefaultLogger;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
@@ -420,7 +422,7 @@ final class ConfigCatClient implements ClientInterface
 
     private function checkSettingsAvailable(SettingsResult $settingsResult, string $defaultReturnValue): bool
     {
-        if (empty($settingsResult->settings)) {
+        if (!$settingsResult->hasConfigJson) {
             $this->logger->error('Config JSON is not present. Returning '.$defaultReturnValue.'.', [
                 'event_id' => 1000,
             ]);
@@ -513,27 +515,38 @@ final class ConfigCatClient implements ClientInterface
     }
 
     /**
-     * @param array<string, mixed> $json
+     * @param array<string, mixed> $settings
      */
-    private function parseKeyAndValue(array $json, string $variationId): ?Pair
+    private function parseKeyAndValue(array $settings, string $variationId): ?Pair
     {
-        foreach ($json as $key => $value) {
-            if ($variationId == $value[SettingAttributes::VARIATION_ID]) {
-                return new Pair($key, $value[SettingAttributes::VALUE]);
+        foreach ($settings as $key => $setting) {
+            $settingType = Setting::getType(Setting::ensure($setting));
+
+            if ($variationId === ($setting[Setting::VARIATION_ID] ?? null)) {
+                return new Pair($key, SettingValue::get($setting[Setting::VALUE], $settingType));
             }
 
-            $rolloutRules = $value[SettingAttributes::ROLLOUT_RULES];
-            $percentageItems = $value[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS];
-
-            foreach ($rolloutRules as $rolloutValue) {
-                if ($variationId == $rolloutValue[RolloutAttributes::VARIATION_ID]) {
-                    return new Pair($key, $rolloutValue[RolloutAttributes::VALUE]);
+            $targetingRules = TargetingRule::ensureList($setting[Setting::TARGETING_RULES] ?? []);
+            foreach ($targetingRules as $targetingRule) {
+                if (TargetingRule::hasPercentageOptions(TargetingRule::ensure($targetingRule))) {
+                    $percentageOptions = $targetingRule[TargetingRule::PERCENTAGE_OPTIONS];
+                    foreach ($percentageOptions as $percentageOption) {
+                        if ($variationId === ($percentageOption[PercentageOption::VARIATION_ID] ?? null)) {
+                            return new Pair($key, SettingValue::get($percentageOption[PercentageOption::VALUE], $settingType));
+                        }
+                    }
+                } else {
+                    $simpleValue = $targetingRule[TargetingRule::SIMPLE_VALUE];
+                    if ($variationId === ($simpleValue[SettingValueContainer::VARIATION_ID] ?? null)) {
+                        return new Pair($key, SettingValue::get($simpleValue[SettingValueContainer::VALUE], $settingType));
+                    }
                 }
             }
 
-            foreach ($percentageItems as $percentageValue) {
-                if ($variationId == $percentageValue[PercentageAttributes::VARIATION_ID]) {
-                    return new Pair($key, $percentageValue[PercentageAttributes::VALUE]);
+            $percentageOptions = PercentageOption::ensureList($setting[Setting::PERCENTAGE_OPTIONS] ?? []);
+            foreach ($percentageOptions as $percentageOption) {
+                if ($variationId === ($percentageOption[PercentageOption::VARIATION_ID] ?? null)) {
+                    return new Pair($key, SettingValue::get($percentageOption[PercentageOption::VALUE], $settingType));
                 }
             }
         }
@@ -556,13 +569,13 @@ final class ConfigCatClient implements ClientInterface
                     $local = $this->overrides->getDataSource()->getOverrides();
                     $remote = $this->getRemoteSettingsResult();
 
-                    return new SettingsResult(array_merge($remote->settings, $local), $remote->fetchTime, $remote->hasConfigJson);
+                    return new SettingsResult(array_merge($remote->settings, $local), $remote->fetchTime, true);
 
                 default: // remote over local
                     $local = $this->overrides->getDataSource()->getOverrides();
                     $remote = $this->getRemoteSettingsResult();
 
-                    return new SettingsResult(array_merge($local, $remote->settings), $remote->fetchTime, $remote->hasConfigJson);
+                    return new SettingsResult(array_merge($local, $remote->settings), $remote->fetchTime, true);
             }
         }
 
@@ -581,13 +594,15 @@ final class ConfigCatClient implements ClientInterface
             return new SettingsResult([], 0, false);
         }
 
-        return new SettingsResult($cacheEntry->getConfig()[Config::ENTRIES], $cacheEntry->getFetchTime(), true);
+        $settings = Setting::ensureMap($cacheEntry->getConfig()[Config::SETTINGS] ?? []);
+
+        return new SettingsResult($settings, $cacheEntry->getFetchTime(), true);
     }
 
     private function handleResponse(FetchResponse $response, ConfigEntry $cacheEntry): ConfigEntry
     {
         if ($response->isFetched()) {
-            $this->hooks->fireOnConfigChanged($response->getConfigEntry()->getConfig()[Config::ENTRIES]);
+            $this->hooks->fireOnConfigChanged($response->getConfigEntry()->getConfig()[Config::SETTINGS] ?? []);
             $this->cache->store($this->cacheKey, $response->getConfigEntry());
 
             return $response->getConfigEntry();

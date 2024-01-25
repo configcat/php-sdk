@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 class LocalSourceTest extends TestCase
 {
-    const TEST_JSON_BODY = '{ "f" : { "disabled": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "enabled": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';
+    const TEST_JSON_BODY = '{"f":{"disabled":{"t":0,"v":{"b":false},"i":"fakeIdFirst"},"enabled":{"t":0,"v":{"b":true},"i":"fakeIdSecond"}}}';
 
     public function testWithNonExistingFile()
     {

@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
-use ConfigCat\Attributes\Config;
-use ConfigCat\Attributes\Preferences;
 use ConfigCat\Cache\ConfigEntry;
+use ConfigCat\ConfigJson\Config;
+use ConfigCat\ConfigJson\Preferences;
+use ConfigCat\ConfigJson\RedirectMode;
 use ConfigCat\Http\FetchClientInterface;
 use ConfigCat\Http\GuzzleFetchClient;
 use ConfigCat\Log\InternalLogger;
 use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
+use UnexpectedValueException;
 
 /**
  * Class ConfigFetcher This class is used to fetch the latest configuration.
@@ -21,14 +23,10 @@ use Psr\Http\Client\ClientExceptionInterface;
 final class ConfigFetcher
 {
     public const ETAG_HEADER = 'ETag';
-    public const CONFIG_JSON_NAME = 'config_v5.json';
+    public const CONFIG_JSON_NAME = 'config_v6.json';
 
     public const GLOBAL_URL = 'https://cdn-global.configcat.com';
     public const EU_ONLY_URL = 'https://cdn-eu.configcat.com';
-
-    public const NO_REDIRECT = 0;
-    public const SHOULD_REDIRECT = 1;
-    public const FORCE_REDIRECT = 2;
 
     private InternalLogger $logger;
     private string $urlPath;
@@ -105,16 +103,16 @@ final class ConfigFetcher
         }
 
         $preferences = $response->getConfigEntry()->getConfig()[Config::PREFERENCES];
-        $redirect = $preferences[Preferences::REDIRECT];
-        if ($this->urlIsCustom && self::FORCE_REDIRECT != $redirect) {
+        $redirect = RedirectMode::from($preferences[Preferences::REDIRECT] ?? RedirectMode::NO->value);
+        if ($this->urlIsCustom && RedirectMode::FORCE != $redirect) {
             return $response;
         }
 
-        if (self::NO_REDIRECT == $redirect) {
+        if (RedirectMode::NO == $redirect) {
             return $response;
         }
 
-        if (self::SHOULD_REDIRECT == $redirect) {
+        if (RedirectMode::SHOULD == $redirect) {
             $this->logger->warning(
                 'The `dataGovernance` parameter specified at the client initialization is '.
                 'not in sync with the preferences on the ConfigCat Dashboard. '.
@@ -159,11 +157,13 @@ final class ConfigFetcher
             if ($statusCode >= 200 && $statusCode < 300) {
                 $this->logger->debug('Fetch was successful: new config fetched.');
 
-                $entry = ConfigEntry::fromConfigJson((string) $response->getBody(), $etag ?? '', Utils::getUnixMilliseconds());
-                if (JSON_ERROR_NONE !== json_last_error()) {
-                    $message = 'Fetching config JSON was successful but the HTTP response content was invalid. JSON error: '.json_last_error_msg();
+                try {
+                    $entry = ConfigEntry::fromConfigJson((string) $response->getBody(), $etag ?? '', Utils::getUnixMilliseconds());
+                } catch (UnexpectedValueException $ex) {
+                    $message = 'Fetching config JSON was successful but the HTTP response content was invalid.';
                     $messageCtx = [
                         'event_id' => 1105,
+                        'exception' => $ex,
                     ];
                     $this->logger->error($message, $messageCtx);
 

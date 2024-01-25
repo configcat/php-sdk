@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
-use ConfigCat\Attributes\PercentageAttributes;
-use ConfigCat\Attributes\RolloutAttributes;
-use ConfigCat\Attributes\SettingAttributes;
+use ConfigCat\ConfigJson\ConditionContainer;
+use ConfigCat\ConfigJson\PercentageOption;
+use ConfigCat\ConfigJson\Setting;
+use ConfigCat\ConfigJson\SettingValue;
+use ConfigCat\ConfigJson\SettingValueContainer;
+use ConfigCat\ConfigJson\TargetingRule;
+use ConfigCat\ConfigJson\UserCondition;
 use ConfigCat\Log\InternalLogger;
 use Exception;
 use z4kn4fein\SemVer\SemverException;
@@ -66,11 +70,13 @@ final class RolloutEvaluator
         EvaluationLogCollector $logCollector,
         ?User $user = null
     ): EvaluationResult {
+        $settingType = Setting::getType($json);
+
         if (null === $user) {
-            if (isset($json[SettingAttributes::ROLLOUT_RULES])
-                && !empty($json[SettingAttributes::ROLLOUT_RULES])
-                || isset($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])
-                && !empty($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])) {
+            if (isset($json[Setting::TARGETING_RULES])
+                && !empty($json[Setting::TARGETING_RULES])
+                || isset($json[Setting::PERCENTAGE_OPTIONS])
+                && !empty($json[Setting::PERCENTAGE_OPTIONS])) {
                 $this->logger->warning("Cannot evaluate targeting rules and % options for setting '".$key."' (User Object is missing). ".
                     'You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. '.
                     'Read more: https://configcat.com/docs/advanced/user-object/', [
@@ -78,29 +84,32 @@ final class RolloutEvaluator
                     ]);
             }
 
-            $result = $json[SettingAttributes::VALUE];
-            $variationId = $json[SettingAttributes::VARIATION_ID] ?? '';
+            $result = SettingValue::get($json[Setting::VALUE], $settingType);
+            $variationId = $json[Setting::VARIATION_ID] ?? '';
             $logCollector->add('Returning '.Utils::getStringRepresentation($result).'.');
 
             return new EvaluationResult($result, $variationId, null, null);
         }
 
         $logCollector->add('User object: '.$user);
-        if (isset($json[SettingAttributes::ROLLOUT_RULES]) && !empty($json[SettingAttributes::ROLLOUT_RULES])) {
-            foreach ($json[SettingAttributes::ROLLOUT_RULES] as $rule) {
-                $comparisonAttribute = $rule[RolloutAttributes::COMPARISON_ATTRIBUTE];
-                $comparisonValue = $rule[RolloutAttributes::COMPARISON_VALUE];
-                $comparator = $rule[RolloutAttributes::COMPARATOR];
-                $value = $rule[RolloutAttributes::VALUE];
-                $variationId = $rule[RolloutAttributes::VARIATION_ID] ?? '';
+        if (isset($json[Setting::TARGETING_RULES]) && !empty($json[Setting::TARGETING_RULES])) {
+            foreach ($json[Setting::TARGETING_RULES] as $targetingRule) {
+                $rule = $targetingRule[TargetingRule::CONDITIONS][0][ConditionContainer::USER_CONDITION];
+                $simpleValue = $targetingRule[TargetingRule::SIMPLE_VALUE];
+
+                $comparisonAttribute = $rule[UserCondition::COMPARISON_ATTRIBUTE];
+                $comparator = $rule[UserCondition::COMPARATOR];
+                $value = SettingValue::get($simpleValue[SettingValueContainer::VALUE], $settingType);
+                $variationId = $simpleValue[SettingValueContainer::VARIATION_ID] ?? '';
                 $userValue = $user->getAttribute($comparisonAttribute);
 
+                $comparisonValue = $rule[UserCondition::STRING_COMPARISON_VALUE] ?? $rule[UserCondition::NUMBER_COMPARISON_VALUE] ?? $rule[UserCondition::STRINGLIST_COMPARISON_VALUE];
                 if (empty($comparisonValue) || (!is_numeric($userValue) && empty($userValue))) {
                     $logCollector->add($this->logNoMatch(
                         $comparisonAttribute,
                         $userValue,
                         $comparator,
-                        $comparisonValue
+                        (string) json_encode($comparisonValue)
                     ));
 
                     continue;
@@ -109,66 +118,66 @@ final class RolloutEvaluator
                 switch ($comparator) {
                     // IS ONE OF
                     case 0:
-                        $split = array_filter(Utils::splitTrim($comparisonValue));
+                        $split = $comparisonValue;
                         if (in_array($userValue, $split, true)) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
 
                         // IS NOT ONE OF
                     case 1:
-                        $split = array_filter(Utils::splitTrim($comparisonValue));
+                        $split = $comparisonValue;
                         if (!in_array($userValue, $split, true)) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
 
                         // CONTAINS
                     case 2:
-                        if (Utils::strContains($userValue, $comparisonValue)) {
+                        if (Utils::strContains($userValue, $comparisonValue[0])) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
 
                         // DOES NOT CONTAIN
                     case 3:
-                        if (!Utils::strContains($userValue, $comparisonValue)) {
+                        if (!Utils::strContains($userValue, $comparisonValue[0])) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
@@ -176,11 +185,15 @@ final class RolloutEvaluator
                         // IS ONE OF, IS NOT ONE OF (SemVer)
                     case 4:
                     case 5:
-                        $split = array_filter(Utils::splitTrim($comparisonValue));
+                        $split = $comparisonValue;
 
                         try {
                             $matched = false;
                             foreach ($split as $semVer) {
+                                if (empty($semVer)) {
+                                    continue;
+                                }
+
                                 $matched = Version::equal($userValue, $semVer) || $matched;
                             }
 
@@ -189,18 +202,18 @@ final class RolloutEvaluator
                                     $comparisonAttribute,
                                     $userValue,
                                     $comparator,
-                                    $comparisonValue,
+                                    (string) json_encode($comparisonValue),
                                     $value
                                 ));
 
-                                return new EvaluationResult($value, $variationId, $rule, null);
+                                return new EvaluationResult($value, $variationId, $targetingRule, null);
                             }
                         } catch (SemverException) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
@@ -227,18 +240,18 @@ final class RolloutEvaluator
                                     $comparisonAttribute,
                                     $userValue,
                                     $comparator,
-                                    $comparisonValue,
+                                    (string) json_encode($comparisonValue),
                                     $value
                                 ));
 
-                                return new EvaluationResult($value, $variationId, $rule, null);
+                                return new EvaluationResult($value, $variationId, $targetingRule, null);
                             }
                         } catch (SemverException $exception) {
                             $logCollector->add($this->logFormatError(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $exception
                             ));
 
@@ -255,13 +268,13 @@ final class RolloutEvaluator
                     case 14:
                     case 15:
                         $userDouble = str_replace(',', '.', $userValue);
-                        $comparisonDouble = str_replace(',', '.', $comparisonValue);
+                        $comparisonDouble = $comparisonValue;
                         if (!is_numeric($userDouble)) {
                             $logCollector->add($this->logFormatErrorWithMessage(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $userDouble.'is not a valid number.'
                             ));
 
@@ -273,7 +286,7 @@ final class RolloutEvaluator
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $comparisonDouble.'is not a valid number.'
                             ));
 
@@ -293,66 +306,66 @@ final class RolloutEvaluator
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
 
                         // IS ONE OF (Sensitive)
                     case 16:
-                        $split = array_filter(Utils::splitTrim($comparisonValue));
-                        if (in_array(sha1($userValue), $split, true)) {
+                        $split = $comparisonValue;
+                        if (in_array(hash('sha256', $userValue.$json[Setting::CONFIG_JSON_SALT].$key), $split, true)) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
 
                         // IS NOT ONE OF (Sensitive)
                     case 17:
-                        $split = array_filter(Utils::splitTrim($comparisonValue));
-                        if (!in_array(sha1($userValue), $split, true)) {
+                        $split = $comparisonValue;
+                        if (!in_array(hash('sha256', $userValue.$json[Setting::CONFIG_JSON_SALT].$key), $split, true)) {
                             $logCollector->add($this->logMatch(
                                 $comparisonAttribute,
                                 $userValue,
                                 $comparator,
-                                $comparisonValue,
+                                (string) json_encode($comparisonValue),
                                 $value
                             ));
 
-                            return new EvaluationResult($value, $variationId, $rule, null);
+                            return new EvaluationResult($value, $variationId, $targetingRule, null);
                         }
 
                         break;
                 }
-                $logCollector->add($this->logNoMatch($comparisonAttribute, $userValue, $comparator, $comparisonValue));
+                $logCollector->add($this->logNoMatch($comparisonAttribute, $userValue, $comparator, (string) json_encode($comparisonValue)));
             }
         }
 
-        if (isset($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])
-            && !empty($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS])) {
+        if (isset($json[Setting::PERCENTAGE_OPTIONS])
+            && !empty($json[Setting::PERCENTAGE_OPTIONS])) {
             $hashCandidate = $key.$user->getIdentifier();
             $stringHash = substr(sha1($hashCandidate), 0, 7);
             $intHash = intval($stringHash, 16);
             $scale = $intHash % 100;
 
             $bucket = 0;
-            foreach ($json[SettingAttributes::ROLLOUT_PERCENTAGE_ITEMS] as $rule) {
-                $bucket += $rule[PercentageAttributes::PERCENTAGE];
+            foreach ($json[Setting::PERCENTAGE_OPTIONS] as $rule) {
+                $bucket += $rule[PercentageOption::PERCENTAGE];
                 if ($scale < $bucket) {
-                    $result = $rule[PercentageAttributes::VALUE];
-                    $variationId = $rule[PercentageAttributes::VARIATION_ID];
+                    $result = SettingValue::get($rule[PercentageOption::VALUE], $settingType);
+                    $variationId = $rule[PercentageOption::VARIATION_ID];
                     $logCollector->add(
                         'Evaluating % options. Returning '.Utils::getStringRepresentation($result).'.'
                     );
@@ -362,8 +375,8 @@ final class RolloutEvaluator
             }
         }
 
-        $result = $json[SettingAttributes::VALUE];
-        $variationId = $json[SettingAttributes::VARIATION_ID] ?? '';
+        $result = SettingValue::get($json[Setting::VALUE], $settingType);
+        $variationId = $json[Setting::VARIATION_ID] ?? '';
         $logCollector->add('Returning '.Utils::getStringRepresentation($result).'.');
 
         return new EvaluationResult($result, $variationId, null, null);

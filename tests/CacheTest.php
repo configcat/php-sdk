@@ -14,11 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 class CacheTest extends TestCase
 {
-    private const TEST_JSON = '{ "f" : { "first": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "second": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';
+    private const TEST_JSON = '{"f":{"first":{"t":0,"v":{"b":false},"i":"fakeIdFirst"},"second":{"t":0,"v":{"b":true},"i":"fakeIdSecond"}}}';
 
     public function testCachePayload()
     {
-        $testJson = '{"p":{"u":"https://cdn-global.configcat.com","r":0},"f":{"testKey":{"v":"testValue","t":1,"p":[],"r":[]}}}';
+        $testJson = '{"p":{"u":"https://cdn-global.configcat.com","r":0},"f":{"testKey":{"t":1,"v":{"s":"testValue"}}}}';
 
         $dateTime = new DateTime('2023-06-14T15:27:15.8440000Z');
 
@@ -76,8 +76,10 @@ class CacheTest extends TestCase
     public function cacheKeyTestData(): array
     {
         return [
-            ['test1', '147c5b4c2b2d7c77e1605b1a4309f0ea6684a0c6'],
-            ['test2', 'c09513b1756de9e4bc48815ec7a142b2441ed4d5'],
+            ['test1', '7f845c43ecc95e202b91e271435935e6d1391e5d'],
+            ['test2', 'a78b7e323ef543a272c74540387566a22415148a'],
+            ['configcat-sdk-1/TEST_KEY-0123456789012/1234567890123456789012', 'f83ba5d45bceb4bb704410f51b704fb6dfa19942'],
+            ['configcat-sdk-1/TEST_KEY2-123456789012/1234567890123456789012', 'da7bfd8662209c8ed3f9db96daed4f8d91ba5876'],
         ];
     }
 }
