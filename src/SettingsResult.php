@@ -7,7 +7,7 @@ namespace ConfigCat;
 /**
  * @internal
  */
-class SettingsResult
+final class SettingsResult
 {
     /**
      * @param mixed[] $settings

@@ -28,4 +28,20 @@ abstract class PercentageOption extends SettingValueContainer
 
         return $percentageOptions;
     }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws UnexpectedValueException
+     *
+     * @internal
+     */
+    public static function ensure(mixed $percentageOption): array
+    {
+        if (!is_array($percentageOption)) {
+            throw new UnexpectedValueException('Percentage option is missing or invalid.');
+        }
+
+        return $percentageOption;
+    }
 }

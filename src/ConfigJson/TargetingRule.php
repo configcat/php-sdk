@@ -54,7 +54,7 @@ abstract class TargetingRule
      *
      * @internal
      */
-    public static function hasPercentageOptions(array $targetingRule): bool
+    public static function hasPercentageOptions(array $targetingRule, bool $throwIfInvalid = true): null|bool
     {
         $simpleValue = $targetingRule[self::SIMPLE_VALUE] ?? null;
         $percentageOptions = $targetingRule[self::PERCENTAGE_OPTIONS] ?? null;
@@ -67,6 +67,10 @@ abstract class TargetingRule
             return true;
         }
 
-        throw new UnexpectedValueException('Targeting rule THEN part is missing or invalid.');
+        if ($throwIfInvalid) {
+            throw new UnexpectedValueException('Targeting rule THEN part is missing or invalid.');
+        }
+
+        return null;
     }
 }

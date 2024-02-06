@@ -99,7 +99,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return null|mixed[] the targeting rule the evaluation was based on
+     * @return null|array<string, mixed> the targeting rule the evaluation was based on
      */
     public function getMatchedEvaluationRule(): ?array
     {
@@ -107,7 +107,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return null|mixed[] the percentage rule the evaluation was based on
+     * @return null|array<string, mixed> the percentage rule the evaluation was based on
      */
     public function getMatchedEvaluationPercentageRule(): ?array
     {

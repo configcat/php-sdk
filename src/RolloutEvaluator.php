@@ -7,431 +7,808 @@ namespace ConfigCat;
 use ConfigCat\ConfigJson\ConditionContainer;
 use ConfigCat\ConfigJson\PercentageOption;
 use ConfigCat\ConfigJson\Setting;
+use ConfigCat\ConfigJson\SettingType;
 use ConfigCat\ConfigJson\SettingValue;
 use ConfigCat\ConfigJson\SettingValueContainer;
 use ConfigCat\ConfigJson\TargetingRule;
+use ConfigCat\ConfigJson\UserComparator;
 use ConfigCat\ConfigJson\UserCondition;
 use ConfigCat\Log\InternalLogger;
+use ConfigCat\Log\LogLevel;
+use DateTimeInterface;
 use Exception;
-use z4kn4fein\SemVer\SemverException;
+use LogicException;
+use stdClass;
+use UnexpectedValueException;
 use z4kn4fein\SemVer\Version;
 
 /**
- * Class RolloutEvaluator.
- *
+ * @internal
+ */
+final class EvaluateContext
+{
+    public bool $isMissingUserObjectLogged;
+    public bool $isMissingUserObjectAttributeLogged;
+
+    public ?EvaluateLogBuilder $logBuilder; // initialized by RolloutEvaluator.evaluate
+
+    private null|SettingType|stdClass $settingType = null;
+
+    /**
+     * @param string $key     the key of the setting to evaluate
+     * @param mixed  $setting the definition of the setting to evaluate
+     * @param ?User  $user    the User Object
+     */
+    public function __construct(
+        public readonly string $key,
+        public readonly mixed $setting,
+        public readonly ?User $user
+    ) {
+        $this->isMissingUserObjectLogged = $this->isMissingUserObjectAttributeLogged = false;
+        $this->logBuilder = null;
+    }
+
+    public function getSettingType(): SettingType|stdClass
+    {
+        return $this->settingType ??= Setting::getType($this->setting);
+    }
+}
+
+/**
+ * @internal
+ */
+final class EvaluateResult
+{
+    /**
+     * @param array<string, mixed>      $selectedValue
+     * @param null|array<string, mixed> $matchedTargetingRule
+     * @param null|array<string, mixed> $matchedPercentageOption
+     */
+    public function __construct(
+        public readonly array $selectedValue,
+        public readonly ?array $matchedTargetingRule = null,
+        public readonly ?array $matchedPercentageOption = null
+    ) {}
+}
+
+/**
  * @internal
  */
 final class RolloutEvaluator
 {
-    /**
-     * @var string[]
-     */
-    private array $comparatorTexts = [
-        'IS ONE OF',
-        'IS NOT ONE OF',
-        'CONTAINS',
-        'DOES NOT CONTAIN',
-        'IS ONE OF (SemVer)',
-        'IS NOT ONE OF (SemVer)',
-        '< (SemVer)',
-        '<= (SemVer)',
-        '> (SemVer)',
-        '>= (SemVer)',
-        '= (Number)',
-        '<> (Number)',
-        '< (Number)',
-        '<= (Number)',
-        '> (Number)',
-        '>= (Number)',
-        'IS ONE OF (Sensitive)',
-        'IS NOT ONE OF (Sensitive)',
-    ];
+    private const TARGETING_RULE_IGNORED_MESSAGE = 'The current targeting rule is ignored and the evaluation continues with the next rule.';
+    private const MISSING_USER_OBJECT_ERROR = 'cannot evaluate, User Object is missing';
+    private const MISSING_USER_ATTRIBUTE_ERROR = 'cannot evaluate, the User.%s attribute is missing';
+    private const INVALID_USER_ATTRIBUTE_ERROR = 'cannot evaluate, the User.%s attribute is invalid (%s)';
 
     /**
-     * RolloutEvaluator constructor.
-     *
      * @param InternalLogger $logger the logger instance
      */
     public function __construct(private readonly InternalLogger $logger) {}
 
     /**
-     * Evaluates a requested value from the configuration by the specified roll-out rules.
+     * @param mixed           $defaultValue the value to return in case of failure
+     * @param EvaluateContext $context      the context object
      *
-     * @param string                 $key          the key of the desired value
-     * @param array<string, mixed>   $json         the decoded JSON configuration
-     * @param EvaluationLogCollector $logCollector the evaluation log collector
-     * @param ?User                  $user         Optional. The user to identify the caller.
+     * @return EvaluateResult the result of the evaluation
      *
-     * @return EvaluationResult the evaluation result
+     * @throws UnexpectedValueException
      */
-    public function evaluate(
-        string $key,
-        array $json,
-        EvaluationLogCollector $logCollector,
-        ?User $user = null
-    ): EvaluationResult {
-        $settingType = Setting::getType($json);
+    public function evaluate(mixed $defaultValue, EvaluateContext $context, mixed &$returnValue): EvaluateResult
+    {
+        $logBuilder = $context->logBuilder;
 
-        if (null === $user) {
-            if (isset($json[Setting::TARGETING_RULES])
-                && !empty($json[Setting::TARGETING_RULES])
-                || isset($json[Setting::PERCENTAGE_OPTIONS])
-                && !empty($json[Setting::PERCENTAGE_OPTIONS])) {
-                $this->logger->warning("Cannot evaluate targeting rules and % options for setting '".$key."' (User Object is missing). ".
-                    'You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. '.
-                    'Read more: https://configcat.com/docs/advanced/user-object/', [
-                        'event_id' => 3001,
-                    ]);
+        // Building the evaluation log is expensive, so let's not do it if it wouldn't be logged anyway.
+        if ($this->logger->shouldLog(LogLevel::INFO, [])) {
+            $context->logBuilder = $logBuilder = new EvaluateLogBuilder();
+
+            $logBuilder->append("Evaluating '{$context->key}'");
+
+            if (isset($context->user)) {
+                $logBuilder->append(" for User '{$context->user}'");
             }
 
-            $result = SettingValue::get($json[Setting::VALUE], $settingType);
-            $variationId = $json[Setting::VARIATION_ID] ?? '';
-            $logCollector->add('Returning '.Utils::getStringRepresentation($result).'.');
-
-            return new EvaluationResult($result, $variationId, null, null);
+            $logBuilder->increaseIndent();
         }
 
-        $logCollector->add('User object: '.$user);
-        if (isset($json[Setting::TARGETING_RULES]) && !empty($json[Setting::TARGETING_RULES])) {
-            foreach ($json[Setting::TARGETING_RULES] as $targetingRule) {
-                $rule = $targetingRule[TargetingRule::CONDITIONS][0][ConditionContainer::USER_CONDITION];
+        try {
+            Setting::ensure($context->setting);
+
+            $settingType = $context->getSettingType();
+            $result = $this->evaluateSetting($context);
+            $returnValue = SettingValue::get($result->selectedValue[SettingValueContainer::VALUE] ?? null, $settingType);
+
+            return $result;
+        } catch (Exception $ex) {
+            $logBuilder?->resetIndent()->increaseIndent();
+
+            $returnValue = $defaultValue;
+
+            throw $ex;
+        } finally {
+            if (isset($logBuilder)) {
+                $logBuilder->newLine("Returning '{$returnValue}'.")
+                    ->decreaseIndent()
+                ;
+                $this->logger->info((string) $logBuilder, [
+                    'event_id' => 5000,
+                ]);
+            }
+
+            if (!isset($ex)) {
+                $this->checkDefaultValueTypeMismatch(
+                    $returnValue,
+                    $defaultValue,
+                    $settingType // @phpstan-ignore-line
+                );
+            }
+        }
+    }
+
+    private function evaluateSetting(EvaluateContext $context): EvaluateResult
+    {
+        $targetingRules = TargetingRule::ensureList($context->setting[Setting::TARGETING_RULES] ?? []);
+        if (!empty($targetingRules) && ($evaluateResult = $this->evaluateTargetingRules($targetingRules, $context))) {
+            return $evaluateResult;
+        }
+
+        $percentageOptions = PercentageOption::ensureList($context->setting[Setting::PERCENTAGE_OPTIONS] ?? []);
+        if (!empty($percentageOptions) && ($evaluateResult = $this->evaluatePercentageOptions($percentageOptions, null, $context))) {
+            return $evaluateResult;
+        }
+
+        return new EvaluateResult($context->setting);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $targetingRules
+     */
+    private function evaluateTargetingRules(array $targetingRules, EvaluateContext $context): null|EvaluateResult
+    {
+        $logBuilder = $context->logBuilder;
+
+        $logBuilder?->newLine('Evaluating targeting rules and applying the first match if any:');
+
+        foreach ($targetingRules as $targetingRule) {
+            TargetingRule::ensure($targetingRule);
+
+            $conditions = ConditionContainer::ensureList($targetingRule[TargetingRule::CONDITIONS] ?? []);
+
+            $isMatchOrError = $this->evaluateConditions($conditions, ConditionContainer::conditionAccessor(), $targetingRule, $context->key, $context);
+            if (true !== $isMatchOrError) {
+                if (is_string($isMatchOrError)) {
+                    $logBuilder?->increaseIndent()
+                        ->newLine(self::TARGETING_RULE_IGNORED_MESSAGE)
+                        ->decreaseIndent()
+                    ;
+                }
+
+                continue;
+            }
+
+            if (!TargetingRule::hasPercentageOptions($targetingRule)) {
                 $simpleValue = $targetingRule[TargetingRule::SIMPLE_VALUE];
 
-                $comparisonAttribute = $rule[UserCondition::COMPARISON_ATTRIBUTE];
-                $comparator = $rule[UserCondition::COMPARATOR];
-                $value = SettingValue::get($simpleValue[SettingValueContainer::VALUE], $settingType);
-                $variationId = $simpleValue[SettingValueContainer::VARIATION_ID] ?? '';
-                $userValue = $user->getAttribute($comparisonAttribute);
+                return new EvaluateResult($simpleValue, $targetingRule);
+            }
 
-                $comparisonValue = $rule[UserCondition::STRING_COMPARISON_VALUE] ?? $rule[UserCondition::NUMBER_COMPARISON_VALUE] ?? $rule[UserCondition::STRINGLIST_COMPARISON_VALUE];
-                if (empty($comparisonValue) || (!is_numeric($userValue) && empty($userValue))) {
-                    $logCollector->add($this->logNoMatch(
-                        $comparisonAttribute,
-                        $userValue,
-                        $comparator,
-                        (string) json_encode($comparisonValue)
-                    ));
+            $percentageOptions = $targetingRule[TargetingRule::PERCENTAGE_OPTIONS];
 
-                    continue;
+            $logBuilder?->increaseIndent();
+
+            $evaluateResult = $this->evaluatePercentageOptions($percentageOptions, $targetingRule, $context);
+            if ($evaluateResult) {
+                $logBuilder?->decreaseIndent();
+
+                return $evaluateResult;
+            }
+
+            $logBuilder?->newLine(self::TARGETING_RULE_IGNORED_MESSAGE)
+                ->decreaseIndent()
+            ;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $percentageOptions
+     * @param array<string, mixed>       $matchedTargetingRule
+     */
+    private function evaluatePercentageOptions(array $percentageOptions, ?array $matchedTargetingRule, EvaluateContext $context): null|EvaluateResult
+    {
+        $logBuilder = $context->logBuilder;
+
+        if (!isset($context->user)) {
+            $logBuilder?->newLine('Skipping % options because the User Object is missing.');
+
+            if (!$context->isMissingUserObjectLogged) {
+                $this->logUserObjectIsMissing($context->key);
+                $context->isMissingUserObjectLogged = true;
+            }
+
+            return null;
+        }
+
+        $percentageOptionsAttributeName = $context->setting[Setting::PERCENTAGE_OPTIONS_ATTRIBUTE] ?? null;
+        if (!isset($percentageOptionsAttributeName)) {
+            $percentageOptionsAttributeName = User::IDENTIFIER_ATTRIBUTE;
+            $percentageOptionsAttributeValue = $context->user->getIdentifier();
+        } elseif (is_string($percentageOptionsAttributeName)) {
+            $percentageOptionsAttributeValue = $context->user->getAttribute($percentageOptionsAttributeName);
+        } else {
+            throw new UnexpectedValueException('Percentage evaluation attribute is invalid.');
+        }
+
+        if (!isset($percentageOptionsAttributeValue)) {
+            $logBuilder?->newLine()->append("Skipping % options because the User.{$percentageOptionsAttributeName} attribute is missing.");
+
+            if (!$context->isMissingUserObjectAttributeLogged) {
+                $this->logUserObjectAttributeIsMissingPercentage($context->key, $percentageOptionsAttributeName);
+                $context->isMissingUserObjectAttributeLogged = true;
+            }
+
+            return null;
+        }
+
+        $logBuilder?->newLine()->append("Evaluating % options based on the User.{$percentageOptionsAttributeName} attribute:");
+
+        $sha1 = sha1($context->key.self::userAttributeValueToString($percentageOptionsAttributeValue));
+        $hashValue = intval(substr($sha1, 0, 7), 16) % 100;
+
+        $logBuilder?->newLine()->append("- Computing hash in the [0..99] range from User.{$percentageOptionsAttributeName} => {$hashValue} (this value is sticky and consistent across all SDKs)");
+
+        $bucket = 0;
+        $optionNumber = 1;
+
+        foreach ($percentageOptions as $percentageOption) {
+            PercentageOption::ensure($percentageOption);
+
+            $percentage = $percentageOption[PercentageOption::PERCENTAGE] ?? null;
+            if (!(is_int($percentage) || is_double($percentage)) || $percentage < 0) {
+                throw new UnexpectedValueException('Percentage is missing or invalid.');
+            }
+
+            $bucket += $percentage;
+
+            if ($hashValue >= $bucket) {
+                ++$optionNumber;
+
+                continue;
+            }
+
+            if (isset($logBuilder)) {
+                $percentageOptionValue = SettingValue::get($percentageOption[PercentageOption::VALUE] ?? null, $context->getSettingType(), false)
+                    ?? EvaluateLogBuilder::INVALID_VALUE_PLACEHOLDER;
+                $logBuilder->newLine()->append("- Hash value {$hashValue} selects % option {$optionNumber} ({$percentage}%), '{$percentageOptionValue}'.");
+            }
+
+            return new EvaluateResult($percentageOption, $matchedTargetingRule, $percentageOption);
+        }
+
+        throw new UnexpectedValueException('Sum of percentage option percentages are less than 100.');
+    }
+
+    /**
+     * @param list<array<string, mixed>>                                           $conditions
+     * @param callable(array<string, mixed>, string&): (null|array<string, mixed>) $conditionAccessor
+     * @param array<string, mixed>                                                 $targetingRule
+     */
+    private function evaluateConditions(array $conditions, callable $conditionAccessor, ?array $targetingRule, string $contextSalt, EvaluateContext $context): bool|string
+    {
+        $result = true;
+
+        $logBuilder = $context->logBuilder;
+        $newLineBeforeThen = false;
+
+        $logBuilder?->newLine('- ');
+
+        $i = 0;
+        foreach ($conditions as $condition) {
+            $conditionType = '';
+            $condition = ConditionContainer::ensure($conditionAccessor($condition, $conditionType));
+
+            if (isset($logBuilder)) {
+                if (0 === $i) {
+                    $logBuilder
+                        ->append('IF ')
+                        ->increaseIndent()
+                    ;
+                } else {
+                    $logBuilder
+                        ->increaseIndent()
+                        ->newLine('AND ')
+                    ;
+                }
+            }
+
+            switch ($conditionType) {
+                case ConditionContainer::USER_CONDITION:
+                    $result = $this->evaluateUserCondition($condition, $contextSalt, $context);
+                    $newLineBeforeThen = count($conditions) > 1;
+
+                    break;
+
+                case ConditionContainer::PREREQUISITE_FLAG_CONDITION:
+                    throw new Exception('Not implemented.'); // TODO
+
+                case ConditionContainer::SEGMENT_CONDITION:
+                    throw new Exception('Not implemented.'); // TODO
+
+                default:
+                    throw new LogicException(); // execution should never get here
+            }
+
+            $success = true === $result;
+
+            if ($logBuilder) {
+                if (!isset($targetingRule) || count($conditions) > 1) {
+                    $logBuilder->appendConditionConsequence($success);
                 }
 
-                switch ($comparator) {
-                    // IS ONE OF
-                    case 0:
-                        $split = $comparisonValue;
-                        if (in_array($userValue, $split, true)) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+                $logBuilder->decreaseIndent();
+            }
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
+            if (!$success) {
+                break;
+            }
 
-                        break;
+            ++$i;
+        }
 
-                        // IS NOT ONE OF
-                    case 1:
-                        $split = $comparisonValue;
-                        if (!in_array($userValue, $split, true)) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+        if ($targetingRule) {
+            $logBuilder?->appendTargetingRuleConsequence($targetingRule, $context->getSettingType(), $result, $newLineBeforeThen);
+        }
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
+        return $result;
+    }
 
-                        break;
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function evaluateUserCondition(array $condition, string $contextSalt, EvaluateContext $context): bool|string
+    {
+        $logBuilder = $context->logBuilder;
+        $logBuilder?->appendUserCondition($condition);
 
-                        // CONTAINS
-                    case 2:
-                        if (Utils::strContains($userValue, $comparisonValue[0])) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+        if (!isset($context->user)) {
+            if (!$context->isMissingUserObjectLogged) {
+                $this->logUserObjectIsMissing($context->key);
+                $context->isMissingUserObjectLogged = true;
+            }
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
+            return self::MISSING_USER_OBJECT_ERROR;
+        }
 
-                        break;
+        $userAttributeName = $condition[UserCondition::COMPARISON_ATTRIBUTE] ?? null;
+        if (!is_string($userAttributeName)) {
+            throw new UnexpectedValueException('Comparison attribute is missing or invalid.');
+        }
+        $userAttributeValue = $context->user->getAttribute($userAttributeName);
 
-                        // DOES NOT CONTAIN
-                    case 3:
-                        if (!Utils::strContains($userValue, $comparisonValue[0])) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+        if (!isset($userAttributeValue) || '' === $userAttributeValue) {
+            $this->logUserObjectAttributeIsMissingCondition(EvaluateLogBuilder::formatUserCondition($condition), $context->key, $userAttributeName);
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
+            return sprintf(self::MISSING_USER_ATTRIBUTE_ERROR, $userAttributeName);
+        }
 
-                        break;
+        $comparator = UserComparator::tryFrom($condition[UserCondition::COMPARATOR] ?? null);
 
-                        // IS ONE OF, IS NOT ONE OF (SemVer)
-                    case 4:
-                    case 5:
-                        $split = $comparisonValue;
+        switch ($comparator) {
+            case UserComparator::TEXT_EQUALS:
+            case UserComparator::TEXT_NOT_EQUALS:
+                throw new Exception('Not implemented.'); // TODO
 
-                        try {
-                            $matched = false;
-                            foreach ($split as $semVer) {
-                                if (empty($semVer)) {
-                                    continue;
-                                }
+            case UserComparator::SENSITIVE_TEXT_EQUALS:
+            case UserComparator::SENSITIVE_TEXT_NOT_EQUALS:
+                throw new Exception('Not implemented.'); // TODO
 
-                                $matched = Version::equal($userValue, $semVer) || $matched;
-                            }
+            case UserComparator::TEXT_IS_ONE_OF:
+            case UserComparator::TEXT_IS_NOT_ONE_OF:
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
 
-                            if (($matched && 4 == $comparator) || (!$matched && 5 == $comparator)) {
-                                $logCollector->add($this->logMatch(
-                                    $comparisonAttribute,
-                                    $userValue,
-                                    $comparator,
-                                    (string) json_encode($comparisonValue),
-                                    $value
-                                ));
+                return $this->evaluateTextIsOneOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    UserComparator::TEXT_IS_NOT_ONE_OF === $comparator
+                );
 
-                                return new EvaluationResult($value, $variationId, $targetingRule, null);
-                            }
-                        } catch (SemverException) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+            case UserComparator::SENSITIVE_TEXT_IS_ONE_OF:
+            case UserComparator::SENSITIVE_TEXT_IS_NOT_ONE_OF:
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
 
-                            break;
-                        }
+                return $this->evaluateSensitiveTextIsOneOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    self::ensureConfigJsonSalt($context->setting[Setting::CONFIG_JSON_SALT]),
+                    $contextSalt,
+                    UserComparator::SENSITIVE_TEXT_IS_NOT_ONE_OF === $comparator
+                );
 
-                        break;
+            case UserComparator::TEXT_STARTS_WITH_ANY_OF:
+            case UserComparator::TEXT_NOT_STARTS_WITH_ANY_OF:
+                throw new Exception('Not implemented.'); // TODO
 
-                        // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (SemVer)
-                    case 6:
-                    case 7:
-                    case 8:
-                    case 9:
-                        try {
-                            if ((6 == $comparator
-                                    && Version::lessThan($userValue, $comparisonValue))
-                                || (7 == $comparator
-                                    && Version::lessThanOrEqual($userValue, $comparisonValue))
-                                || (8 == $comparator
-                                    && Version::greaterThan($userValue, $comparisonValue))
-                                || (9 == $comparator
-                                    && Version::greaterThanOrEqual($userValue, $comparisonValue))) {
-                                $logCollector->add($this->logMatch(
-                                    $comparisonAttribute,
-                                    $userValue,
-                                    $comparator,
-                                    (string) json_encode($comparisonValue),
-                                    $value
-                                ));
+            case UserComparator::SENSITIVE_TEXT_STARTS_WITH_ANY_OF:
+            case UserComparator::SENSITIVE_TEXT_NOT_STARTS_WITH_ANY_OF:
+                throw new Exception('Not implemented.'); // TODO
 
-                                return new EvaluationResult($value, $variationId, $targetingRule, null);
-                            }
-                        } catch (SemverException $exception) {
-                            $logCollector->add($this->logFormatError(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $exception
-                            ));
+            case UserComparator::TEXT_ENDS_WITH_ANY_OF:
+            case UserComparator::TEXT_NOT_ENDS_WITH_ANY_OF:
+                throw new Exception('Not implemented.'); // TODO
 
-                            break;
-                        }
+            case UserComparator::SENSITIVE_TEXT_ENDS_WITH_ANY_OF:
+            case UserComparator::SENSITIVE_TEXT_NOT_ENDS_WITH_ANY_OF:
+                throw new Exception('Not implemented.'); // TODO
 
-                        break;
+            case UserComparator::TEXT_CONTAINS_ANY_OF:
+            case UserComparator::TEXT_NOT_CONTAINS_ANY_OF:
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
 
-                        // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Number)
-                    case 10:
-                    case 11:
-                    case 12:
-                    case 13:
-                    case 14:
-                    case 15:
-                        $userDouble = str_replace(',', '.', $userValue);
-                        $comparisonDouble = $comparisonValue;
-                        if (!is_numeric($userDouble)) {
-                            $logCollector->add($this->logFormatErrorWithMessage(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $userDouble.'is not a valid number.'
-                            ));
+                return $this->evaluateTextContainsAnyOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    UserComparator::TEXT_NOT_CONTAINS_ANY_OF === $comparator
+                );
 
-                            break;
-                        }
+            case UserComparator::SEMVER_IS_ONE_OF:
+            case UserComparator::SEMVER_IS_NOT_ONE_OF:
+                $versionOrError = $this->getUserAttributeValueAsSemVer($userAttributeName, $userAttributeValue, $condition, $context->key);
 
-                        if (!is_numeric($comparisonDouble)) {
-                            $logCollector->add($this->logFormatErrorWithMessage(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $comparisonDouble.'is not a valid number.'
-                            ));
+                return !is_string($versionOrError)
+                    ? $this->evaluateSemVerIsOneOf(
+                        $versionOrError,
+                        $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                        UserComparator::SEMVER_IS_NOT_ONE_OF === $comparator
+                    )
+                    : $versionOrError;
 
-                            break;
-                        }
+            case UserComparator::SEMVER_LESS:
+            case UserComparator::SEMVER_LESS_OR_EQUALS:
+            case UserComparator::SEMVER_GREATER:
+            case UserComparator::SEMVER_GREATER_OR_EQUALS:
+                $versionOrError = $this->getUserAttributeValueAsSemVer($userAttributeName, $userAttributeValue, $condition, $context->key);
 
-                        $userDoubleValue = floatval($userDouble);
-                        $comparisonDoubleValue = floatval($comparisonDouble);
+                return !is_string($versionOrError)
+                    ? $this->evaluateSemVerRelation(
+                        $versionOrError,
+                        $comparator, // @phpstan-ignore-line
+                        $condition[UserCondition::STRING_COMPARISON_VALUE] ?? null
+                    )
+                    : $versionOrError;
 
-                        if ((10 == $comparator && $userDoubleValue == $comparisonDoubleValue)
-                            || (11 == $comparator && $userDoubleValue != $comparisonDoubleValue)
-                            || (12 == $comparator && $userDoubleValue < $comparisonDoubleValue)
-                            || (13 == $comparator && $userDoubleValue <= $comparisonDoubleValue)
-                            || (14 == $comparator && $userDoubleValue > $comparisonDoubleValue)
-                            || (15 == $comparator && $userDoubleValue >= $comparisonDoubleValue)) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+            case UserComparator::NUMBER_EQUALS:
+            case UserComparator::NUMBER_NOT_EQUALS:
+            case UserComparator::NUMBER_LESS:
+            case UserComparator::NUMBER_LESS_OR_EQUALS:
+            case UserComparator::NUMBER_GREATER:
+            case UserComparator::NUMBER_GREATER_OR_EQUALS:
+                $numberOrError = $this->getUserAttributeValueAsNumber($userAttributeName, $userAttributeValue, $condition, $context->key);
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
+                return !is_string($numberOrError)
+                    ? $this->evaluateNumberRelation(
+                        $numberOrError,
+                        $comparator, // @phpstan-ignore-line
+                        $condition[UserCondition::NUMBER_COMPARISON_VALUE] ?? null
+                    )
+                    : $numberOrError;
 
-                        break;
+            case UserComparator::DATETIME_BEFORE:
+            case UserComparator::DATETIME_AFTER:
+                throw new Exception('Not implemented.'); // TODO
 
-                        // IS ONE OF (Sensitive)
-                    case 16:
-                        $split = $comparisonValue;
-                        if (in_array(hash('sha256', $userValue.$json[Setting::CONFIG_JSON_SALT].$key), $split, true)) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+            case UserComparator::ARRAY_CONTAINS_ANY_OF:
+            case UserComparator::ARRAY_NOT_CONTAINS_ANY_OF:
+                throw new Exception('Not implemented.'); // TODO
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
+            case UserComparator::SENSITIVE_ARRAY_CONTAINS_ANY_OF:
+            case UserComparator::SENSITIVE_ARRAY_NOT_CONTAINS_ANY_OF:
+                throw new Exception('Not implemented.'); // TODO
 
-                        break;
+            default:
+                throw new UnexpectedValueException('Comparison operator is missing or invalid.');
+        }
+    }
 
-                        // IS NOT ONE OF (Sensitive)
-                    case 17:
-                        $split = $comparisonValue;
-                        if (!in_array(hash('sha256', $userValue.$json[Setting::CONFIG_JSON_SALT].$key), $split, true)) {
-                            $logCollector->add($this->logMatch(
-                                $comparisonAttribute,
-                                $userValue,
-                                $comparator,
-                                (string) json_encode($comparisonValue),
-                                $value
-                            ));
+    private static function evaluateTextIsOneOf(string $text, mixed $comparisonValues, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
 
-                            return new EvaluationResult($value, $variationId, $targetingRule, null);
-                        }
-
-                        break;
-                }
-                $logCollector->add($this->logNoMatch($comparisonAttribute, $userValue, $comparator, (string) json_encode($comparisonValue)));
+        foreach ($comparisonValues as $comparisonValue) {
+            if ($text === self::ensureStringComparisonValue($comparisonValue)) {
+                return !$negate;
             }
         }
 
-        if (isset($json[Setting::PERCENTAGE_OPTIONS])
-            && !empty($json[Setting::PERCENTAGE_OPTIONS])) {
-            $hashCandidate = $key.$user->getIdentifier();
-            $stringHash = substr(sha1($hashCandidate), 0, 7);
-            $intHash = intval($stringHash, 16);
-            $scale = $intHash % 100;
+        return $negate;
+    }
 
-            $bucket = 0;
-            foreach ($json[Setting::PERCENTAGE_OPTIONS] as $rule) {
-                $bucket += $rule[PercentageOption::PERCENTAGE];
-                if ($scale < $bucket) {
-                    $result = SettingValue::get($rule[PercentageOption::VALUE], $settingType);
-                    $variationId = $rule[PercentageOption::VARIATION_ID];
-                    $logCollector->add(
-                        'Evaluating % options. Returning '.Utils::getStringRepresentation($result).'.'
-                    );
+    private static function evaluateSensitiveTextIsOneOf(string $text, mixed $comparisonValues, string $configJsonSalt, string $contextSalt, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
 
-                    return new EvaluationResult($result, $variationId, null, $rule);
-                }
+        $hash = self::hashComparisonValue($text, $configJsonSalt, $contextSalt);
+
+        foreach ($comparisonValues as $comparisonValue) {
+            if ($hash === self::ensureStringComparisonValue($comparisonValue)) {
+                return !$negate;
             }
         }
 
-        $result = SettingValue::get($json[Setting::VALUE], $settingType);
-        $variationId = $json[Setting::VARIATION_ID] ?? '';
-        $logCollector->add('Returning '.Utils::getStringRepresentation($result).'.');
-
-        return new EvaluationResult($result, $variationId, null, null);
+        return $negate;
     }
 
-    private function logMatch(
-        string $comparisonAttribute,
-        string $userValue,
-        int $comparator,
-        string $comparisonValue,
-        mixed $value
-    ): string {
-        return 'Evaluating rule: ['.$comparisonAttribute.':'.$userValue.'] '.
-            '['.$this->comparatorTexts[$comparator].'] '.
-            '['.$comparisonValue.'] => match, returning: '.Utils::getStringRepresentation($value).'.';
+    private static function evaluateTextContainsAnyOf(string $text, mixed $comparisonValues, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
+
+        foreach ($comparisonValues as $comparisonValue) {
+            if (false !== strpos($text, self::ensureStringComparisonValue($comparisonValue))) {
+                return !$negate;
+            }
+        }
+
+        return $negate;
     }
 
-    private function logNoMatch(
-        string $comparisonAttribute,
-        ?string $userValue,
-        int $comparator,
-        string $comparisonValue
-    ): string {
-        return 'Evaluating rule: ['.$comparisonAttribute.':'.$userValue.'] '.
-            '['.$this->comparatorTexts[$comparator].'] '.
-            '['.$comparisonValue.'] => no match.';
+    private static function evaluateSemVerIsOneOf(Version $version, mixed $comparisonValues, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
+
+        $result = false;
+
+        foreach ($comparisonValues as $comparisonValue) {
+            self::ensureStringComparisonValue($comparisonValue);
+
+            // NOTE: Previous versions of the evaluation algorithm ignore empty comparison values.
+            // We keep this behavior for backward compatibility.
+            if ('' === $comparisonValue) {
+                continue;
+            }
+
+            $version2 = Version::parseOrNull(trim($comparisonValue));
+            if (!$version2) {
+                // NOTE: Previous versions of the evaluation algorithm ignored invalid comparison values.
+                // We keep this behavior for backward compatibility.
+                return false;
+            }
+
+            if (!$result && 0 === Version::compare($version, $version2)) {
+                // NOTE: Previous versions of the evaluation algorithm require that
+                // none of the comparison values are empty or invalid, that is, we can't stop when finding a match.
+                // We keep this behavior for backward compatibility.
+                $result = true;
+            }
+        }
+
+        return $result !== $negate;
     }
 
-    private function logFormatError(
-        string $comparisonAttribute,
-        string $userValue,
-        int $comparator,
-        string $comparisonValue,
-        Exception $exception
-    ): string {
-        $message = 'Evaluating rule: ['.$comparisonAttribute.':'.$userValue.'] '.
-            '['.$this->comparatorTexts[$comparator].'] '.
-            '['.$comparisonValue.'] => SKIP rule. Validation error: '.$exception->getMessage().'.';
-        $this->logger->warning($message, ['exception' => $exception]);
+    private static function evaluateSemVerRelation(Version $version, UserComparator $comparator, mixed $comparisonValue): bool
+    {
+        self::ensureStringComparisonValue($comparisonValue);
 
-        return $message;
+        $version2 = Version::parseOrNull(trim($comparisonValue));
+
+        if (!$version2) {
+            return false;
+        }
+
+        $comparisonResult = Version::compare($version, $version2);
+
+        switch ($comparator) {
+            case UserComparator::SEMVER_LESS: return $comparisonResult < 0;
+
+            case UserComparator::SEMVER_LESS_OR_EQUALS: return $comparisonResult <= 0;
+
+            case UserComparator::SEMVER_GREATER: return $comparisonResult > 0;
+
+            case UserComparator::SEMVER_GREATER_OR_EQUALS: return $comparisonResult >= 0;
+
+            default: throw new LogicException();
+        }
     }
 
-    private function logFormatErrorWithMessage(
-        string $comparisonAttribute,
-        string $userValue,
-        int $comparator,
-        string $comparisonValue,
-        string $message
-    ): string {
-        $message = 'Evaluating rule: ['.$comparisonAttribute.':'.$userValue.'] '.
-            '['.$this->comparatorTexts[$comparator].'] '.
-            '['.$comparisonValue.'] => SKIP rule. Validation error: '.$message.'.';
-        $this->logger->warning($message);
+    private static function evaluateNumberRelation(float $number, UserComparator $comparator, mixed $comparisonValue): bool
+    {
+        $number2 = self::ensureNumberComparisonValue($comparisonValue);
 
-        return $message;
+        switch ($comparator) {
+            case UserComparator::NUMBER_EQUALS: return $number === $number2;
+
+            case UserComparator::NUMBER_NOT_EQUALS: return $number !== $number2;
+
+            case UserComparator::NUMBER_LESS: return $number < $number2;
+
+            case UserComparator::NUMBER_LESS_OR_EQUALS: return $number <= $number2;
+
+            case UserComparator::NUMBER_GREATER: return $number > $number2;
+
+            case UserComparator::NUMBER_GREATER_OR_EQUALS: return $number >= $number2;
+
+            default: throw new LogicException();
+        }
+    }
+
+    private static function ensureConfigJsonSalt(mixed $value): string
+    {
+        return is_string($value)
+            ? $value
+            : throw new UnexpectedValueException('Config JSON salt is missing or invalid.');
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private static function ensureComparisonValues(mixed $comparisonValues): array
+    {
+        return array_is_list($comparisonValues)
+            ? $comparisonValues
+            : throw new UnexpectedValueException('Comparison value is missing or invalid.');
+    }
+
+    private static function ensureStringComparisonValue(mixed $comparisonValue): string
+    {
+        return is_string($comparisonValue)
+            ? $comparisonValue
+            : throw new UnexpectedValueException('Comparison value is missing or invalid.');
+    }
+
+    private static function ensureNumberComparisonValue(mixed $comparisonValue): float
+    {
+        return is_float($comparisonValue) || is_int($comparisonValue)
+            ? (float) $comparisonValue
+            : throw new UnexpectedValueException('Comparison value is missing or invalid.');
+    }
+
+    private static function hashComparisonValue(string $value, string $configJsonSalt, string $contextSalt): string
+    {
+        return hash('sha256', $value.$configJsonSalt.$contextSalt);
+    }
+
+    private static function userAttributeValueToString(mixed $attributeValue): string
+    {
+        if (is_string($attributeValue)) {
+            return $attributeValue;
+        }
+        if (is_double($attributeValue) || is_int($attributeValue)) {
+            return Utils::numberToString($attributeValue);
+        }
+        if ($attributeValue instanceof DateTimeInterface
+            && is_double($unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue))) {
+            return Utils::numberToString($unixTimeSeconds);
+        }
+        if (Utils::isStringList($attributeValue)
+            && ($stringArrayJson = json_encode($attributeValue, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))) {
+            return $stringArrayJson;
+        }
+
+        return var_export($attributeValue, true);
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function getUserAttributeValueAsText(string $attributeName, mixed $attributeValue, array $condition, string $key): string
+    {
+        if (is_string($attributeValue)) {
+            return $attributeValue;
+        }
+
+        $text = self::userAttributeValueToString($attributeValue);
+        $this->logUserObjectAttributeIsAutoConverted(EvaluateLogBuilder::formatUserCondition($condition), $key, $attributeName, $text);
+
+        return $text;
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function getUserAttributeValueAsSemVer(string $attributeName, mixed $attributeValue, array $condition, string $key): string|Version
+    {
+        if (is_string($attributeValue) && ($version = Version::parseOrNull(trim($attributeValue)))) {
+            return $version;
+        }
+
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid semantic version");
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function getUserAttributeValueAsNumber(string $attributeName, mixed $attributeValue, array $condition, string $key): float|string
+    {
+        if (is_double($attributeValue) || is_int($attributeValue)) {
+            return (float) $attributeValue;
+        }
+        if (is_string($attributeValue)
+            && is_double($number = Utils::numberFromString(str_replace(',', '.', $attributeValue)))) {
+            return $number;
+        }
+
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid decimal number");
+    }
+
+    private function logUserObjectIsMissing(string $key): void
+    {
+        $this->logger->warning("Cannot evaluate targeting rules and % options for setting '{$key}' (User Object is missing). ".
+            'You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. '.
+            'Read more: https://configcat.com/docs/advanced/user-object/', [
+                'event_id' => 3001,
+            ]);
+    }
+
+    private function logUserObjectAttributeIsMissingPercentage(string $key, string $attributeName): void
+    {
+        $this->logger->warning("Cannot evaluate % options for setting '{$key}' (the User.{$attributeName} attribute is missing). ".
+            "You should set the User.{$attributeName} attribute in order to make targeting work properly. ".
+            'Read more: https://configcat.com/docs/advanced/user-object/', [
+                'event_id' => 3003,
+            ]);
+    }
+
+    private function logUserObjectAttributeIsMissingCondition(string $condition, string $key, string $attributeName): void
+    {
+        $this->logger->warning("Cannot evaluate condition ({$condition}) for setting '{$key}' (the User.{$attributeName} attribute is missing). ".
+            "You should set the User.{$attributeName} attribute in order to make targeting work properly. ".
+            'Read more: https://configcat.com/docs/advanced/user-object/', [
+                'event_id' => 3003,
+            ]);
+    }
+
+    private function logUserObjectAttributeIsInvalid(string $condition, string $key, string $reason, string $attributeName): void
+    {
+        $this->logger->warning("Cannot evaluate condition ({$condition}) for setting '{$key}' ({$reason}). ".
+            "Please check the User.{$attributeName} attribute and make sure that its value corresponds to the comparison operator.", [
+                'event_id' => 3004,
+            ]);
+    }
+
+    private function logUserObjectAttributeIsAutoConverted(string $condition, string $key, string $attributeName, string $attributeValue): void
+    {
+        $this->logger->warning("Evaluation of condition ({$condition}) for setting '{$key}' may not produce the expected result ".
+            "(the User.{$attributeName} attribute is not a string value, thus it was automatically converted to the string value '{$attributeValue}'). ".
+            'Please make sure that using a non-string value was intended.', [
+                'event_id' => 3005,
+            ]);
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function handleInvalidUserAttribute(array $condition, string $key, string $attributeName, string $reason): string
+    {
+        $this->logUserObjectAttributeIsInvalid(EvaluateLogBuilder::formatUserCondition($condition), $key, $reason, $attributeName);
+
+        return sprintf(self::INVALID_USER_ATTRIBUTE_ERROR, $attributeName, $reason);
+    }
+
+    private function checkDefaultValueTypeMismatch(mixed $returnValue, mixed $defaultValue, SettingType $settingType): void
+    {
+        if (!isset($defaultValue)) { // when default value is null, the type of return value can be of any allowed type
+            return;
+        }
+        if (is_bool($returnValue)) {
+            if (is_bool($defaultValue)) {
+                return;
+            }
+        } elseif (is_string($returnValue)) {
+            if (is_string($defaultValue)) {
+                return;
+            }
+        } elseif (is_int($returnValue) || is_float($returnValue)) {
+            if (is_int($defaultValue) || is_float($defaultValue)) {
+                return;
+            }
+        }
+
+        $settingTypeName = $settingType->name;
+        $defaultValueType = gettype($defaultValue);
+
+        $this->logger->warning("The type of a setting does not match the type of the specified default value ({$defaultValue}). ".
+            "Setting's type was {$settingTypeName} but the default value's type was {$defaultValueType}. ".
+            "Please make sure that using a default value not matching the setting's type was intended.", [
+                'event_id' => 4002,
+            ]);
     }
 }

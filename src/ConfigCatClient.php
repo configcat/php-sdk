@@ -163,7 +163,8 @@ final class ConfigCatClient implements ClientInterface
 
             return $this->evaluate(
                 $key,
-                $settingsResult->settings[$key],
+                $settingsResult->settings[$key] ?? null,
+                $defaultValue,
                 $user,
                 $settingsResult->fetchTime
             )->getValue();
@@ -212,7 +213,7 @@ final class ConfigCatClient implements ClientInterface
                 return $details;
             }
 
-            return $this->evaluate($key, $settingsResult->settings[$key], $user, $settingsResult->fetchTime);
+            return $this->evaluate($key, $settingsResult->settings[$key] ?? null, $defaultValue, $user, $settingsResult->fetchTime);
         } catch (Exception $exception) {
             $message = "Error occurred in the `getValueDetails` method while evaluating setting '".$key."'. ".
                 'Returning the `defaultValue` parameter that you specified in '.
@@ -323,7 +324,8 @@ final class ConfigCatClient implements ClientInterface
             foreach ($keys as $key) {
                 $result[$key] = $this->evaluate(
                     $key,
-                    $settingsResult->settings[$key],
+                    $settingsResult->settings[$key] ?? null,
+                    null,
                     $user,
                     $settingsResult->fetchTime
                 );
@@ -477,7 +479,8 @@ final class ConfigCatClient implements ClientInterface
         foreach ($keys as $key) {
             $result[$key] = $this->evaluate(
                 $key,
-                $settingsResult->settings[$key],
+                $settingsResult->settings[$key] ?? null,
+                null,
                 $user,
                 $settingsResult->fetchTime
             )->getValue();
@@ -486,28 +489,22 @@ final class ConfigCatClient implements ClientInterface
         return $result;
     }
 
-    /**
-     * @param mixed[] $setting
-     */
-    private function evaluate(string $key, array $setting, ?User $user, float $fetchTime): EvaluationDetails
+    private function evaluate(string $key, mixed $setting, mixed $defaultValue, ?User $user, float $fetchTime): EvaluationDetails
     {
-        $actualUser = null === $user ? $this->defaultUser : $user;
-        $collector = new EvaluationLogCollector();
-        $collector->add('Evaluating '.$key.'.');
-        $result = $this->evaluator->evaluate($key, $setting, $collector, $actualUser);
-        $this->logger->info((string) $collector, [
-            'event_id' => 5000,
-        ]);
+        $user ??= $this->defaultUser;
+        $evaluateContext = new EvaluateContext($key, $setting, $user);
+        $returnValue = $defaultValue;
+        $evaluateResult = $this->evaluator->evaluate($defaultValue, $evaluateContext, $returnValue);
         $details = new EvaluationDetails(
             $key,
-            $result->variationId,
-            $result->value,
-            $actualUser,
+            $evaluateResult->selectedValue[SettingValueContainer::VARIATION_ID] ?? null,
+            $returnValue,
+            $user,
             false,
             null,
             $fetchTime,
-            $result->targetingRule,
-            $result->percentageRule
+            $evaluateResult->matchedTargetingRule,
+            $evaluateResult->matchedPercentageOption
         );
         $this->hooks->fireOnFlagEvaluated($details);
 
@@ -523,7 +520,7 @@ final class ConfigCatClient implements ClientInterface
             $settingType = Setting::getType(Setting::ensure($setting));
 
             if ($variationId === ($setting[Setting::VARIATION_ID] ?? null)) {
-                return new Pair($key, SettingValue::get($setting[Setting::VALUE], $settingType));
+                return new Pair($key, SettingValue::get($setting[Setting::VALUE] ?? null, $settingType));
             }
 
             $targetingRules = TargetingRule::ensureList($setting[Setting::TARGETING_RULES] ?? []);
@@ -532,13 +529,13 @@ final class ConfigCatClient implements ClientInterface
                     $percentageOptions = $targetingRule[TargetingRule::PERCENTAGE_OPTIONS];
                     foreach ($percentageOptions as $percentageOption) {
                         if ($variationId === ($percentageOption[PercentageOption::VARIATION_ID] ?? null)) {
-                            return new Pair($key, SettingValue::get($percentageOption[PercentageOption::VALUE], $settingType));
+                            return new Pair($key, SettingValue::get($percentageOption[PercentageOption::VALUE] ?? null, $settingType));
                         }
                     }
                 } else {
                     $simpleValue = $targetingRule[TargetingRule::SIMPLE_VALUE];
                     if ($variationId === ($simpleValue[SettingValueContainer::VARIATION_ID] ?? null)) {
-                        return new Pair($key, SettingValue::get($simpleValue[SettingValueContainer::VALUE], $settingType));
+                        return new Pair($key, SettingValue::get($simpleValue[SettingValueContainer::VALUE] ?? null, $settingType));
                     }
                 }
             }
@@ -546,7 +543,7 @@ final class ConfigCatClient implements ClientInterface
             $percentageOptions = PercentageOption::ensureList($setting[Setting::PERCENTAGE_OPTIONS] ?? []);
             foreach ($percentageOptions as $percentageOption) {
                 if ($variationId === ($percentageOption[PercentageOption::VARIATION_ID] ?? null)) {
-                    return new Pair($key, SettingValue::get($percentageOption[PercentageOption::VALUE], $settingType));
+                    return new Pair($key, SettingValue::get($percentageOption[PercentageOption::VALUE] ?? null, $settingType));
                 }
             }
         }

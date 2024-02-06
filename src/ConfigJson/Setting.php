@@ -64,14 +64,15 @@ abstract class Setting extends SettingValueContainer
      *
      * @internal
      */
-    public static function getType(array $setting): object
+    public static function getType(array $setting): SettingType|stdClass
     {
-        $settingType = $setting[self::TYPE];
+        $settingType = $setting[self::TYPE] ?? null;
         if ($settingType === self::unsupportedTypeToken()) {
             return $settingType;
         }
 
-        return SettingType::from($settingType);
+        return SettingType::tryFrom($settingType)
+            ?? throw new UnexpectedValueException('Setting type is missing or invalid.');
     }
 
     /**
@@ -106,7 +107,7 @@ abstract class Setting extends SettingValueContainer
     /**
      * Returns a token object for indicating an unsupported value coming from flag overrides.
      */
-    private static function unsupportedTypeToken(): object
+    private static function unsupportedTypeToken(): stdClass
     {
         static $unsupportedTypeToken = null;
 
