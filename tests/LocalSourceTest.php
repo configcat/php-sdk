@@ -36,7 +36,7 @@ class LocalSourceTest extends TestCase
     public function testWithFile()
     {
         $client = new ConfigCatClient('testWithFile', [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/test.json'), OverrideBehaviour::LOCAL_ONLY),
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/data/test.json'), OverrideBehaviour::LOCAL_ONLY),
         ]);
 
         $this->assertTrue($client->getValue('enabledFeature', false));
@@ -49,7 +49,7 @@ class LocalSourceTest extends TestCase
     public function testWithFileRules()
     {
         $client = new ConfigCatClient('testWithFile_Rules', [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/test-rules.json'), OverrideBehaviour::LOCAL_ONLY),
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/data/test-rules.json'), OverrideBehaviour::LOCAL_ONLY),
         ]);
 
         // without user
@@ -65,7 +65,7 @@ class LocalSourceTest extends TestCase
     public function testWithSimpleFile()
     {
         $client = new ConfigCatClient('testWithSimpleFile', [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/test-simple.json'), OverrideBehaviour::LOCAL_ONLY),
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/data/test-simple.json'), OverrideBehaviour::LOCAL_ONLY),
         ]);
 
         $this->assertTrue($client->getValue('enabledFeature', false));
