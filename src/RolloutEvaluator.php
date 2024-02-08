@@ -6,6 +6,8 @@ namespace ConfigCat;
 
 use ConfigCat\ConfigJson\ConditionContainer;
 use ConfigCat\ConfigJson\PercentageOption;
+use ConfigCat\ConfigJson\PrerequisiteFlagComparator;
+use ConfigCat\ConfigJson\PrerequisiteFlagCondition;
 use ConfigCat\ConfigJson\Segment;
 use ConfigCat\ConfigJson\SegmentComparator;
 use ConfigCat\ConfigJson\SegmentCondition;
@@ -33,27 +35,52 @@ final class EvaluateContext
     public bool $isMissingUserObjectLogged;
     public bool $isMissingUserObjectAttributeLogged;
 
-    public ?EvaluateLogBuilder $logBuilder; // initialized by RolloutEvaluator.evaluate
+    public ?EvaluateLogBuilder $logBuilder = null; // initialized by RolloutEvaluator.evaluate
 
     private null|SettingType|stdClass $settingType = null;
 
     /**
-     * @param string $key     the key of the setting to evaluate
-     * @param mixed  $setting the definition of the setting to evaluate
-     * @param ?User  $user    the User Object
+     * @var null|list<string>
+     */
+    private null|array $visitedFlags = null;
+
+    /**
+     * @param string               $key      the key of the setting to evaluate
+     * @param mixed                $setting  the definition of the setting to evaluate
+     * @param ?User                $user     the User Object
+     * @param array<string, mixed> $settings the map of settings
      */
     public function __construct(
         public readonly string $key,
         public readonly mixed $setting,
-        public readonly ?User $user
+        public readonly ?User $user,
+        public readonly array $settings
     ) {
         $this->isMissingUserObjectLogged = $this->isMissingUserObjectAttributeLogged = false;
-        $this->logBuilder = null;
+    }
+
+    public static function forPrerequisiteFlag(string $key, mixed $setting, EvaluateContext $dependentFlagContext): EvaluateContext
+    {
+        $context = new EvaluateContext($key, $setting, $dependentFlagContext->user, $dependentFlagContext->settings);
+        $context->visitedFlags = &$dependentFlagContext->getVisitedFlags(); // crucial to use `getVisitedFlags` here to make sure the list is created!
+        $context->logBuilder = $dependentFlagContext->logBuilder;
+
+        return $context;
     }
 
     public function getSettingType(): SettingType|stdClass
     {
-        return $this->settingType ??= Setting::getType($this->setting);
+        return $this->settingType ??= Setting::getType($this->setting); // @phpstan-ignore-line
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function &getVisitedFlags(): array
+    {
+        $this->visitedFlags ??= [];
+
+        return $this->visitedFlags;
     }
 }
 
@@ -333,7 +360,10 @@ final class RolloutEvaluator
                     break;
 
                 case ConditionContainer::PREREQUISITE_FLAG_CONDITION:
-                    throw new Exception('Not implemented.'); // TODO
+                    $result = $this->evaluatePrerequisiteFlagCondition($condition, $context);
+                    $newLineBeforeThen = true;
+
+                    break;
 
                 case ConditionContainer::SEGMENT_CONDITION:
                     $result = $this->evaluateSegmentCondition($condition, $context);
@@ -818,6 +848,85 @@ final class RolloutEvaluator
         }
 
         return $negate;
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function evaluatePrerequisiteFlagCondition(array $condition, EvaluateContext $context): bool
+    {
+        $logBuilder = $context->logBuilder;
+        $logBuilder?->appendPrerequisiteFlagCondition($condition, $context->settings);
+
+        $prerequisiteFlagKey = $condition[PrerequisiteFlagCondition::PREREQUISITE_FLAG_KEY] ?? null;
+        if (!is_string($prerequisiteFlagKey)) {
+            throw new UnexpectedValueException('Prerequisite flag key is missing or invalid.');
+        }
+
+        $prerequisiteFlag = $context->settings[$prerequisiteFlagKey] ?? null;
+        if (!is_array($prerequisiteFlag)) {
+            throw new UnexpectedValueException('Prerequisite flag is missing or invalid.');
+        }
+
+        /** @var SettingType|stdClass $prerequisiteFlagType */
+        $prerequisiteFlagType = Setting::getType($prerequisiteFlag);
+
+        $comparisonValue = SettingValue::get($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null, $prerequisiteFlagType, false);
+        if (!isset($comparisonValue)) {
+            throw new UnexpectedValueException("Type mismatch between comparison value '{$comparisonValue}' and prerequisite flag '{$prerequisiteFlagKey}'.");
+        }
+
+        $visitedFlags = &$context->getVisitedFlags();
+        array_push($visitedFlags, $context->key);
+        if (in_array($prerequisiteFlagKey, $visitedFlags, true)) {
+            array_push($visitedFlags, $prerequisiteFlagKey);
+            $dependencyCycle = Utils::formatStringList($visitedFlags, 0, null, ' -> ');
+
+            throw new UnexpectedValueException("Circular dependency detected between the following depending flags: {$dependencyCycle}.");
+        }
+
+        $prerequisiteFlagContext = EvaluateContext::forPrerequisiteFlag($prerequisiteFlagKey, $prerequisiteFlag, $context);
+
+        $logBuilder?->newLine('(')
+            ->increaseIndent()
+            ->newLine()->append("Evaluating prerequisite flag '{$prerequisiteFlagKey}':")
+        ;
+
+        $prerequisiteFlagEvaluateResult = $this->evaluateSetting($prerequisiteFlagContext);
+
+        array_pop($visitedFlags);
+
+        $prerequisiteFlagValue = SettingValue::get(
+            $prerequisiteFlagEvaluateResult->selectedValue[SettingValueContainer::VALUE] ?? null,
+            $prerequisiteFlagType
+        );
+
+        $comparator = PrerequisiteFlagComparator::tryFrom($condition[PrerequisiteFlagCondition::COMPARATOR] ?? null);
+
+        switch ($comparator) {
+            case PrerequisiteFlagComparator::EQUALS:
+                $result = $prerequisiteFlagValue === $comparisonValue;
+
+                break;
+
+            case PrerequisiteFlagComparator::NOT_EQUALS:
+                $result = $prerequisiteFlagValue !== $comparisonValue;
+
+                break;
+
+            default:
+                throw new UnexpectedValueException('Comparison operator is missing or invalid.');
+        }
+
+        $logBuilder?->newLine()->append("Prerequisite flag evaluation result: '{$prerequisiteFlagValue}'.")
+            ->newLine('Condition (')
+            ->appendPrerequisiteFlagCondition($condition, $context->settings)
+            ->append(') evaluates to ')->appendEvaluationResult($result)->append('.')
+            ->decreaseIndent()
+            ->newLine(')')
+        ;
+
+        return $result;
     }
 
     /**

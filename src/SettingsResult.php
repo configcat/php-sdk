@@ -10,7 +10,7 @@ namespace ConfigCat;
 final class SettingsResult
 {
     /**
-     * @param mixed[] $settings
+     * @param array<string, mixed> $settings
      */
     public function __construct(public array $settings, public float $fetchTime, public bool $hasConfigJson) {}
 }

@@ -10,6 +10,7 @@ use ConfigCat\Cache\ConfigEntry;
 use ConfigCat\ConfigJson\Config;
 use ConfigCat\ConfigJson\PercentageOption;
 use ConfigCat\ConfigJson\Setting;
+use ConfigCat\ConfigJson\SettingType;
 use ConfigCat\ConfigJson\SettingValue;
 use ConfigCat\ConfigJson\SettingValueContainer;
 use ConfigCat\ConfigJson\TargetingRule;
@@ -21,6 +22,7 @@ use ConfigCat\Override\OverrideBehaviour;
 use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use stdClass;
 
 /**
  * A client for handling configurations provided by ConfigCat.
@@ -163,7 +165,7 @@ final class ConfigCatClient implements ClientInterface
 
             return $this->evaluate(
                 $key,
-                $settingsResult->settings[$key] ?? null,
+                $settingsResult->settings,
                 $defaultValue,
                 $user,
                 $settingsResult->fetchTime
@@ -213,7 +215,7 @@ final class ConfigCatClient implements ClientInterface
                 return $details;
             }
 
-            return $this->evaluate($key, $settingsResult->settings[$key] ?? null, $defaultValue, $user, $settingsResult->fetchTime);
+            return $this->evaluate($key, $settingsResult->settings, $defaultValue, $user, $settingsResult->fetchTime);
         } catch (Exception $exception) {
             $message = "Error occurred in the `getValueDetails` method while evaluating setting '".$key."'. ".
                 'Returning the `defaultValue` parameter that you specified in '.
@@ -324,7 +326,7 @@ final class ConfigCatClient implements ClientInterface
             foreach ($keys as $key) {
                 $result[$key] = $this->evaluate(
                     $key,
-                    $settingsResult->settings[$key] ?? null,
+                    $settingsResult->settings,
                     null,
                     $user,
                     $settingsResult->fetchTime
@@ -479,7 +481,7 @@ final class ConfigCatClient implements ClientInterface
         foreach ($keys as $key) {
             $result[$key] = $this->evaluate(
                 $key,
-                $settingsResult->settings[$key] ?? null,
+                $settingsResult->settings,
                 null,
                 $user,
                 $settingsResult->fetchTime
@@ -489,10 +491,13 @@ final class ConfigCatClient implements ClientInterface
         return $result;
     }
 
-    private function evaluate(string $key, mixed $setting, mixed $defaultValue, ?User $user, float $fetchTime): EvaluationDetails
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function evaluate(string $key, array $settings, mixed $defaultValue, ?User $user, float $fetchTime): EvaluationDetails
     {
         $user ??= $this->defaultUser;
-        $evaluateContext = new EvaluateContext($key, $setting, $user);
+        $evaluateContext = new EvaluateContext($key, $settings[$key], $user, $settings);
         $returnValue = $defaultValue;
         $evaluateResult = $this->evaluator->evaluate($defaultValue, $evaluateContext, $returnValue);
         $details = new EvaluationDetails(
@@ -517,6 +522,7 @@ final class ConfigCatClient implements ClientInterface
     private function parseKeyAndValue(array $settings, string $variationId): ?Pair
     {
         foreach ($settings as $key => $setting) {
+            /** @var SettingType|stdClass $settingType */
             $settingType = Setting::getType(Setting::ensure($setting));
 
             if ($variationId === ($setting[Setting::VARIATION_ID] ?? null)) {

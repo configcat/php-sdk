@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
+use ConfigCat\ConfigJson\PrerequisiteFlagComparator;
+use ConfigCat\ConfigJson\PrerequisiteFlagCondition;
 use ConfigCat\ConfigJson\Segment;
 use ConfigCat\ConfigJson\SegmentComparator;
 use ConfigCat\ConfigJson\SegmentCondition;
+use ConfigCat\ConfigJson\Setting;
 use ConfigCat\ConfigJson\SettingType;
 use ConfigCat\ConfigJson\SettingValue;
 use ConfigCat\ConfigJson\SettingValueContainer;
@@ -184,6 +187,32 @@ final class EvaluateLogBuilder
 
     /**
      * @param array<string, mixed> $condition
+     * @param array<string, mixed> $settings
+     */
+    public function appendPrerequisiteFlagCondition(array $condition, array $settings): self
+    {
+        $prerequisiteFlagKey = $condition[PrerequisiteFlagCondition::PREREQUISITE_FLAG_KEY] ?? null;
+        if (is_string($prerequisiteFlagKey)) {
+            $prerequisiteFlag = $settings[$prerequisiteFlagKey] ?? null;
+            $settingType = is_array($prerequisiteFlag) ? Setting::getType($prerequisiteFlag, false) : null;
+            $comparisonValue = isset($settingType)
+                ? SettingValue::get($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null, $settingType, false)
+                : null;
+        } else {
+            $prerequisiteFlagKey = self::INVALID_REFERENCE_PLACEHOLDER;
+            $comparisonValue = null;
+        }
+
+        $comparator = PrerequisiteFlagComparator::tryFrom($condition[PrerequisiteFlagCondition::COMPARATOR] ?? null);
+        $comparatorFormatted = self::formatPrerequisiteFlagComparator($comparator);
+
+        $comparisonValue ??= self::INVALID_VALUE_PLACEHOLDER;
+
+        return $this->append("Flag '{$prerequisiteFlagKey}' {$comparatorFormatted} '{$comparisonValue}'");
+    }
+
+    /**
+     * @param array<string, mixed> $condition
      */
     public function appendSegmentCondition(array $condition, mixed $segments): self
     {
@@ -298,6 +327,17 @@ final class EvaluateLogBuilder
 
             case UserComparator::ARRAY_NOT_CONTAINS_ANY_OF:
             case UserComparator::SENSITIVE_ARRAY_NOT_CONTAINS_ANY_OF: return 'ARRAY NOT CONTAINS ANY OF';
+
+            default: return self::INVALID_OPERATOR_PLACEHOLDER;
+        }
+    }
+
+    public static function formatPrerequisiteFlagComparator(?PrerequisiteFlagComparator $comparator): string
+    {
+        switch ($comparator) {
+            case PrerequisiteFlagComparator::EQUALS: return 'EQUALS';
+
+            case PrerequisiteFlagComparator::NOT_EQUALS: return 'NOT EQUALS';
 
             default: return self::INVALID_OPERATOR_PLACEHOLDER;
         }
