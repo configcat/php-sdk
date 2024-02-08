@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
+use ConfigCat\ConfigJson\Segment;
+use ConfigCat\ConfigJson\SegmentComparator;
+use ConfigCat\ConfigJson\SegmentCondition;
 use ConfigCat\ConfigJson\SettingType;
 use ConfigCat\ConfigJson\SettingValue;
 use ConfigCat\ConfigJson\SettingValueContainer;
@@ -18,6 +21,7 @@ use stdClass;
 final class EvaluateLogBuilder
 {
     public const INVALID_NAME_PLACEHOLDER = '<invalid name>';
+    public const INVALID_REFERENCE_PLACEHOLDER = '<invalid reference>';
     public const INVALID_OPERATOR_PLACEHOLDER = '<invalid operator>';
     public const INVALID_VALUE_PLACEHOLDER = '<invalid value>';
 
@@ -178,6 +182,24 @@ final class EvaluateLogBuilder
         }
     }
 
+    /**
+     * @param array<string, mixed> $condition
+     */
+    public function appendSegmentCondition(array $condition, mixed $segments): self
+    {
+        $segmentIndex = $condition[SegmentCondition::SEGMENT_INDEX] ?? null;
+        $segment = $segments[is_int($segmentIndex) ? $segmentIndex : null] ?? null;
+        $segmentName = $segment[Segment::NAME] ?? null;
+        if (!is_string($segmentName)) {
+            $segmentName = isset($segment) ? self::INVALID_NAME_PLACEHOLDER : self::INVALID_REFERENCE_PLACEHOLDER;
+        }
+
+        $comparator = SegmentComparator::tryFrom($condition[SegmentCondition::COMPARATOR] ?? null);
+        $comparatorFormatted = self::formatSegmentComparator($comparator);
+
+        return $this->append("User {$comparatorFormatted} '{$segmentName}'");
+    }
+
     public function appendConditionConsequence(bool $result): self
     {
         $this->append(' => ')->appendEvaluationResult($result);
@@ -276,6 +298,17 @@ final class EvaluateLogBuilder
 
             case UserComparator::ARRAY_NOT_CONTAINS_ANY_OF:
             case UserComparator::SENSITIVE_ARRAY_NOT_CONTAINS_ANY_OF: return 'ARRAY NOT CONTAINS ANY OF';
+
+            default: return self::INVALID_OPERATOR_PLACEHOLDER;
+        }
+    }
+
+    public static function formatSegmentComparator(?SegmentComparator $comparator): string
+    {
+        switch ($comparator) {
+            case SegmentComparator::IS_IN: return 'IS IN SEGMENT';
+
+            case SegmentComparator::IS_NOT_IN: return 'IS NOT IN SEGMENT';
 
             default: return self::INVALID_OPERATOR_PLACEHOLDER;
         }

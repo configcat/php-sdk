@@ -6,6 +6,9 @@ namespace ConfigCat;
 
 use ConfigCat\ConfigJson\ConditionContainer;
 use ConfigCat\ConfigJson\PercentageOption;
+use ConfigCat\ConfigJson\Segment;
+use ConfigCat\ConfigJson\SegmentComparator;
+use ConfigCat\ConfigJson\SegmentCondition;
 use ConfigCat\ConfigJson\Setting;
 use ConfigCat\ConfigJson\SettingType;
 use ConfigCat\ConfigJson\SettingValue;
@@ -333,7 +336,10 @@ final class RolloutEvaluator
                     throw new Exception('Not implemented.'); // TODO
 
                 case ConditionContainer::SEGMENT_CONDITION:
-                    throw new Exception('Not implemented.'); // TODO
+                    $result = $this->evaluateSegmentCondition($condition, $context);
+                    $newLineBeforeThen = !is_string($result) || self::MISSING_USER_OBJECT_ERROR !== $result || count($conditions) > 1;
+
+                    break;
 
                 default:
                     throw new LogicException(); // execution should never get here
@@ -812,6 +818,93 @@ final class RolloutEvaluator
         }
 
         return $negate;
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function evaluateSegmentCondition(array $condition, EvaluateContext $context): bool|string
+    {
+        $segments = $context->setting[Setting::CONFIG_SEGMENTS];
+
+        $logBuilder = $context->logBuilder;
+        $logBuilder?->appendSegmentCondition($condition, $segments);
+
+        if (!$context->user) {
+            if (!$context->isMissingUserObjectLogged) {
+                $this->logUserObjectIsMissing($context->key);
+                $context->isMissingUserObjectLogged = true;
+            }
+
+            return self::MISSING_USER_OBJECT_ERROR;
+        }
+
+        $segments = Segment::ensureList($segments);
+
+        $segmentIndex = $condition[SegmentCondition::SEGMENT_INDEX] ?? null;
+        if (!is_int($segmentIndex) || $segmentIndex < 0 || count($segments) <= $segmentIndex) {
+            throw new UnexpectedValueException('Segment reference is invalid.');
+        }
+
+        $segment = Segment::ensure($segments[$segmentIndex]);
+
+        $segmentName = $segment[Segment::NAME] ?? null;
+        if (!is_string($segmentName)) {
+            throw new UnexpectedValueException('Segment name is missing.');
+        }
+
+        $logBuilder?->newLine('(')
+            ->increaseIndent()
+            ->newLine(`Evaluating segment '$segmentName':`)
+        ;
+
+        $conditions = ConditionContainer::ensureList($segment[Segment::CONDITIONS] ?? []);
+
+        $segmentResult = $this->evaluateConditions($conditions, Segment::conditionAccessor(), null, $segmentName, $context);
+        $result = $segmentResult;
+
+        if (!is_string($result)) {
+            $comparator = SegmentComparator::tryFrom($condition[SegmentCondition::COMPARATOR] ?? null);
+
+            switch ($comparator) {
+                case SegmentComparator::IS_IN:
+                    break;
+
+                case SegmentComparator::IS_NOT_IN:
+                    $result = !$result;
+
+                    break;
+
+                default:
+                    throw new UnexpectedValueException('Comparison operator is missing or invalid.');
+            }
+        }
+
+        if ($logBuilder) {
+            $logBuilder->newLine('Segment evaluation result: ');
+
+            if (!is_string($result)) {
+                $comparatorText = EvaluateLogBuilder::formatSegmentComparator($segmentResult ? SegmentComparator::IS_IN : SegmentComparator::IS_NOT_IN);
+                $logBuilder->append("User {$comparatorText}");
+            } else {
+                $logBuilder->append($result);
+            }
+            $logBuilder->append('.');
+
+            $logBuilder->newLine('Condition (')->appendSegmentCondition($condition, $segments)->append(')');
+            (!is_string($result)
+              ? $logBuilder->append(' evaluates to ')->appendEvaluationResult($result)
+              : $logBuilder->append(' failed to evaluate'))
+                ->append('.')
+            ;
+
+            $logBuilder
+                ->decreaseIndent()
+                ->newLine(')')
+            ;
+        }
+
+        return $result;
     }
 
     private static function ensureConfigJsonSalt(mixed $value): string
