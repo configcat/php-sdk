@@ -187,7 +187,9 @@ final class ConfigFetcher
 
             return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
         } catch (ClientExceptionInterface $exception) {
-            $message = 'Unexpected error occurred while trying to fetch config JSON.';
+            $message = 'Unexpected error occurred while trying to fetch config JSON. '.
+                'It is most likely due to a local network issue. '.
+                'Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP.';
             $messageCtx = ['event_id' => 1103, 'exception' => $exception];
             $this->logger->error($message, $messageCtx);
 
