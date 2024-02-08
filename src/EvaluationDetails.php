@@ -7,8 +7,8 @@ namespace ConfigCat;
 class EvaluationDetails
 {
     /**
-     * @param null|mixed[] $matchedEvaluationRule
-     * @param null|mixed[] $matchedEvaluationPercentageRule
+     * @param null|array<string, mixed> $matchedTargetingRule
+     * @param null|array<string, mixed> $matchedPercentageOption
      *
      * @internal
      */
@@ -20,8 +20,8 @@ class EvaluationDetails
         private readonly bool $isDefaultValue,
         private readonly ?string $error,
         private readonly float $fetchTimeUnixMilliseconds,
-        private readonly ?array $matchedEvaluationRule,
-        private readonly ?array $matchedEvaluationPercentageRule
+        private readonly ?array $matchedTargetingRule,
+        private readonly ?array $matchedPercentageOption
     ) {}
 
     /**
@@ -99,18 +99,18 @@ class EvaluationDetails
     }
 
     /**
-     * @return null|array<string, mixed> the targeting rule the evaluation was based on
+     * @return null|array<string, mixed> the targeting rule (if any) that matched during the evaluation and was used to return the evaluated value
      */
-    public function getMatchedEvaluationRule(): ?array
+    public function getMatchedTargetingRule(): ?array
     {
-        return $this->matchedEvaluationRule;
+        return $this->matchedTargetingRule;
     }
 
     /**
-     * @return null|array<string, mixed> the percentage rule the evaluation was based on
+     * @return null|array<string, mixed> the percentage option (if any) that was used to select the evaluated value
      */
-    public function getMatchedEvaluationPercentageRule(): ?array
+    public function getMatchedPercentageOption(): ?array
     {
-        return $this->matchedEvaluationPercentageRule;
+        return $this->matchedPercentageOption;
     }
 }

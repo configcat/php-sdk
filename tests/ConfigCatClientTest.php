@@ -440,11 +440,11 @@ class ConfigCatClientTest extends TestCase
         $this->assertNull($details->getError());
         $this->assertEquals('key', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-        $condition = $details->getMatchedEvaluationRule()['c'][0]['u'];
+        $condition = $details->getMatchedTargetingRule()['c'][0]['u'];
         $this->assertEquals('Identifier', $condition['a']);
         $this->assertEquals('@test1.com', $condition['l'][0]);
         $this->assertEquals(2, $condition['c']);
-        $this->assertNull($details->getMatchedEvaluationPercentageRule());
+        $this->assertNull($details->getMatchedPercentageOption());
         $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
         $this->assertFalse($details->isDefaultValue());
     }
@@ -462,8 +462,8 @@ class ConfigCatClientTest extends TestCase
         $this->assertNotNull($details->getError());
         $this->assertEquals('non-existent', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-        $this->assertNull($details->getMatchedEvaluationRule());
-        $this->assertNull($details->getMatchedEvaluationPercentageRule());
+        $this->assertNull($details->getMatchedTargetingRule());
+        $this->assertNull($details->getMatchedPercentageOption());
         $this->assertTrue($details->isDefaultValue());
     }
 
@@ -480,11 +480,11 @@ class ConfigCatClientTest extends TestCase
             $this->assertNull($details->getError());
             $this->assertEquals('key', $details->getKey());
             $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-            $condition = $details->getMatchedEvaluationRule()['c'][0]['u'];
+            $condition = $details->getMatchedTargetingRule()['c'][0]['u'];
             $this->assertEquals('Identifier', $condition['a']);
             $this->assertEquals('@test1.com', $condition['l'][0]);
             $this->assertEquals(2, $condition['c']);
-            $this->assertNull($details->getMatchedEvaluationPercentageRule());
+            $this->assertNull($details->getMatchedPercentageOption());
             $this->assertFalse($details->isDefaultValue());
             $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
             $called = true;
