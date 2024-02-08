@@ -397,11 +397,25 @@ final class RolloutEvaluator
         switch ($comparator) {
             case UserComparator::TEXT_EQUALS:
             case UserComparator::TEXT_NOT_EQUALS:
-                throw new Exception('Not implemented.'); // TODO
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return $this->evaluateTextEquals(
+                    $text,
+                    $condition[UserCondition::STRING_COMPARISON_VALUE] ?? null,
+                    UserComparator::TEXT_NOT_EQUALS === $comparator
+                );
 
             case UserComparator::SENSITIVE_TEXT_EQUALS:
             case UserComparator::SENSITIVE_TEXT_NOT_EQUALS:
-                throw new Exception('Not implemented.'); // TODO
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return $this->evaluateSensitiveTextEquals(
+                    $text,
+                    $condition[UserCondition::STRING_COMPARISON_VALUE] ?? null,
+                    self::ensureConfigJsonSalt($context->setting[Setting::CONFIG_JSON_SALT]),
+                    $contextSalt,
+                    UserComparator::SENSITIVE_TEXT_NOT_EQUALS === $comparator
+                );
 
             case UserComparator::TEXT_IS_ONE_OF:
             case UserComparator::TEXT_IS_NOT_ONE_OF:
@@ -427,19 +441,51 @@ final class RolloutEvaluator
 
             case UserComparator::TEXT_STARTS_WITH_ANY_OF:
             case UserComparator::TEXT_NOT_STARTS_WITH_ANY_OF:
-                throw new Exception('Not implemented.'); // TODO
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return $this->evaluateTextSliceEqualsAnyOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    true,
+                    UserComparator::TEXT_NOT_STARTS_WITH_ANY_OF === $comparator
+                );
 
             case UserComparator::SENSITIVE_TEXT_STARTS_WITH_ANY_OF:
             case UserComparator::SENSITIVE_TEXT_NOT_STARTS_WITH_ANY_OF:
-                throw new Exception('Not implemented.'); // TODO
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return $this->evaluateSensitiveTextSliceEqualsAnyOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    self::ensureConfigJsonSalt($context->setting[Setting::CONFIG_JSON_SALT]),
+                    $contextSalt,
+                    true,
+                    UserComparator::SENSITIVE_TEXT_NOT_STARTS_WITH_ANY_OF === $comparator
+                );
 
             case UserComparator::TEXT_ENDS_WITH_ANY_OF:
             case UserComparator::TEXT_NOT_ENDS_WITH_ANY_OF:
-                throw new Exception('Not implemented.'); // TODO
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return $this->evaluateTextSliceEqualsAnyOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    false,
+                    UserComparator::TEXT_NOT_ENDS_WITH_ANY_OF === $comparator
+                );
 
             case UserComparator::SENSITIVE_TEXT_ENDS_WITH_ANY_OF:
             case UserComparator::SENSITIVE_TEXT_NOT_ENDS_WITH_ANY_OF:
-                throw new Exception('Not implemented.'); // TODO
+                $text = $this->getUserAttributeValueAsText($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return $this->evaluateSensitiveTextSliceEqualsAnyOf(
+                    $text,
+                    $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                    self::ensureConfigJsonSalt($context->setting[Setting::CONFIG_JSON_SALT]),
+                    $contextSalt,
+                    false,
+                    UserComparator::SENSITIVE_TEXT_NOT_ENDS_WITH_ANY_OF === $comparator
+                );
 
             case UserComparator::TEXT_CONTAINS_ANY_OF:
             case UserComparator::TEXT_NOT_CONTAINS_ANY_OF:
@@ -495,19 +541,61 @@ final class RolloutEvaluator
 
             case UserComparator::DATETIME_BEFORE:
             case UserComparator::DATETIME_AFTER:
-                throw new Exception('Not implemented.'); // TODO
+                $numberOrError = $this->getUserAttributeValueAsUnixTimeSeconds($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return !is_string($numberOrError)
+                    ? $this->evaluateDateTimeRelation(
+                        $numberOrError,
+                        $condition[UserCondition::NUMBER_COMPARISON_VALUE] ?? null,
+                        UserComparator::DATETIME_BEFORE === $comparator
+                    )
+                    : $numberOrError;
 
             case UserComparator::ARRAY_CONTAINS_ANY_OF:
             case UserComparator::ARRAY_NOT_CONTAINS_ANY_OF:
-                throw new Exception('Not implemented.'); // TODO
+                $arrayOrError = $this->getUserAttributeValueAsStringArray($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return !is_string($arrayOrError)
+                    ? $this->evaluateArrayContainsAnyOf(
+                        $arrayOrError,
+                        $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                        UserComparator::ARRAY_NOT_CONTAINS_ANY_OF === $comparator
+                    )
+                    : $arrayOrError;
 
             case UserComparator::SENSITIVE_ARRAY_CONTAINS_ANY_OF:
             case UserComparator::SENSITIVE_ARRAY_NOT_CONTAINS_ANY_OF:
-                throw new Exception('Not implemented.'); // TODO
+                $arrayOrError = $this->getUserAttributeValueAsStringArray($userAttributeName, $userAttributeValue, $condition, $context->key);
+
+                return !is_string($arrayOrError)
+                    ? $this->evaluateSensitiveArrayContainsAnyOf(
+                        $arrayOrError,
+                        $condition[UserCondition::STRINGLIST_COMPARISON_VALUE] ?? null,
+                        self::ensureConfigJsonSalt($context->setting[Setting::CONFIG_JSON_SALT]),
+                        $contextSalt,
+                        UserComparator::SENSITIVE_ARRAY_NOT_CONTAINS_ANY_OF === $comparator
+                    )
+                    : $arrayOrError;
 
             default:
                 throw new UnexpectedValueException('Comparison operator is missing or invalid.');
         }
+    }
+
+    private static function evaluateTextEquals(string $text, mixed $comparisonValue, bool $negate): bool
+    {
+        self::ensureStringComparisonValue($comparisonValue);
+
+        return ($text === $comparisonValue) !== $negate;
+    }
+
+    private static function evaluateSensitiveTextEquals(string $text, mixed $comparisonValue, string $configJsonSalt, string $contextSalt, bool $negate): bool
+    {
+        self::ensureStringComparisonValue($comparisonValue);
+
+        $hash = self::hashComparisonValue($text, $configJsonSalt, $contextSalt);
+
+        return ($hash === $comparisonValue) !== $negate;
     }
 
     private static function evaluateTextIsOneOf(string $text, mixed $comparisonValues, bool $negate): bool
@@ -531,6 +619,57 @@ final class RolloutEvaluator
 
         foreach ($comparisonValues as $comparisonValue) {
             if ($hash === self::ensureStringComparisonValue($comparisonValue)) {
+                return !$negate;
+            }
+        }
+
+        return $negate;
+    }
+
+    private static function evaluateTextSliceEqualsAnyOf(string $text, mixed $comparisonValues, bool $startsWith, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
+
+        foreach ($comparisonValues as $comparisonValue) {
+            $item = self::ensureStringComparisonValue($comparisonValue);
+
+            $success = $startsWith ? str_starts_with($text, $item) : str_ends_with($text, $item);
+
+            if ($success) {
+                return !$negate;
+            }
+        }
+
+        return $negate;
+    }
+
+    private static function evaluateSensitiveTextSliceEqualsAnyOf(string $text, mixed $comparisonValues, string $configJsonSalt, string $contextSalt, bool $startsWith, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
+
+        $textLength = strlen($text);
+
+        foreach ($comparisonValues as $comparisonValue) {
+            $item = self::ensureStringComparisonValue($comparisonValue);
+
+            $index = strpos($item, '_');
+
+            if (false === $index
+                || false === ($sliceLength = filter_var(substr($item, 0, $index), FILTER_VALIDATE_INT))
+                || '' === ($hash2 = substr($item, $index + 1))) {
+                self::ensureStringComparisonValue(null);
+
+                break; // execution should never get here (this is just for keeping phpstan happy)
+            }
+
+            if ($textLength < $sliceLength) {
+                continue;
+            }
+
+            $slice = $startsWith ? substr($text, 0, $sliceLength) : substr($text, $textLength - $sliceLength);
+
+            $hash = self::hashComparisonValue($slice, $configJsonSalt, $contextSalt);
+            if ($hash === $hash2) {
                 return !$negate;
             }
         }
@@ -630,6 +769,51 @@ final class RolloutEvaluator
         }
     }
 
+    private static function evaluateDateTimeRelation(float $number, mixed $comparisonValue, bool $before): bool
+    {
+        $number2 = self::ensureNumberComparisonValue($comparisonValue);
+
+        return $before ? $number < $number2 : $number > $number2;
+    }
+
+    /**
+     * @param list<string> $array
+     */
+    private static function evaluateArrayContainsAnyOf(array $array, mixed $comparisonValues, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
+
+        foreach ($array as $text) {
+            foreach ($comparisonValues as $comparisonValue) {
+                if ($text === self::ensureStringComparisonValue($comparisonValue)) {
+                    return !$negate;
+                }
+            }
+        }
+
+        return $negate;
+    }
+
+    /**
+     * @param list<string> $array
+     */
+    private static function evaluateSensitiveArrayContainsAnyOf(array $array, mixed $comparisonValues, string $configJsonSalt, string $contextSalt, bool $negate): bool
+    {
+        self::ensureComparisonValues($comparisonValues);
+
+        foreach ($array as $text) {
+            $hash = self::hashComparisonValue($text, $configJsonSalt, $contextSalt);
+
+            foreach ($comparisonValues as $comparisonValue) {
+                if ($hash === self::ensureStringComparisonValue($comparisonValue)) {
+                    return !$negate;
+                }
+            }
+        }
+
+        return $negate;
+    }
+
     private static function ensureConfigJsonSalt(mixed $value): string
     {
         return is_string($value)
@@ -706,8 +890,11 @@ final class RolloutEvaluator
      */
     private function getUserAttributeValueAsSemVer(string $attributeName, mixed $attributeValue, array $condition, string $key): string|Version
     {
-        if (is_string($attributeValue) && ($version = Version::parseOrNull(trim($attributeValue)))) {
-            return $version;
+        if (is_string($attributeValue)) {
+            $version = Version::parseOrNull(trim($attributeValue));
+            if ($version) {
+                return $version;
+            }
         }
 
         return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid semantic version");
@@ -721,12 +908,57 @@ final class RolloutEvaluator
         if (is_double($attributeValue) || is_int($attributeValue)) {
             return (float) $attributeValue;
         }
-        if (is_string($attributeValue)
-            && is_double($number = Utils::numberFromString(str_replace(',', '.', $attributeValue)))) {
-            return $number;
+        if (is_string($attributeValue)) {
+            $number = Utils::numberFromString(str_replace(',', '.', $attributeValue));
+            if (is_double($number)) {
+                return $number;
+            }
         }
 
         return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid decimal number");
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function getUserAttributeValueAsUnixTimeSeconds(string $attributeName, mixed $attributeValue, array $condition, string $key): float|string
+    {
+        if ($attributeValue instanceof DateTimeInterface) {
+            $unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue);
+            if (is_double($unixTimeSeconds)) {
+                return $unixTimeSeconds;
+            }
+        } elseif (is_double($attributeValue) || is_int($attributeValue)) {
+            return (float) $attributeValue;
+        } elseif (is_string($attributeValue)) {
+            $unixTimeSeconds = Utils::numberFromString(str_replace(',', '.', $attributeValue));
+            if (is_double($unixTimeSeconds)) {
+                return $unixTimeSeconds;
+            }
+        }
+
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)");
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     *
+     * @return list<string>
+     */
+    private function getUserAttributeValueAsStringArray(string $attributeName, mixed $attributeValue, array $condition, string $key): array|string
+    {
+        if (is_array($attributeValue)) {
+            if (Utils::isStringList($attributeValue)) {
+                return $attributeValue;
+            }
+        } elseif (is_string($attributeValue)) {
+            $stringArray = json_decode($attributeValue, true);
+            if (JSON_ERROR_NONE === json_last_error() && Utils::isStringList($stringArray)) {
+                return $stringArray;
+            }
+        }
+
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid string array");
     }
 
     private function logUserObjectIsMissing(string $key): void
