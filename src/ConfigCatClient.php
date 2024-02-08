@@ -88,6 +88,18 @@ final class ConfigCatClient implements ClientInterface
             throw new InvalidArgumentException("'sdkKey' cannot be empty.");
         }
 
+        $overrides = (isset($options[ClientOptions::FLAG_OVERRIDES])
+            && $options[ClientOptions::FLAG_OVERRIDES] instanceof FlagOverrides)
+            ? $options[ClientOptions::FLAG_OVERRIDES]
+            : null;
+
+        if (OverrideBehaviour::LOCAL_ONLY !== $overrides?->getBehaviour()) {
+            $customBaseUrl = isset($options[ClientOptions::BASE_URL]) && !empty($options[ClientOptions::BASE_URL]);
+            if (!self::isValidSdkKey($sdkKey, $customBaseUrl)) {
+                throw new InvalidArgumentException("'sdkKey' is invalid.");
+            }
+        }
+
         $this->hooks = new Hooks();
         $this->cacheKey = sha1(sprintf('%s_'.ConfigFetcher::CONFIG_JSON_NAME.'_'.self::CONFIG_JSON_CACHE_VERSION, $sdkKey));
 
@@ -108,10 +120,7 @@ final class ConfigCatClient implements ClientInterface
 
         $this->logger = new InternalLogger($externalLogger, $logLevel, $exceptionsToIgnore, $this->hooks);
 
-        $this->overrides = (isset($options[ClientOptions::FLAG_OVERRIDES])
-            && $options[ClientOptions::FLAG_OVERRIDES] instanceof FlagOverrides)
-            ? $options[ClientOptions::FLAG_OVERRIDES]
-            : null;
+        $this->overrides = $overrides;
 
         $this->defaultUser = (isset($options[ClientOptions::DEFAULT_USER])
             && $options[ClientOptions::DEFAULT_USER] instanceof User)
@@ -618,5 +627,24 @@ final class ConfigCatClient implements ClientInterface
         }
 
         return $cacheEntry;
+    }
+
+    private static function isValidSdkKey(string $sdkKey, bool $customBaseUrl): bool
+    {
+        $proxyPrefix = 'configcat-proxy/';
+        if ($customBaseUrl && strlen($sdkKey) > strlen($proxyPrefix) && str_starts_with($sdkKey, $proxyPrefix)) {
+            return true;
+        }
+
+        $components = explode('/', $sdkKey);
+        $keyLength = 22;
+
+        switch (count($components)) {
+            case 2: return strlen($components[0]) === $keyLength && strlen($components[1]) === $keyLength;
+
+            case 3: return 'configcat-sdk-1' === $components[0] && strlen($components[1]) === $keyLength && strlen($components[2]) === $keyLength;
+
+            default: return false;
+        }
     }
 }

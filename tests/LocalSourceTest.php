@@ -96,7 +96,7 @@ class LocalSourceTest extends TestCase
 
     public function testLocalOverRemote()
     {
-        $client = new ConfigCatClient('testLocalOverRemote', [
+        $client = new ConfigCatClient('testLocalOverRemote-12/1234567890123456789012', [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localArray([
                 'enabled' => false,
                 'nonexisting' => true,
@@ -112,7 +112,7 @@ class LocalSourceTest extends TestCase
 
     public function testRemoteOverLocal()
     {
-        $client = new ConfigCatClient('testRemoteOverLocal', [
+        $client = new ConfigCatClient('testRemoteOverLocal-12/1234567890123456789012', [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localArray([
                 'enabled' => false,
                 'nonexisting' => true,

@@ -76,8 +76,6 @@ class CacheTest extends TestCase
     public function cacheKeyTestData(): array
     {
         return [
-            ['test1', '7f845c43ecc95e202b91e271435935e6d1391e5d'],
-            ['test2', 'a78b7e323ef543a272c74540387566a22415148a'],
             ['configcat-sdk-1/TEST_KEY-0123456789012/1234567890123456789012', 'f83ba5d45bceb4bb704410f51b704fb6dfa19942'],
             ['configcat-sdk-1/TEST_KEY2-123456789012/1234567890123456789012', 'da7bfd8662209c8ed3f9db96daed4f8d91ba5876'],
         ];
