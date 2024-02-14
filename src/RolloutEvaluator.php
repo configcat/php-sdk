@@ -958,7 +958,7 @@ final class RolloutEvaluator
         $segment = Segment::ensure($segments[$segmentIndex]);
 
         $segmentName = $segment[Segment::NAME] ?? null;
-        if (!is_string($segmentName)) {
+        if (!is_string($segmentName) || '' === $segmentName) {
             throw new UnexpectedValueException('Segment name is missing.');
         }
 

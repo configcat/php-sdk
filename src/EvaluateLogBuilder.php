@@ -194,12 +194,16 @@ final class EvaluateLogBuilder
         $prerequisiteFlagKey = $condition[PrerequisiteFlagCondition::PREREQUISITE_FLAG_KEY] ?? null;
         if (is_string($prerequisiteFlagKey)) {
             $prerequisiteFlag = $settings[$prerequisiteFlagKey] ?? null;
-            $settingType = is_array($prerequisiteFlag) ? Setting::getType($prerequisiteFlag, false) : null;
+            if (isset($prerequisiteFlag)) {
+                $settingType = is_array($prerequisiteFlag) ? Setting::getType($prerequisiteFlag, false) : null;
+            } else {
+                $prerequisiteFlagKey = self::INVALID_REFERENCE_PLACEHOLDER;
+            }
             $comparisonValue = isset($settingType)
                 ? SettingValue::get($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null, $settingType, false)
                 : null;
         } else {
-            $prerequisiteFlagKey = self::INVALID_REFERENCE_PLACEHOLDER;
+            $prerequisiteFlagKey = self::INVALID_NAME_PLACEHOLDER;
             $comparisonValue = null;
         }
 
@@ -218,9 +222,13 @@ final class EvaluateLogBuilder
     {
         $segmentIndex = $condition[SegmentCondition::SEGMENT_INDEX] ?? null;
         $segment = $segments[is_int($segmentIndex) ? $segmentIndex : null] ?? null;
-        $segmentName = $segment[Segment::NAME] ?? null;
-        if (!is_string($segmentName)) {
-            $segmentName = isset($segment) ? self::INVALID_NAME_PLACEHOLDER : self::INVALID_REFERENCE_PLACEHOLDER;
+        if (isset($segment)) {
+            $segmentName = $segment[Segment::NAME] ?? null;
+            if (!is_string($segmentName) || '' === $segmentName) {
+                $segmentName = self::INVALID_NAME_PLACEHOLDER;
+            }
+        } else {
+            $segmentName = self::INVALID_REFERENCE_PLACEHOLDER;
         }
 
         $comparator = SegmentComparator::tryFrom($condition[SegmentCondition::COMPARATOR] ?? null);
