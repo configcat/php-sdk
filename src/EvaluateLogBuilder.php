@@ -76,11 +76,6 @@ final class EvaluateLogBuilder
         return $this;
     }
 
-    public function appendEvaluationResult(bool $result): self
-    {
-        return $this->append($result ? 'true' : 'false');
-    }
-
     /**
      * @param array<string, mixed> $condition
      */
@@ -237,9 +232,14 @@ final class EvaluateLogBuilder
         return $this->append("User {$comparatorFormatted} '{$segmentName}'");
     }
 
+    public function appendConditionResult(bool $result): self
+    {
+        return $this->append($result ? 'true' : 'false');
+    }
+
     public function appendConditionConsequence(bool $result): self
     {
-        $this->append(' => ')->appendEvaluationResult($result);
+        $this->append(' => ')->appendConditionResult($result);
 
         return $result ? $this : $this->append(', skipping the remaining AND conditions');
     }

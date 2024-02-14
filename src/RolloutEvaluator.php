@@ -921,7 +921,7 @@ final class RolloutEvaluator
         $logBuilder?->newLine()->append("Prerequisite flag evaluation result: '{$prerequisiteFlagValue}'.")
             ->newLine('Condition (')
             ->appendPrerequisiteFlagCondition($condition, $context->settings)
-            ->append(') evaluates to ')->appendEvaluationResult($result)->append('.')
+            ->append(') evaluates to ')->appendConditionResult($result)->append('.')
             ->decreaseIndent()
             ->newLine(')')
         ;
@@ -1002,7 +1002,7 @@ final class RolloutEvaluator
 
             $logBuilder->newLine('Condition (')->appendSegmentCondition($condition, $segments)->append(')');
             (!is_string($result)
-              ? $logBuilder->append(' evaluates to ')->appendEvaluationResult($result)
+              ? $logBuilder->append(' evaluates to ')->appendConditionResult($result)
               : $logBuilder->append(' failed to evaluate'))
                 ->append('.')
             ;
