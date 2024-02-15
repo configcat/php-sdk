@@ -64,9 +64,13 @@ class DefaultLogger implements LoggerInterface
         $context['timestamp'] = $date->format('Y-m-d\\TH:i:sP');
         $context['level'] = LogLevel::asString($level);
 
-        $final = '[{timestamp}] ConfigCat.{level}: '.$message;
+        $final = self::interpolate('[{timestamp}] ConfigCat.{level}: '.$message, $context);
 
-        error_log(self::interpolate($final, $context));
+        if (isset($context['exception'])) {
+            $final .= PHP_EOL.$context['exception'];
+        }
+
+        error_log($final);
     }
 
     /**
