@@ -14,6 +14,11 @@ final class User
     public const COUNTRY_ATTRIBUTE = 'Country';
 
     /**
+     * @internal
+     */
+    public const WELL_KNOWN_ATTRIBUTES = [self::IDENTIFIER_ATTRIBUTE, self::EMAIL_ATTRIBUTE, self::COUNTRY_ATTRIBUTE];
+
+    /**
      * User constructor.
      *
      * @param string                $identifier the unique identifier of the user or session (e.g. email address, primary key, session ID, etc.)
@@ -115,9 +120,8 @@ final class User
         }
 
         if (isset($this->custom)) {
-            $wellKnownAttributes = [self::IDENTIFIER_ATTRIBUTE, self::EMAIL_ATTRIBUTE, self::COUNTRY_ATTRIBUTE];
             foreach ($this->custom as $attributeName => $attributeValue) {
-                if (isset($attributeValue) && !in_array($attributeName, $wellKnownAttributes, true)) {
+                if (isset($attributeValue) && !in_array($attributeName, self::WELL_KNOWN_ATTRIBUTES, true)) {
                     $result[$attributeName] = $attributeValue;
                 }
             }

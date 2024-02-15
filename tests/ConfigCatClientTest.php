@@ -11,6 +11,7 @@ use ConfigCat\EvaluationDetails;
 use ConfigCat\Http\GuzzleFetchClient;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
+use ConfigCat\Tests\Helpers\Utils;
 use ConfigCat\User;
 use Exception;
 use GuzzleHttp\Exception\ConnectException;

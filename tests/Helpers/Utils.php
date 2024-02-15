@@ -1,6 +1,6 @@
 <?php
 
-namespace ConfigCat\Tests;
+namespace ConfigCat\Tests\Helpers;
 
 use ConfigCat\Hooks;
 use ConfigCat\Log\DefaultLogger;

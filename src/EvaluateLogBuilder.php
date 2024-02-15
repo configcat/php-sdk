@@ -9,7 +9,6 @@ use ConfigCat\ConfigJson\PrerequisiteFlagCondition;
 use ConfigCat\ConfigJson\Segment;
 use ConfigCat\ConfigJson\SegmentComparator;
 use ConfigCat\ConfigJson\SegmentCondition;
-use ConfigCat\ConfigJson\Setting;
 use ConfigCat\ConfigJson\SettingType;
 use ConfigCat\ConfigJson\SettingValue;
 use ConfigCat\ConfigJson\SettingValueContainer;
@@ -187,27 +186,19 @@ final class EvaluateLogBuilder
     public function appendPrerequisiteFlagCondition(array $condition, array $settings): self
     {
         $prerequisiteFlagKey = $condition[PrerequisiteFlagCondition::PREREQUISITE_FLAG_KEY] ?? null;
-        if (is_string($prerequisiteFlagKey)) {
-            $prerequisiteFlag = $settings[$prerequisiteFlagKey] ?? null;
-            if (isset($prerequisiteFlag)) {
-                $settingType = is_array($prerequisiteFlag) ? Setting::getType($prerequisiteFlag, false) : null;
-            } else {
+        if (!is_string($prerequisiteFlagKey)) {
+            $prerequisiteFlagKey = self::INVALID_NAME_PLACEHOLDER;
+        } elseif (!array_key_exists($prerequisiteFlagKey, $settings)) {
                 $prerequisiteFlagKey = self::INVALID_REFERENCE_PLACEHOLDER;
             }
-            $comparisonValue = isset($settingType)
-                ? SettingValue::get($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null, $settingType, false)
-                : null;
-        } else {
-            $prerequisiteFlagKey = self::INVALID_NAME_PLACEHOLDER;
-            $comparisonValue = null;
-        }
 
         $comparator = PrerequisiteFlagComparator::tryFrom($condition[PrerequisiteFlagCondition::COMPARATOR] ?? null);
         $comparatorFormatted = self::formatPrerequisiteFlagComparator($comparator);
 
-        $comparisonValue ??= self::INVALID_VALUE_PLACEHOLDER;
+        $comparisonValue = SettingValue::infer($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null);
+        $comparisonValueFormatted = self::formatSettingValue($comparisonValue);
 
-        return $this->append("Flag '{$prerequisiteFlagKey}' {$comparatorFormatted} '{$comparisonValue}'");
+        return $this->append("Flag '{$prerequisiteFlagKey}' {$comparatorFormatted} '{$comparisonValueFormatted}'");
     }
 
     /**
@@ -254,10 +245,10 @@ final class EvaluateLogBuilder
         ;
 
         if (!TargetingRule::hasPercentageOptions($targetingRule, false)) {
-            $simpleValue = SettingValue::get($targetingRule[TargetingRule::SIMPLE_VALUE][SettingValueContainer::VALUE] ?? null, $settingType, false)
-                ?? self::INVALID_VALUE_PLACEHOLDER;
+            $simpleValue = SettingValue::get($targetingRule[TargetingRule::SIMPLE_VALUE][SettingValueContainer::VALUE] ?? null, $settingType, false);
+            $simpleValueFormatted = self::formatSettingValue($simpleValue);
 
-            return $this->append(" '{$simpleValue}'");
+            return $this->append(" '{$simpleValueFormatted}'");
         }
 
         return $this->append(' % options');
@@ -275,6 +266,18 @@ final class EvaluateLogBuilder
         ;
 
         return $this->decreaseIndent();
+    }
+
+    public static function formatSettingValue(mixed $value): string
+    {
+        if (!isset($value)) {
+            return self::INVALID_VALUE_PLACEHOLDER;
+        }
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        return (string) $value;
     }
 
     public static function formatUserComparator(?UserComparator $comparator): string
@@ -421,7 +424,7 @@ final class EvaluateLogBuilder
         $comparatorFormatted = self::formatUserComparator($comparator);
 
         if ($isDateTime && ($dateTime = Utils::dateTimeFromUnixSeconds($comparisonValue))) {
-            $dateIsoString = $dateTime->format('Y-m-d\\TH:i:s.up');
+            $dateIsoString = $dateTime->format('Y-m-d\\TH:i:s.vp');
 
             return $this->append("User.{$comparisonAttribute} {$comparatorFormatted} '{$comparisonValue}' ({$dateIsoString} UTC)");
         }

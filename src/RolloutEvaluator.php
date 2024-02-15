@@ -157,7 +157,8 @@ final class RolloutEvaluator
             throw $ex;
         } finally {
             if (isset($logBuilder)) {
-                $logBuilder->newLine("Returning '{$returnValue}'.")
+                $returnValueFormatted = EvaluateLogBuilder::formatSettingValue($returnValue);
+                $logBuilder->newLine("Returning '{$returnValueFormatted}'.")
                     ->decreaseIndent()
                 ;
                 $this->logger->info((string) $logBuilder, [
@@ -308,9 +309,9 @@ final class RolloutEvaluator
             }
 
             if (isset($logBuilder)) {
-                $percentageOptionValue = SettingValue::get($percentageOption[PercentageOption::VALUE] ?? null, $context->getSettingType(), false)
-                    ?? EvaluateLogBuilder::INVALID_VALUE_PLACEHOLDER;
-                $logBuilder->newLine()->append("- Hash value {$hashValue} selects % option {$optionNumber} ({$percentage}%), '{$percentageOptionValue}'.");
+                $percentageOptionValue = SettingValue::get($percentageOption[PercentageOption::VALUE] ?? null, $context->getSettingType(), false);
+                $percentageOptionValueFormatted = EvaluateLogBuilder::formatSettingValue($percentageOptionValue);
+                $logBuilder->newLine()->append("- Hash value {$hashValue} selects % option {$optionNumber} ({$percentage}%), '{$percentageOptionValueFormatted}'.");
             }
 
             return new EvaluateResult($percentageOption, $matchedTargetingRule, $percentageOption);
@@ -873,7 +874,10 @@ final class RolloutEvaluator
 
         $comparisonValue = SettingValue::get($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null, $prerequisiteFlagType, false);
         if (!isset($comparisonValue)) {
-            throw new UnexpectedValueException("Type mismatch between comparison value '{$comparisonValue}' and prerequisite flag '{$prerequisiteFlagKey}'.");
+            $comparisonValue = SettingValue::infer($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null);
+            $comparisonValueFormatted = EvaluateLogBuilder::formatSettingValue($comparisonValue);
+
+            throw new UnexpectedValueException("Type mismatch between comparison value '{$comparisonValueFormatted}' and prerequisite flag '{$prerequisiteFlagKey}'.");
         }
 
         $visitedFlags = &$context->getVisitedFlags();
@@ -918,13 +922,16 @@ final class RolloutEvaluator
                 throw new UnexpectedValueException('Comparison operator is missing or invalid.');
         }
 
-        $logBuilder?->newLine()->append("Prerequisite flag evaluation result: '{$prerequisiteFlagValue}'.")
+        if ($logBuilder) {
+            $prerequisiteFlagValueFormatted = EvaluateLogBuilder::formatSettingValue($prerequisiteFlagValue);
+            $logBuilder->newLine()->append("Prerequisite flag evaluation result: '{$prerequisiteFlagValueFormatted}'.")
             ->newLine('Condition (')
             ->appendPrerequisiteFlagCondition($condition, $context->settings)
             ->append(') evaluates to ')->appendConditionResult($result)->append('.')
             ->decreaseIndent()
             ->newLine(')')
         ;
+        }
 
         return $result;
     }
@@ -964,7 +971,7 @@ final class RolloutEvaluator
 
         $logBuilder?->newLine('(')
             ->increaseIndent()
-            ->newLine(`Evaluating segment '$segmentName':`)
+            ->newLine("Evaluating segment '{$segmentName}':")
         ;
 
         $conditions = ConditionContainer::ensureList($segment[Segment::CONDITIONS] ?? []);

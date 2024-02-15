@@ -60,4 +60,32 @@ abstract class SettingValue
 
         return null;
     }
+
+    /**
+     * @internal
+     */
+    public static function infer(mixed $settingValue): mixed
+    {
+        $value = $settingValue[self::BOOLEAN] ?? null;
+        if (isset($value)) {
+            return is_bool($value) ? $value : null;
+        }
+
+        $value = $settingValue[self::STRING] ?? null;
+        if (isset($value)) {
+            return is_string($value) ? $value : null;
+        }
+
+        $value = $settingValue[self::INT] ?? null;
+        if (isset($value)) {
+            return is_int($value) ? $value : null;
+        }
+
+        $value = $settingValue[self::DOUBLE] ?? null;
+        if (isset($value)) {
+            return is_double($value) || is_int($value) ? $value : null;
+        }
+
+        return null;
+    }
 }
