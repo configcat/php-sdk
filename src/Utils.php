@@ -6,8 +6,6 @@ namespace ConfigCat;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use LogicException;
-use NumberFormatter;
 
 /**
  * Contains helper utility operations.
@@ -34,25 +32,35 @@ abstract class Utils
 
     public static function numberToString(float|int $number): string
     {
-        if ($number < 1e-6) {
-            $formatter = new NumberFormatter('', NumberFormatter::SCIENTIFIC);
-            $formatter->setSymbol(NumberFormatter::EXPONENTIAL_SYMBOL, 'e');
-        } elseif ($number >= 1e21) {
-            $formatter = new NumberFormatter('', NumberFormatter::SCIENTIFIC);
-            $formatter->setSymbol(NumberFormatter::EXPONENTIAL_SYMBOL, 'e+');
-        } else {
-            $formatter = new NumberFormatter('', NumberFormatter::DECIMAL);
+        if (is_nan($number)) {
+            return 'NaN';
         }
-        $formatter->setSymbol(NumberFormatter::DECIMAL_SEPARATOR_SYMBOL, '.');
-        $formatter->setSymbol(NumberFormatter::INFINITY_SYMBOL, 'Infinity');
-        $formatter->setSymbol(NumberFormatter::NAN_SYMBOL, 'NaN');
-        $formatter->setAttribute(NumberFormatter::GROUPING_USED, 0);
-        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 0);
-        $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, 17);
+        if (is_infinite($number)) {
+            return $number > 0 ? 'Infinity' : '-Infinity';
+        }
+        if (!$number) {
+            return '0';
+        }
 
-        $str = $formatter->format($number);
+        $abs = abs($number);
+        if (1e-6 <= $abs && $abs < 1e21) {
+            $exp = 0;
+        } else {
+            $exp = self::getExponent($abs);
+            $number /= pow(10, $exp);
+        }
 
-        return false !== $str ? $str : throw new LogicException();
+        // NOTE: number_format can't really deal with 17 decimal places,
+        // e.g. number_format(0.1, 17, '.', '') results in '0.10000000000000001'.
+        // So we need to manually calculate the actual number of significant decimals.
+        $decimals = self::getSignificantDecimals($number);
+
+        $str = number_format($number, $decimals, '.', '');
+        if ($exp) {
+            $str .= ($exp > 0 ? 'e+' : 'e').number_format($exp, 0, '.', '');
+        }
+
+        return $str;
     }
 
     public static function numberFromString(string $str): false|float
@@ -90,7 +98,7 @@ abstract class Utils
         $timestamp = (float) $dateTime->format('U\.v');
 
         // Allow values only between 0001-01-01T00:00:00.000Z and 9999-12-31T23:59:59.999
-        return $timestamp < -62135596800 || 253402300800 <= $timestamp ? $timestamp : null;
+        return $timestamp < -62135596800 || 253402300800 <= $timestamp ? null : $timestamp;
     }
 
     public static function dateTimeFromUnixSeconds(float $timestamp): ?DateTimeInterface
@@ -162,5 +170,35 @@ abstract class Utils
         }
 
         return false;
+    }
+
+    private static function getExponent(float|int $abs): int
+    {
+        $exp = log10($abs);
+        $ceil = ceil($exp);
+
+        return (int) (abs($exp - $ceil) < PHP_FLOAT_EPSILON ? $ceil : floor($exp));
+    }
+
+    // Based on: https://stackoverflow.com/a/31888253/8656352
+    private static function getSignificantDecimals(float|int $number): int
+    {
+        if (!$number) {
+            return 0;
+        }
+
+        $number = abs($number);
+        $exp = min(0, self::getExponent($number));
+
+        for (; $exp > -17; --$exp) {
+            $fracr = round($number, -$exp, PHP_ROUND_HALF_UP);
+            // NOTE: PHP_FLOAT_EPSILON is the same as JavaScript's Number.EPSILON
+            // (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON).
+            if (abs($number - $fracr) < $number * 10.0 * PHP_FLOAT_EPSILON) {
+                break;
+            }
+        }
+
+        return min(17, -$exp);
     }
 }

@@ -104,11 +104,8 @@ class UserTest extends TestCase
 
     /**
      * @dataProvider provideTestDataForUseWellKnownAttributesAsCustomPropertiesWithDifferentNames_ShouldAppendAllAttributes
-     *
-     * @param mixed $attributeName
-     * @param mixed $attributeValue
      */
-    public function testUseWellKnownAttributesAsCustomPropertiesWithDifferentNamesShouldAppendAllAttributes($attributeName, $attributeValue)
+    public function testUseWellKnownAttributesAsCustomPropertiesWithDifferentNamesShouldAppendAllAttributes(string $attributeName, string $attributeValue)
     {
         // Arrange
 
@@ -145,11 +142,8 @@ class UserTest extends TestCase
 
     /**
      * @dataProvider provideTestDataForCreateUser_ShouldSetIdentifier
-     *
-     * @param mixed $identifier
-     * @param mixed $expectedValue
      */
-    public function testCreateUserShouldSetIdentifier($identifier, $expectedValue)
+    public function testCreateUserShouldSetIdentifier(string $identifier, string $expectedValue)
     {
         // Arrange
 
