@@ -74,4 +74,20 @@ class Utils
             }
           }';
     }
+
+    /**
+     * @param list<list<mixed>> testData
+     * @param callable(list<mixed>, int): array<string, list<mixed>> $getDescription
+     */
+    public static function withDescription(array $testData, callable $getDescription)
+    {
+        $testDataWithDescription = [];
+        $i = 0;
+        foreach ($testData as $testCase) {
+            $testDataWithDescription[$getDescription($testCase, $i)] = $testCase;
+            ++$i;
+        }
+
+        return $testDataWithDescription;
+    }
 }
