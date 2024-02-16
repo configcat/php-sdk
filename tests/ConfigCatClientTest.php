@@ -94,6 +94,49 @@ class ConfigCatClientTest extends TestCase
         $this->assertSame(20, $propInterval);
     }
 
+    public function provideTestDataForSdkKeyFormat_ShouldBeValidated()
+    {
+        return Utils::withDescription([
+            ['sdk-key-90123456789012', false, false],
+            ['sdk-key-9012345678901/1234567890123456789012', false, false],
+            ['sdk-key-90123456789012/123456789012345678901', false, false],
+            ['sdk-key-90123456789012/12345678901234567890123', false, false],
+            ['sdk-key-901234567890123/1234567890123456789012', false, false],
+            ['sdk-key-90123456789012/1234567890123456789012', false, true],
+            ['configcat-sdk-1/sdk-key-90123456789012', false, false],
+            ['configcat-sdk-1/sdk-key-9012345678901/1234567890123456789012', false, false],
+            ['configcat-sdk-1/sdk-key-90123456789012/123456789012345678901', false, false],
+            ['configcat-sdk-1/sdk-key-90123456789012/12345678901234567890123', false, false],
+            ['configcat-sdk-1/sdk-key-901234567890123/1234567890123456789012', false, false],
+            ['configcat-sdk-1/sdk-key-90123456789012/1234567890123456789012', false, true],
+            ['configcat-sdk-2/sdk-key-90123456789012/1234567890123456789012', false, false],
+            ['configcat-proxy/', false, false],
+            ['configcat-proxy/', true, false],
+            ['configcat-proxy/sdk-key-90123456789012', false, false],
+            ['configcat-proxy/sdk-key-90123456789012', true, true],
+        ], function ($testCase) {
+            return "sdkKey: {$testCase[0]} | customBaseUrl: {$testCase[1]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForSdkKeyFormat_ShouldBeValidated
+     */
+    public function testSdkKeyFormatShouldBeValidated(string $sdkKey, bool $customBaseUrl, bool $isValid)
+    {
+        $clientOptions = $customBaseUrl
+            ? [ClientOptions::BASE_URL => 'https://my-configcat-proxy']
+            : [];
+
+        if (!$isValid) {
+            $this->expectException(InvalidArgumentException::class);
+        } else {
+            $this->expectNotToPerformAssertions();
+        }
+
+        $client = new ConfigCatClient($sdkKey, $clientOptions);
+    }
+
     public function testGetValueFailedFetch()
     {
         $client = new ConfigCatClient('testGetValueFailedFetc/h-34567890123456789012', [ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
