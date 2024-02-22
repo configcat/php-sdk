@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
+use Throwable;
+
 class EvaluationDetails
 {
     /**
@@ -18,7 +20,8 @@ class EvaluationDetails
         private readonly mixed $value,
         private readonly ?User $user,
         private readonly bool $isDefaultValue,
-        private readonly ?string $error,
+        private readonly ?string $errorMessage,
+        private readonly ?Throwable $errorException,
         private readonly float $fetchTimeUnixMilliseconds,
         private readonly ?array $matchedTargetingRule,
         private readonly ?array $matchedPercentageOption
@@ -27,7 +30,7 @@ class EvaluationDetails
     /**
      * @internal
      */
-    public static function fromError(string $key, mixed $value, ?User $user, ?string $error): EvaluationDetails
+    public static function fromError(string $key, mixed $value, ?User $user, string $errorMessage, ?Throwable $errorException = null): EvaluationDetails
     {
         return new EvaluationDetails(
             $key,
@@ -35,7 +38,8 @@ class EvaluationDetails
             $value,
             $user,
             true,
-            $error,
+            $errorMessage,
+            $errorException,
             0,
             null,
             null
@@ -83,11 +87,19 @@ class EvaluationDetails
     }
 
     /**
-     * @return ?string in case of an error, the error message
+     * @return ?string error message in case evaluation failed
      */
-    public function getError(): ?string
+    public function getErrorMessage(): ?string
     {
-        return $this->error;
+        return $this->errorMessage;
+    }
+
+    /**
+     * @return ?Throwable the `Throwable` object related to the error in case evaluation failed (if any)
+     */
+    public function getErrorException(): ?Throwable
+    {
+        return $this->errorException;
     }
 
     /**

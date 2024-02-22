@@ -23,6 +23,7 @@ use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use stdClass;
+use Throwable;
 
 /**
  * A client for handling configurations provided by ConfigCat.
@@ -179,7 +180,7 @@ final class ConfigCatClient implements ClientInterface
                 $user,
                 $settingsResult->fetchTime
             )->getValue();
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $message = "Error occurred in the `getValue` method while evaluating setting '".$key."'. ".
                 'Returning the `defaultValue` parameter that you specified '.
                 "in your application: '".Utils::getStringRepresentation($defaultValue)."'.";
@@ -191,7 +192,8 @@ final class ConfigCatClient implements ClientInterface
                 $key,
                 $defaultValue,
                 $user,
-                InternalLogger::format($message, $messageCtx)
+                InternalLogger::format($message, $messageCtx),
+                $exception
             ));
 
             return $defaultValue;
@@ -225,7 +227,7 @@ final class ConfigCatClient implements ClientInterface
             }
 
             return $this->evaluate($key, $settingsResult->settings, $defaultValue, $user, $settingsResult->fetchTime);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $message = "Error occurred in the `getValueDetails` method while evaluating setting '".$key."'. ".
                 'Returning the `defaultValue` parameter that you specified in '.
                 "your application: '".Utils::getStringRepresentation($defaultValue)."'.";
@@ -233,7 +235,7 @@ final class ConfigCatClient implements ClientInterface
                 'event_id' => 1002, 'exception' => $exception,
             ];
             $this->logger->error($message, $messageCtx);
-            $details = EvaluationDetails::fromError($key, $defaultValue, $user, InternalLogger::format($message, $messageCtx));
+            $details = EvaluationDetails::fromError($key, $defaultValue, $user, InternalLogger::format($message, $messageCtx), $exception);
             $this->hooks->fireOnFlagEvaluated($details);
 
             return $details;
@@ -258,7 +260,7 @@ final class ConfigCatClient implements ClientInterface
             return empty($settingsResult->settings)
                 ? null
                 : $this->parseKeyAndValue($settingsResult->settings, $variationId);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('Error occurred in the `getKeyAndValue` method. Returning null.', [
                 'event_id' => 1002, 'exception' => $exception,
             ]);
@@ -281,7 +283,7 @@ final class ConfigCatClient implements ClientInterface
             }
 
             return empty($settingsResult->settings) ? [] : array_keys($settingsResult->settings);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('Error occurred in the `getAllKeys` method. Returning empty array.', [
                 'event_id' => 1002, 'exception' => $exception,
             ]);
@@ -306,7 +308,7 @@ final class ConfigCatClient implements ClientInterface
             }
 
             return empty($settingsResult->settings) ? [] : $this->parseValues($settingsResult, $user);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('Error occurred in the `getAllValues` method. Returning empty array.', [
                 'event_id' => 1002, 'exception' => $exception,
             ]);
@@ -343,7 +345,7 @@ final class ConfigCatClient implements ClientInterface
             }
 
             return $result;
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('Error occurred in the `getAllValueDetails` method. Returning empty array.', [
                 'event_id' => 1002, 'exception' => $exception,
             ]);
@@ -515,6 +517,7 @@ final class ConfigCatClient implements ClientInterface
             $returnValue,
             $user,
             false,
+            null,
             null,
             $fetchTime,
             $evaluateResult->matchedTargetingRule,

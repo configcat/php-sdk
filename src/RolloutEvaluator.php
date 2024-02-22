@@ -21,9 +21,9 @@ use ConfigCat\ConfigJson\UserCondition;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
 use DateTimeInterface;
-use Exception;
 use LogicException;
 use stdClass;
+use Throwable;
 use UnexpectedValueException;
 use z4kn4fein\SemVer\Version;
 
@@ -149,7 +149,7 @@ final class RolloutEvaluator
             $returnValue = SettingValue::get($result->selectedValue[SettingValueContainer::VALUE] ?? null, $settingType);
 
             return $result;
-        } catch (Exception $ex) {
+        } catch (Throwable $ex) {
             $logBuilder?->resetIndent()->increaseIndent();
 
             $returnValue = $defaultValue;
@@ -873,7 +873,7 @@ final class RolloutEvaluator
         $prerequisiteFlagType = Setting::getType($prerequisiteFlag);
 
         $comparisonValue = SettingValue::get($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null, $prerequisiteFlagType, false);
-        if (!isset($comparisonValue)) {
+        if (!isset($comparisonValue) && !($prerequisiteFlagType instanceof stdClass)) {
             $comparisonValue = SettingValue::infer($condition[PrerequisiteFlagCondition::COMPARISON_VALUE] ?? null);
             $comparisonValueFormatted = EvaluateLogBuilder::formatSettingValue($comparisonValue);
 
@@ -1076,7 +1076,7 @@ final class RolloutEvaluator
             return $stringArrayJson;
         }
 
-        return var_export($attributeValue, true);
+        return Utils::getStringRepresentation($attributeValue);
     }
 
     /**

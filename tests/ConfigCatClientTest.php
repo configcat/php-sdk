@@ -481,7 +481,7 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertEquals('fake1', $details->getValue());
         $this->assertEquals('id1', $details->getVariationId());
-        $this->assertNull($details->getError());
+        $this->assertNull($details->getErrorMessage());
         $this->assertEquals('key', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
         $condition = $details->getMatchedTargetingRule()['c'][0]['u'];
@@ -503,7 +503,7 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertEquals('', $details->getValue());
         $this->assertEquals('', $details->getVariationId());
-        $this->assertNotNull($details->getError());
+        $this->assertNotNull($details->getErrorMessage());
         $this->assertEquals('non-existent', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
         $this->assertNull($details->getMatchedTargetingRule());
@@ -521,7 +521,7 @@ class ConfigCatClientTest extends TestCase
         $client->hooks()->addOnFlagEvaluated(function (EvaluationDetails $details) use (&$called) {
             $this->assertEquals('fake1', $details->getValue());
             $this->assertEquals('id1', $details->getVariationId());
-            $this->assertNull($details->getError());
+            $this->assertNull($details->getErrorMessage());
             $this->assertEquals('key', $details->getKey());
             $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
             $condition = $details->getMatchedTargetingRule()['c'][0]['u'];

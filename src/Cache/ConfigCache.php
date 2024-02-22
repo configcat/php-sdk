@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ConfigCat\Cache;
 
-use Exception;
 use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * A cache API used to make custom cache implementations.
@@ -33,7 +33,7 @@ abstract class ConfigCache implements LoggerAwareInterface
 
         try {
             $this->set($key, $value->serialize());
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('Error occurred while writing the cache.', [
                 'event_id' => 2201, 'exception' => $exception,
             ]);
@@ -63,7 +63,7 @@ abstract class ConfigCache implements LoggerAwareInterface
             }
 
             return ConfigEntry::fromCached($cached);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('Error occurred while reading the cache.', [
                 'event_id' => 2200, 'exception' => $exception,
             ]);

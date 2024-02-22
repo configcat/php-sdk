@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ConfigCat\ConfigJson;
 
+use ConfigCat\Utils;
 use stdClass;
 use UnexpectedValueException;
 
@@ -46,9 +47,14 @@ abstract class SettingValue
             }
         } else { // unsupported value token (see Setting::unsupportedTypeToken())
             if ($throwIfInvalid) {
-                throw new UnexpectedValueException(null === $settingValue
-                    ? 'Setting value is null.'
-                    : "Setting value '{$settingValue}' is of an unsupported type (".gettype($settingValue).').');
+                if (null === $settingValue) {
+                    $errorMessage = 'Setting value is null.';
+                } else {
+                    $settingValueFormatted = Utils::getStringRepresentation($settingValue);
+                    $errorMessage = "Setting value '{$settingValueFormatted}' is of an unsupported type (".gettype($settingValue).').';
+                }
+
+                throw new UnexpectedValueException($errorMessage);
             }
 
             return null;

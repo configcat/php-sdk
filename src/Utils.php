@@ -6,6 +6,7 @@ namespace ConfigCat;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use Throwable;
 
 /**
  * Contains helper utility operations.
@@ -27,7 +28,11 @@ abstract class Utils
             return $value ? 'true' : 'false';
         }
 
-        return (string) $value;
+        try {
+            return (string) $value;
+        } catch (Throwable) { // @phpstan-ignore-line
+            return str_replace(["\r\n", "\r", "\n"], ' ', var_export($value, true));
+        }
     }
 
     public static function numberToString(float|int $number): string

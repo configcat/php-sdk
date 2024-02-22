@@ -40,7 +40,7 @@ class ConfigV2EvaluationTests extends TestCase
             ['stringArrayToStringConversionSpecialChars', ["+<>%\"'\\/\t\r\n"], '3'],
             ['stringArrayToStringConversionUnicode', ['äöüÄÖÜçéèñışğâ¢™✓😀'], '2'],
         ], function ($testCase) {
-            $customAttributeValue = str_replace(["\r\n", "\r", "\n"], ' ', var_export($testCase[1], true));
+            $customAttributeValue = \ConfigCat\Utils::getStringRepresentation($testCase[1]);
 
             return "key: {$testCase[0]} | customAttributeValue: {$customAttributeValue}";
         });
@@ -316,7 +316,7 @@ class ConfigV2EvaluationTests extends TestCase
             ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/OfQqcTjfFUGBwMKqtyEOrQ', 'stringArrayContainsAnyOfDogDefaultCat', '12345', 'Custom1', '["x", "Read"]', 'Cat'],
             ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/OfQqcTjfFUGBwMKqtyEOrQ', 'stringArrayContainsAnyOfDogDefaultCat', '12345', 'Custom1', 'x, read', 'Cat'],
         ], function ($testCase) {
-            $customAttributeValue = str_replace(["\r\n", "\r", "\n"], ' ', var_export($testCase[4], true));
+            $customAttributeValue = \ConfigCat\Utils::getStringRepresentation($testCase[4], true);
 
             return "sdkKey: {$testCase[0]} | key: {$testCase[1]} | userId: {$testCase[2]} | customAttributeName: {$testCase[3]} | customAttributeValue: {$customAttributeValue}";
         });
@@ -344,6 +344,228 @@ class ConfigV2EvaluationTests extends TestCase
         $evaluationDetails = $client->getValueDetails($key, null, $user);
 
         $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
+    }
+
+    public function provideTestDataForPrerequisiteFlagCircularDependency()
+    {
+        return Utils::withDescription([
+            ['key1', "'key1' -> 'key1'"],
+            ['key2', "'key2' -> 'key3' -> 'key2'"],
+            ['key4', "'key4' -> 'key3' -> 'key2' -> 'key3'"],
+        ], function ($testCase) {
+            return "key: {$testCase[0]} | dependencyCycle: {$testCase[1]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForPrerequisiteFlagCircularDependency
+     */
+    public function testPrerequisiteFlagCircularDependency(string $key, string $dependencyCycle)
+    {
+        $clientOptions = [
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
+                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/test_circulardependency_v6.json'),
+                OverrideBehaviour::LOCAL_ONLY
+            ),
+        ];
+
+        $client = new ConfigCatClient('local-only', $clientOptions);
+
+        $evaluationDetails = $client->getValueDetails($key, null);
+
+        $this->assertTrue($evaluationDetails->isDefaultValue());
+        $this->assertNull($evaluationDetails->getValue());
+        $this->assertNotNull($evaluationDetails->getErrorMessage());
+        $this->assertNotNull($exception = $evaluationDetails->getErrorException());
+        $this->assertStringContainsString('Circular dependency detected', $exception->getMessage());
+        $this->assertStringContainsString($dependencyCycle, $exception->getMessage());
+    }
+
+    public function provideTestDataForPrerequisiteFlagComparisonValueTypeMismatch()
+    {
+        // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
+        return Utils::withDescription([
+            ['stringDependsOnBool', 'mainBoolFlag', true, 'Dog'],
+            ['stringDependsOnBool', 'mainBoolFlag', false, 'Cat'],
+            ['stringDependsOnBool', 'mainBoolFlag', '1', null],
+            ['stringDependsOnBool', 'mainBoolFlag', 1, null],
+            ['stringDependsOnBool', 'mainBoolFlag', 1.0, null],
+            ['stringDependsOnBool', 'mainBoolFlag', [true], null],
+            ['stringDependsOnBool', 'mainBoolFlag', null, null],
+            ['stringDependsOnString', 'mainStringFlag', 'private', 'Dog'],
+            ['stringDependsOnString', 'mainStringFlag', 'Private', 'Cat'],
+            ['stringDependsOnString', 'mainStringFlag', true, null],
+            ['stringDependsOnString', 'mainStringFlag', 1, null],
+            ['stringDependsOnString', 'mainStringFlag', 1.0, null],
+            ['stringDependsOnString', 'mainStringFlag', ['private'], null],
+            ['stringDependsOnString', 'mainStringFlag', null, null],
+            ['stringDependsOnInt', 'mainIntFlag', 2, 'Dog'],
+            ['stringDependsOnInt', 'mainIntFlag', 1, 'Cat'],
+            ['stringDependsOnInt', 'mainIntFlag', '2', null],
+            ['stringDependsOnInt', 'mainIntFlag', true, null],
+            ['stringDependsOnInt', 'mainIntFlag', 2.0, null],
+            ['stringDependsOnInt', 'mainIntFlag', [2], null],
+            ['stringDependsOnInt', 'mainIntFlag', null, null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', 0.1, 'Dog'],
+            ['stringDependsOnDouble', 'mainDoubleFlag', 0.11, 'Cat'],
+            ['stringDependsOnDouble', 'mainDoubleFlag', '0.1', null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', true, null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', 1, null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', [0.1], null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', null, null],
+        ], function ($testCase) {
+            return "key: {$testCase[0]} | prerequisiteFlagKey: {$testCase[1]} | prerequisiteFlagValue: {$testCase[2]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForPrerequisiteFlagComparisonValueTypeMismatch
+     */
+    public function testPrerequisiteFlagComparisonValueTypeMismatch(string $key, string $prerequisiteFlagKey, mixed $prerequisiteFlagValue, mixed $expectedReturnValue)
+    {
+        $overrideArray = [$prerequisiteFlagKey => $prerequisiteFlagValue];
+
+        $clientOptions = [
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
+                OverrideDataSource::localArray($overrideArray),
+                OverrideBehaviour::LOCAL_OVER_REMOTE
+            ),
+        ];
+
+        $client = new ConfigCatClient('configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg', $clientOptions);
+
+        $evaluationDetails = $client->getValueDetails($key, null);
+
+        if (isset($expectedReturnValue)) {
+            $this->assertFalse($evaluationDetails->isDefaultValue());
+            $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
+            $this->assertNull($evaluationDetails->getErrorMessage());
+            $this->assertNull($evaluationDetails->getErrorException());
+        } else {
+            $this->assertTrue($evaluationDetails->isDefaultValue());
+            $this->assertNull($evaluationDetails->getValue());
+            $this->assertNotNull($evaluationDetails->getErrorMessage());
+            $this->assertNotNull($exception = $evaluationDetails->getErrorException());
+            if (!isset($prerequisiteFlagValue)) {
+                $this->assertStringContainsString('Setting value is null', $exception->getMessage());
+            } elseif (!is_bool($prerequisiteFlagValue) && !is_string($prerequisiteFlagValue) && !is_int($prerequisiteFlagValue) && !is_double($prerequisiteFlagValue)) {
+                $this->assertStringMatchesFormat("Setting value '%s' is of an unsupported type%s", $exception->getMessage());
+            } else {
+                $this->assertStringMatchesFormat("Type mismatch between comparison value '%s' and prerequisite flag '%s'%s", $exception->getMessage());
+            }
+        }
+    }
+
+    public function provideTestDataForPrerequisiteFlagOverride()
+    {
+        // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
+        return Utils::withDescription([
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', null, 'Dog'],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', null, 'Cat'],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', null, 'Dog'],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Cat'],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', null, 'Cat'],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+        ], function ($testCase) {
+            return "key: {$testCase[0]} | userId: {$testCase[1]} | email: {$testCase[2]} | overrideBehaviour: {$testCase[3]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForPrerequisiteFlagOverride
+     */
+    public function testPrerequisiteFlagOverride(string $key, string $userId, string $email, ?int $overrideBehaviour, mixed $expectedReturnValue)
+    {
+        $clientOptions = [
+            // The flag override alters the definition of the following flags:
+            // * 'mainStringFlag': to check the case where a prerequisite flag is overridden (dependent flag: 'stringDependsOnString')
+            // * 'stringDependsOnInt': to check the case where a dependent flag is overridden (prerequisite flag: 'mainIntFlag')
+            ClientOptions::FLAG_OVERRIDES => isset($overrideBehaviour)
+                ? new FlagOverrides(
+                    OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/test_override_flagdependency_v6.json'),
+                    $overrideBehaviour
+                )
+                : null,
+        ];
+
+        $client = new ConfigCatClient('configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg', $clientOptions);
+
+        $user = new User($userId, $email);
+
+        $evaluationDetails = $client->getValueDetails($key, null, $user);
+
+        if (isset($expectedReturnValue)) {
+            $this->assertFalse($evaluationDetails->isDefaultValue());
+            $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
+            $this->assertNull($evaluationDetails->getErrorMessage());
+            $this->assertNull($evaluationDetails->getErrorException());
+        } else {
+            $this->assertTrue($evaluationDetails->isDefaultValue());
+            $this->assertNull($evaluationDetails->getValue());
+            $this->assertNotNull($evaluationDetails->getErrorMessage());
+        }
+    }
+
+    public function provideTestDataForConfigSaltAndSegmentsOverride()
+    {
+        // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
+        return Utils::withDescription([
+            ['developerAndBetaUserSegment', '1', 'john@example.com', null, false],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, false],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_ONLY, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', null, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_ONLY, null],
+        ], function ($testCase) {
+            return "key: {$testCase[0]} | userId: {$testCase[1]} | email: {$testCase[2]} | overrideBehaviour: {$testCase[3]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForConfigSaltAndSegmentsOverride
+     */
+    public function testConfigSaltAndSegmentsOverride(string $key, string $userId, string $email, ?int $overrideBehaviour, mixed $expectedReturnValue)
+    {
+        $clientOptions = [
+            // The flag override uses a different config json salt than the downloaded one and overrides the following segments:
+            // * 'Beta Users': User.Email IS ONE OF ['jane@example.com']
+            // * 'Developers': User.Email IS ONE OF ['john@example.com']
+            ClientOptions::FLAG_OVERRIDES => isset($overrideBehaviour)
+                ? new FlagOverrides(
+                    OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/test_override_segments_v6.json'),
+                    $overrideBehaviour
+                )
+                : null,
+        ];
+
+        $client = new ConfigCatClient('configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/h99HYXWWNE2bH8eWyLAVMA', $clientOptions);
+
+        $user = new User($userId, $email);
+
+        $evaluationDetails = $client->getValueDetails($key, null, $user);
+
+        if (isset($expectedReturnValue)) {
+            $this->assertFalse($evaluationDetails->isDefaultValue());
+            $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
+            $this->assertNull($evaluationDetails->getErrorMessage());
+            $this->assertNull($evaluationDetails->getErrorException());
+        } else {
+            $this->assertTrue($evaluationDetails->isDefaultValue());
+            $this->assertNull($evaluationDetails->getValue());
+            $this->assertNotNull($evaluationDetails->getErrorMessage());
+        }
     }
 
     public function provideTestDataForEvaluationDetailsMatchedEvaluationRuleAndPercantageOption()
