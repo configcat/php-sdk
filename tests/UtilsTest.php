@@ -3,7 +3,6 @@
 namespace ConfigCat\Tests;
 
 use ConfigCat\Tests\Helpers\Utils;
-use ConfigCat\User;
 use PHPUnit\Framework\TestCase;
 
 class UtilsTest extends TestCase

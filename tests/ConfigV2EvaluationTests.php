@@ -70,6 +70,142 @@ class ConfigV2EvaluationTests extends TestCase
         $this->assertSame($expectedReturnValue, $actualReturnValue);
     }
 
+    public function provideTestDataForComparisonAttributeTrimming()
+    {
+        return Utils::withDescription([
+            ['isoneof', 'no trim'],
+            ['isnotoneof', 'no trim'],
+            ['isoneofhashed', 'no trim'],
+            ['isnotoneofhashed', 'no trim'],
+            ['equalshashed', 'no trim'],
+            ['notequalshashed', 'no trim'],
+            ['arraycontainsanyofhashed', 'no trim'],
+            ['arraynotcontainsanyofhashed', 'no trim'],
+            ['equals', 'no trim'],
+            ['notequals', 'no trim'],
+            ['startwithanyof', 'no trim'],
+            ['notstartwithanyof', 'no trim'],
+            ['endswithanyof', 'no trim'],
+            ['notendswithanyof', 'no trim'],
+            ['arraycontainsanyof', 'no trim'],
+            ['arraynotcontainsanyof', 'no trim'],
+            ['startwithanyofhashed', 'no trim'],
+            ['notstartwithanyofhashed', 'no trim'],
+            ['endswithanyofhashed', 'no trim'],
+            ['notendswithanyofhashed', 'no trim'],
+            // semver comparators user values trimmed because of backward compatibility
+            ['semverisoneof', '4 trim'],
+            ['semverisnotoneof', '5 trim'],
+            ['semverless', '6 trim'],
+            ['semverlessequals', '7 trim'],
+            ['semvergreater', '8 trim'],
+            ['semvergreaterequals', '9 trim'],
+            // number and date comparators user values trimmed because of backward compatibility
+            ['numberequals', '10 trim'],
+            ['numbernotequals', '11 trim'],
+            ['numberless', '12 trim'],
+            ['numberlessequals', '13 trim'],
+            ['numbergreater', '14 trim'],
+            ['numbergreaterequals', '15 trim'],
+            ['datebefore', '18 trim'],
+            ['dateafter', '19 trim'],
+            // "contains any of" and "not contains any of" is a special case, the not trimmed user attribute checked against not trimmed comparator values.
+            ['containsanyof', 'no trim'],
+            ['notcontainsanyof', 'no trim'],
+        ], function ($testCase) {
+            return "key: {$testCase[0]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForComparisonAttributeTrimming
+     */
+    public function testComparisonAttributeTrimming(string $key, string $expectedReturnValue)
+    {
+        $clientOptions = [
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
+                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_attribute_trimming.json'),
+                OverrideBehaviour::LOCAL_ONLY
+            ),
+        ];
+
+        $client = new ConfigCatClient('local-only', $clientOptions);
+
+        $user = new User(' 12345 ', null, '[" USA "]', [
+            'Version' => ' 1.0.0 ',
+            'Number' => ' 3 ',
+            'Date' => ' 1705253400 ',
+        ]);
+
+        $defaultValue = 'default';
+        $actualReturnValue = $client->getValue($key, $defaultValue, $user);
+
+        $this->assertSame($expectedReturnValue, $actualReturnValue);
+    }
+
+    public function provideTestDataForComparisonValueTrimming()
+    {
+        return Utils::withDescription([
+            ['isoneof', 'no trim'],
+            ['isnotoneof', 'no trim'],
+            ['containsanyof', 'no trim'],
+            ['notcontainsanyof', 'no trim'],
+            ['isoneofhashed', 'no trim'],
+            ['isnotoneofhashed', 'no trim'],
+            ['equalshashed', 'no trim'],
+            ['notequalshashed', 'no trim'],
+            ['arraycontainsanyofhashed', 'no trim'],
+            ['arraynotcontainsanyofhashed', 'no trim'],
+            ['equals', 'no trim'],
+            ['notequals', 'no trim'],
+            ['startwithanyof', 'no trim'],
+            ['notstartwithanyof', 'no trim'],
+            ['endswithanyof', 'no trim'],
+            ['notendswithanyof', 'no trim'],
+            ['arraycontainsanyof', 'no trim'],
+            ['arraynotcontainsanyof', 'no trim'],
+            ['startwithanyofhashed', 'no trim'],
+            ['notstartwithanyofhashed', 'no trim'],
+            ['endswithanyofhashed', 'no trim'],
+            ['notendswithanyofhashed', 'no trim'],
+            // semver comparator values trimmed because of backward compatibility
+            ['semverisoneof', '4 trim'],
+            ['semverisnotoneof', '5 trim'],
+            ['semverless', '6 trim'],
+            ['semverlessequals', '7 trim'],
+            ['semvergreater', '8 trim'],
+            ['semvergreaterequals', '9 trim'],
+        ], function ($testCase) {
+            return "key: {$testCase[0]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForComparisonValueTrimming_Test
+     */
+    public function testComparisonValueTrimming(string $key, string $expectedReturnValue)
+    {
+        $clientOptions = [
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
+                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_value_trimming.json'),
+                OverrideBehaviour::LOCAL_ONLY
+            ),
+        ];
+
+        $client = new ConfigCatClient('local-only', $clientOptions);
+
+        $user = new User('12345', null, '["USA"]', [
+            'Version' => '1.0.0',
+            'Number' => '3',
+            'Date' => '1705253400',
+        ]);
+
+        $defaultValue = 'default';
+        $actualReturnValue = $client->getValue($key, $defaultValue, $user);
+
+        $this->assertSame($expectedReturnValue, $actualReturnValue);
+    }
+
     public function testUserObjectAttributeValueConversionTextComparisons()
     {
         $fakeLogger = new FakeLogger();
