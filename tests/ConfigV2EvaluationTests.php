@@ -345,4 +345,50 @@ class ConfigV2EvaluationTests extends TestCase
 
         $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
     }
+
+    public function provideTestDataForEvaluationDetailsMatchedEvaluationRuleAndPercantageOption()
+    {
+        // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
+        return Utils::withDescription([
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', null, null, null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', null, null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@example.com', null, 'Dog', true, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', '', 'Frog', true, true],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', 'US', 'Fish', true, true],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', '', 'Falcon', false, true],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', 'US', 'Spider', false, true],
+        ], function ($testCase) {
+            return "sdkKey: {$testCase[0]} | key: {$testCase[1]} | userId: {$testCase[2]} | email: {$testCase[3]} | percentageBase: {$testCase[4]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForEvaluationDetailsMatchedEvaluationRuleAndPercantageOption
+     */
+    public function testEvaluationDetailsMatchedEvaluationRuleAndPercantageOption(
+        string $sdkKey,
+        string $key,
+        ?string $userId,
+        ?string $email,
+        ?string $percentageBase,
+        string $expectedReturnValue,
+        bool $expectedIsExpectedMatchedTargetingRuleSet,
+        bool $expectedIsExpectedMatchedPercentageOptionSet
+    ) {
+        $client = new ConfigCatClient($sdkKey);
+
+        $user = isset($userId)
+            ? new User($userId, $email, null, [
+                'PercentageBase' => $percentageBase,
+            ])
+            : null;
+
+        $evaluationDetails = $client->getValueDetails($key, null, $user);
+
+        $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
+        $this->assertSame($expectedIsExpectedMatchedTargetingRuleSet, null != $evaluationDetails->getMatchedTargetingRule());
+        $this->assertSame($expectedIsExpectedMatchedPercentageOptionSet, null != $evaluationDetails->getMatchedPercentageOption());
+    }
 }
