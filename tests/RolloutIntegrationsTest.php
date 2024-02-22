@@ -5,6 +5,7 @@ namespace ConfigCat\Tests;
 use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
 use ConfigCat\Log\LogLevel;
+use ConfigCat\Tests\Helpers\Utils;
 use ConfigCat\User;
 use PHPUnit\Framework\TestCase;
 
@@ -138,6 +139,33 @@ class RolloutIntegrationsTest extends TestCase
             // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbd63c-9774-49d6-8187-5f2aab7bd606/08dbc325-9ebd-4587-8171-88f76a3004cb
             ['testmatrix_unicode.csv', 'configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/Da6w8dBbmUeMUBhh0iEeQQ', self::valueKind],
         ];
+    }
+
+    public function provideTestDataForSpecialCharactersWorks()
+    {
+        return Utils::withDescription([
+            ['specialCharacters', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],
+            ['specialCharactersHashed', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],
+        ], function ($testCase) {
+            return "settingKey: {$testCase[0]} | userId: {$testCase[1]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForSpecialCharactersWorks
+     */
+    public function testSpecialCharactersWorks(
+        string $settingKey,
+        string $userId,
+        string $expectedReturnValue
+    ) {
+        $client = new ConfigCatClient('configcat-sdk-1/PKDVCLf-Hq-h-kCzMp-L7Q/u28_1qNyZ0Wz-ldYHIU7-g');
+
+        $user = new User($userId);
+
+        $actualReturnValue = $client->getValue($settingKey, null, $user);
+
+        $this->assertSame($expectedReturnValue, $actualReturnValue);
     }
 
     private static function readCsv($file): array
