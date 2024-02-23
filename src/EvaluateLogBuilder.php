@@ -273,11 +273,8 @@ final class EvaluateLogBuilder
         if (!isset($value)) {
             return self::INVALID_VALUE_PLACEHOLDER;
         }
-        if (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
 
-        return (string) $value;
+        return Utils::getStringRepresentation($value);
     }
 
     public static function formatUserComparator(?UserComparator $comparator): string

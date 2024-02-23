@@ -24,7 +24,7 @@ abstract class Utils
      */
     public static function getStringRepresentation(mixed $value): string
     {
-        if (true === is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
 

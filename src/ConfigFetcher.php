@@ -95,14 +95,14 @@ final class ConfigFetcher
         }
 
         $newUrl = '';
-        if (isset($response->getConfigEntry()->getConfig()[Config::PREFERENCES][Preferences::BASE_URL])) {
-            $newUrl = $response->getConfigEntry()->getConfig()[Config::PREFERENCES][Preferences::BASE_URL];
+        $preferences = $response->getConfigEntry()->getConfig()[Config::PREFERENCES];
+        if (isset($preferences[Preferences::BASE_URL])) {
+            $newUrl = $preferences[Preferences::BASE_URL];
         }
         if (empty($newUrl) || $newUrl == $url) {
             return $response;
         }
 
-        $preferences = $response->getConfigEntry()->getConfig()[Config::PREFERENCES];
         $redirect = RedirectMode::from($preferences[Preferences::REDIRECT] ?? RedirectMode::NO->value);
         if ($this->urlIsCustom && RedirectMode::FORCE != $redirect) {
             return $response;
