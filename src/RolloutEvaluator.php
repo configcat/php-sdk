@@ -925,12 +925,12 @@ final class RolloutEvaluator
         if ($logBuilder) {
             $prerequisiteFlagValueFormatted = EvaluateLogBuilder::formatSettingValue($prerequisiteFlagValue);
             $logBuilder->newLine()->append("Prerequisite flag evaluation result: '{$prerequisiteFlagValueFormatted}'.")
-            ->newLine('Condition (')
-            ->appendPrerequisiteFlagCondition($condition, $context->settings)
-            ->append(') evaluates to ')->appendConditionResult($result)->append('.')
-            ->decreaseIndent()
-            ->newLine(')')
-        ;
+                ->newLine('Condition (')
+                ->appendPrerequisiteFlagCondition($condition, $context->settings)
+                ->append(') evaluates to ')->appendConditionResult($result)->append('.')
+                ->decreaseIndent()
+                ->newLine(')')
+            ;
         }
 
         return $result;

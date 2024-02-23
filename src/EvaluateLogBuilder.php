@@ -189,8 +189,8 @@ final class EvaluateLogBuilder
         if (!is_string($prerequisiteFlagKey)) {
             $prerequisiteFlagKey = self::INVALID_NAME_PLACEHOLDER;
         } elseif (!array_key_exists($prerequisiteFlagKey, $settings)) {
-                $prerequisiteFlagKey = self::INVALID_REFERENCE_PLACEHOLDER;
-            }
+            $prerequisiteFlagKey = self::INVALID_REFERENCE_PLACEHOLDER;
+        }
 
         $comparator = PrerequisiteFlagComparator::tryFrom($condition[PrerequisiteFlagCondition::COMPARATOR] ?? null);
         $comparatorFormatted = self::formatPrerequisiteFlagComparator($comparator);
