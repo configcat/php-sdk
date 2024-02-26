@@ -103,7 +103,7 @@ final class ConfigFetcher
             return $response;
         }
 
-        $redirect = RedirectMode::from($preferences[Preferences::REDIRECT] ?? RedirectMode::NO->value);
+        $redirect = RedirectMode::from($preferences[Preferences::REDIRECT_MODE] ?? RedirectMode::NO->value);
         if ($this->urlIsCustom && RedirectMode::FORCE != $redirect) {
             return $response;
         }

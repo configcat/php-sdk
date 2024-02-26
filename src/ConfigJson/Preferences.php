@@ -17,7 +17,7 @@ abstract class Preferences
     /**
      * The redirect mode that should be used in case the data governance mode is wrongly configured.
      */
-    public const REDIRECT = 'r';
+    public const REDIRECT_MODE = 'r';
 
     /**
      * The salt that, combined with the feature flag key or segment name, is used to hash values for sensitive text comparisons.
