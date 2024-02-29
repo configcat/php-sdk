@@ -31,7 +31,7 @@ abstract class Config
      *
      * @internal
      */
-    public static function inlineSaltAndSegments(array &$config): void
+    public static function fixupSaltAndSegments(array &$config): void
     {
         $settings = &$config[self::SETTINGS] ?? [];
         if (is_array($settings) && !empty($settings)) {
@@ -61,7 +61,7 @@ abstract class Config
             throw new UnexpectedValueException('Invalid config JSON content: '.$json);
         }
 
-        self::inlineSaltAndSegments($config);
+        self::fixupSaltAndSegments($config);
 
         return $config;
     }
