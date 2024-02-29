@@ -52,7 +52,7 @@ abstract class ConditionContainer
      */
     public static function conditionAccessor(): callable
     {
-        return function (array $conditionContainer, string &$conditionType): null|array {
+        return function (array $conditionContainer, string &$conditionType): ?array {
             return $conditionContainer[$conditionType = ConditionContainer::USER_CONDITION]
                 ?? $conditionContainer[$conditionType = ConditionContainer::PREREQUISITE_FLAG_CONDITION]
                 ?? $conditionContainer[$conditionType = ConditionContainer::SEGMENT_CONDITION]

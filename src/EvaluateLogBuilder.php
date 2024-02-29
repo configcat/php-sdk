@@ -372,7 +372,7 @@ final class EvaluateLogBuilder
         return (string) $logBuilder->appendUserCondition($condition);
     }
 
-    private function appendUserConditionCore(string $comparisonAttribute, ?UserComparator $comparator, null|string $comparisonValue): self
+    private function appendUserConditionCore(string $comparisonAttribute, ?UserComparator $comparator, ?string $comparisonValue): self
     {
         $comparatorFormatted = self::formatUserComparator($comparator);
         $comparisonValue ??= self::INVALID_VALUE_PLACEHOLDER;

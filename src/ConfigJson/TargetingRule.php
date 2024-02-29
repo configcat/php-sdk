@@ -54,7 +54,7 @@ abstract class TargetingRule
      *
      * @internal
      */
-    public static function hasPercentageOptions(array $targetingRule, bool $throwIfInvalid = true): null|bool
+    public static function hasPercentageOptions(array $targetingRule, bool $throwIfInvalid = true): ?bool
     {
         $simpleValue = $targetingRule[self::SIMPLE_VALUE] ?? null;
         $percentageOptions = $targetingRule[self::PERCENTAGE_OPTIONS] ?? null;

@@ -42,7 +42,7 @@ final class EvaluateContext
     /**
      * @var null|list<string>
      */
-    private null|array $visitedFlags = null;
+    private ?array $visitedFlags = null;
 
     /**
      * @param string               $key      the key of the setting to evaluate
@@ -194,7 +194,7 @@ final class RolloutEvaluator
     /**
      * @param list<array<string, mixed>> $targetingRules
      */
-    private function evaluateTargetingRules(array $targetingRules, EvaluateContext $context): null|EvaluateResult
+    private function evaluateTargetingRules(array $targetingRules, EvaluateContext $context): ?EvaluateResult
     {
         $logBuilder = $context->logBuilder;
 
@@ -246,7 +246,7 @@ final class RolloutEvaluator
      * @param list<array<string, mixed>> $percentageOptions
      * @param array<string, mixed>       $matchedTargetingRule
      */
-    private function evaluatePercentageOptions(array $percentageOptions, ?array $matchedTargetingRule, EvaluateContext $context): null|EvaluateResult
+    private function evaluatePercentageOptions(array $percentageOptions, ?array $matchedTargetingRule, EvaluateContext $context): ?EvaluateResult
     {
         $logBuilder = $context->logBuilder;
 
