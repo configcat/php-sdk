@@ -1107,6 +1107,7 @@ final class RolloutEvaluator
         }
 
         $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+
         return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid semantic version");
     }
 
@@ -1126,6 +1127,7 @@ final class RolloutEvaluator
         }
 
         $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+
         return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid decimal number");
     }
 
@@ -1149,6 +1151,7 @@ final class RolloutEvaluator
         }
 
         $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+
         return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)");
     }
 
@@ -1171,6 +1174,7 @@ final class RolloutEvaluator
         }
 
         $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+
         return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid string array");
     }
 
