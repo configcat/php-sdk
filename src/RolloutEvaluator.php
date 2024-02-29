@@ -272,7 +272,7 @@ final class RolloutEvaluator
         }
 
         if (!isset($percentageOptionsAttributeValue)) {
-            $logBuilder?->newLine()->append("Skipping % options because the User.{$percentageOptionsAttributeName} attribute is missing.");
+            $logBuilder?->newLine("Skipping % options because the User.{$percentageOptionsAttributeName} attribute is missing.");
 
             if (!$context->isMissingUserObjectAttributeLogged) {
                 $this->logUserObjectAttributeIsMissingPercentage($context->key, $percentageOptionsAttributeName);
@@ -282,12 +282,12 @@ final class RolloutEvaluator
             return null;
         }
 
-        $logBuilder?->newLine()->append("Evaluating % options based on the User.{$percentageOptionsAttributeName} attribute:");
+        $logBuilder?->newLine("Evaluating % options based on the User.{$percentageOptionsAttributeName} attribute:");
 
         $sha1 = sha1($context->key.self::userAttributeValueToString($percentageOptionsAttributeValue));
         $hashValue = intval(substr($sha1, 0, 7), 16) % 100;
 
-        $logBuilder?->newLine()->append("- Computing hash in the [0..99] range from User.{$percentageOptionsAttributeName} => {$hashValue} (this value is sticky and consistent across all SDKs)");
+        $logBuilder?->newLine("- Computing hash in the [0..99] range from User.{$percentageOptionsAttributeName} => {$hashValue} (this value is sticky and consistent across all SDKs)");
 
         $bucket = 0;
         $optionNumber = 1;
@@ -311,7 +311,7 @@ final class RolloutEvaluator
             if (isset($logBuilder)) {
                 $percentageOptionValue = SettingValue::get($percentageOption[PercentageOption::VALUE] ?? null, $context->getSettingType(), false);
                 $percentageOptionValueFormatted = EvaluateLogBuilder::formatSettingValue($percentageOptionValue);
-                $logBuilder->newLine()->append("- Hash value {$hashValue} selects % option {$optionNumber} ({$percentage}%), '{$percentageOptionValueFormatted}'.");
+                $logBuilder->newLine("- Hash value {$hashValue} selects % option {$optionNumber} ({$percentage}%), '{$percentageOptionValueFormatted}'.");
             }
 
             return new EvaluateResult($percentageOption, $matchedTargetingRule, $percentageOption);
@@ -893,7 +893,7 @@ final class RolloutEvaluator
 
         $logBuilder?->newLine('(')
             ->increaseIndent()
-            ->newLine()->append("Evaluating prerequisite flag '{$prerequisiteFlagKey}':")
+            ->newLine("Evaluating prerequisite flag '{$prerequisiteFlagKey}':")
         ;
 
         $prerequisiteFlagEvaluateResult = $this->evaluateSetting($prerequisiteFlagContext);
@@ -924,7 +924,7 @@ final class RolloutEvaluator
 
         if ($logBuilder) {
             $prerequisiteFlagValueFormatted = EvaluateLogBuilder::formatSettingValue($prerequisiteFlagValue);
-            $logBuilder->newLine()->append("Prerequisite flag evaluation result: '{$prerequisiteFlagValueFormatted}'.")
+            $logBuilder->newLine("Prerequisite flag evaluation result: '{$prerequisiteFlagValueFormatted}'.")
                 ->newLine('Condition (')
                 ->appendPrerequisiteFlagCondition($condition, $context->settings)
                 ->append(') evaluates to ')->appendConditionResult($result)->append('.')
