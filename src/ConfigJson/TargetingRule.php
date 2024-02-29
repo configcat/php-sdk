@@ -63,7 +63,7 @@ abstract class TargetingRule
             if (!isset($percentageOptions) && is_array($simpleValue)) {
                 return false;
             }
-        } elseif (is_array($percentageOptions) && array_is_list($percentageOptions)) {
+        } elseif (is_array($percentageOptions) && array_is_list($percentageOptions) && count($percentageOptions) > 0) {
             return true;
         }
 

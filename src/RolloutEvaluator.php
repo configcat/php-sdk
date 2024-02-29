@@ -1067,11 +1067,11 @@ final class RolloutEvaluator
         if (is_double($attributeValue) || is_int($attributeValue)) {
             return Utils::numberToString($attributeValue);
         }
-        if ($attributeValue instanceof DateTimeInterface
-            && is_double($unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue))) {
-            return Utils::numberToString($unixTimeSeconds);
-        }
-        if (Utils::isStringList($attributeValue)
+        if ($attributeValue instanceof DateTimeInterface) {
+            if (is_double($unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue))) {
+                return Utils::numberToString($unixTimeSeconds);
+            }
+        } elseif (Utils::isStringList($attributeValue)
             && ($stringArrayJson = json_encode($attributeValue, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))) {
             return $stringArrayJson;
         }

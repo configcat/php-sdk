@@ -171,9 +171,9 @@ final class EvaluateLogBuilder
                     ?? $condition[UserCondition::STRINGLIST_COMPARISON_VALUE]
                     ?? null;
 
-                if (is_string($comparisonValue) || is_double($comparisonValue) || is_int($comparisonValue) || Utils::isStringList($comparisonValue)) {
-                    $comparisonValue = null;
-                }
+                $comparisonValue = is_string($comparisonValue) || is_double($comparisonValue) || is_int($comparisonValue) || Utils::isStringList($comparisonValue)
+                    ? Utils::getStringRepresentation($comparisonValue)
+                    : null;
 
                 return $this->appendUserConditionCore($comparisonAttribute, $comparator, $comparisonValue);
         }
