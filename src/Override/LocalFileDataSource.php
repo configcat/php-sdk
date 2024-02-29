@@ -49,7 +49,7 @@ class LocalFileDataSource extends OverrideDataSource
             $ex = new UnexpectedValueException('JSON error: '.json_last_error_msg());
         } elseif (is_array($json)) {
             if (!isset($json['flags'])) {
-                Config::fixup($json);
+                Config::inlineSaltAndSegments($json);
 
                 try {
                     return Setting::ensureMap($json[Config::SETTINGS] ?? []);
