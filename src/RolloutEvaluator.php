@@ -1106,7 +1106,8 @@ final class RolloutEvaluator
             }
         }
 
-        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid semantic version");
+        $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid semantic version");
     }
 
     /**
@@ -1124,7 +1125,8 @@ final class RolloutEvaluator
             }
         }
 
-        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid decimal number");
+        $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid decimal number");
     }
 
     /**
@@ -1146,7 +1148,8 @@ final class RolloutEvaluator
             }
         }
 
-        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)");
+        $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)");
     }
 
     /**
@@ -1167,7 +1170,8 @@ final class RolloutEvaluator
             }
         }
 
-        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValue}' is not a valid string array");
+        $attributeValueFormatted = Utils::getStringRepresentation($attributeValue);
+        return $this->handleInvalidUserAttribute($condition, $key, $attributeName, "'{$attributeValueFormatted}' is not a valid string array");
     }
 
     private function logUserObjectIsMissing(string $key): void
