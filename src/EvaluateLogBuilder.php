@@ -238,25 +238,6 @@ final class EvaluateLogBuilder
     /**
      * @param array<string, mixed> $targetingRule
      */
-    public function appendTargetingRuleThenPart(array $targetingRule, SettingType|stdClass $settingType, bool $newLine): self
-    {
-        ($newLine ? $this->newLine() : $this->append(' '))
-            ->append('THEN')
-        ;
-
-        if (!TargetingRule::hasPercentageOptions($targetingRule, false)) {
-            $simpleValue = SettingValue::get($targetingRule[TargetingRule::SIMPLE_VALUE][SettingValueContainer::VALUE] ?? null, $settingType, false);
-            $simpleValueFormatted = self::formatSettingValue($simpleValue);
-
-            return $this->append(" '{$simpleValueFormatted}'");
-        }
-
-        return $this->append(' % options');
-    }
-
-    /**
-     * @param array<string, mixed> $targetingRule
-     */
     public function appendTargetingRuleConsequence(array $targetingRule, SettingType|stdClass $settingType, bool|string $isMatchOrError, bool $newLine): self
     {
         $this->increaseIndent();
@@ -427,5 +408,24 @@ final class EvaluateLogBuilder
         }
 
         return $this->append("User.{$comparisonAttribute} {$comparatorFormatted} '{$comparisonValue}'");
+    }
+
+    /**
+     * @param array<string, mixed> $targetingRule
+     */
+    private function appendTargetingRuleThenPart(array $targetingRule, SettingType|stdClass $settingType, bool $newLine): self
+    {
+        ($newLine ? $this->newLine() : $this->append(' '))
+            ->append('THEN')
+        ;
+
+        if (!TargetingRule::hasPercentageOptions($targetingRule, false)) {
+            $simpleValue = SettingValue::get($targetingRule[TargetingRule::SIMPLE_VALUE][SettingValueContainer::VALUE] ?? null, $settingType, false);
+            $simpleValueFormatted = self::formatSettingValue($simpleValue);
+
+            return $this->append(" '{$simpleValueFormatted}'");
+        }
+
+        return $this->append(' % options');
     }
 }
