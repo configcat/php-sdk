@@ -541,7 +541,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testTimeout()
     {
-        $client = new ConfigCatClient('testTimout-23456789012/1234567890123456789012', [
+        $client = new ConfigCatClient('testTimeout-3456789012/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => new MockHandler([
                 new ConnectException('timeout', new Request('GET', 'test')),
             ]),
