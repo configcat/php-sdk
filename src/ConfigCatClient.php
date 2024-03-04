@@ -30,7 +30,7 @@ use Throwable;
  */
 final class ConfigCatClient implements ClientInterface
 {
-    public const SDK_VERSION = '8.1.0';
+    public const SDK_VERSION = '9.0.0';
     private const CONFIG_JSON_CACHE_VERSION = 'v2';
 
     private InternalLogger $logger;
