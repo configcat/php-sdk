@@ -38,14 +38,14 @@ final class User
      * * all other values are considered invalid (a warning will be logged and the currently evaluated targeting rule will be skipped).
      *
      * **Number-based comparators** (=, &lt;, &gt;=, etc.)
-     * * accept `number` values,
-     * * accept `string` values containing a properly formatted, valid `number` value,
+     * * accept `int` or `float` values,
+     * * accept `string` values containing a properly formatted, valid `int` or `float` value,
      * * all other values are considered invalid (a warning will be logged and the currently evaluated targeting rule will be skipped).
      *
      * **Date time-based comparators** (BEFORE / AFTER)
      * * accept `DateTimeInterface` values, which are automatically converted to a second-based Unix timestamp,
-     * * accept `number` values representing a second-based Unix timestamp,
-     * * accept `string` values containing a properly formatted, valid `number` value,
+     * * accept `int` or `float` values representing a second-based Unix timestamp,
+     * * accept `string` values containing a properly formatted, valid `int` or `float` value,
      * * all other values are considered invalid (a warning will be logged and the currently evaluated targeting rule will be skipped).
      *
      * **String array-based comparators** (ARRAY CONTAINS ANY OF / ARRAY NOT CONTAINS ANY OF)
