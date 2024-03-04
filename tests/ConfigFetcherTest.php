@@ -4,6 +4,7 @@ namespace ConfigCat\Tests;
 
 use ConfigCat\ClientOptions;
 use ConfigCat\ConfigFetcher;
+use ConfigCat\Tests\Helpers\Utils;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;

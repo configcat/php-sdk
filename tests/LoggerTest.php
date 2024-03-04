@@ -521,7 +521,7 @@ class LoggerTest extends TestCase
     {
         $mockLogger = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
-        $client = new ConfigCatClient('not-existing', [
+        $client = new ConfigCatClient('not-existing-456789012/1234567890123456789012', [
             ClientOptions::LOGGER => $mockLogger,
             ClientOptions::LOG_LEVEL => LogLevel::NO_LOG,
         ]);

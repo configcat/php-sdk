@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
+use Throwable;
+
 class EvaluationDetails
 {
     /**
-     * @param null|mixed[] $matchedEvaluationRule
-     * @param null|mixed[] $matchedEvaluationPercentageRule
+     * @param null|array<string, mixed> $matchedTargetingRule
+     * @param null|array<string, mixed> $matchedPercentageOption
      *
      * @internal
      */
@@ -18,16 +20,17 @@ class EvaluationDetails
         private readonly mixed $value,
         private readonly ?User $user,
         private readonly bool $isDefaultValue,
-        private readonly ?string $error,
+        private readonly ?string $errorMessage,
+        private readonly ?Throwable $errorException,
         private readonly float $fetchTimeUnixMilliseconds,
-        private readonly ?array $matchedEvaluationRule,
-        private readonly ?array $matchedEvaluationPercentageRule
+        private readonly ?array $matchedTargetingRule,
+        private readonly ?array $matchedPercentageOption
     ) {}
 
     /**
      * @internal
      */
-    public static function fromError(string $key, mixed $value, ?User $user, ?string $error): EvaluationDetails
+    public static function fromError(string $key, mixed $value, ?User $user, string $errorMessage, ?Throwable $errorException = null): EvaluationDetails
     {
         return new EvaluationDetails(
             $key,
@@ -35,7 +38,8 @@ class EvaluationDetails
             $value,
             $user,
             true,
-            $error,
+            $errorMessage,
+            $errorException,
             0,
             null,
             null
@@ -83,11 +87,19 @@ class EvaluationDetails
     }
 
     /**
-     * @return ?string in case of an error, the error message
+     * @return ?string error message in case evaluation failed
      */
-    public function getError(): ?string
+    public function getErrorMessage(): ?string
     {
-        return $this->error;
+        return $this->errorMessage;
+    }
+
+    /**
+     * @return ?Throwable the `Throwable` object related to the error in case evaluation failed (if any)
+     */
+    public function getErrorException(): ?Throwable
+    {
+        return $this->errorException;
     }
 
     /**
@@ -99,18 +111,18 @@ class EvaluationDetails
     }
 
     /**
-     * @return null|mixed[] the targeting rule the evaluation was based on
+     * @return null|array<string, mixed> the targeting rule (if any) that matched during the evaluation and was used to return the evaluated value
      */
-    public function getMatchedEvaluationRule(): ?array
+    public function getMatchedTargetingRule(): ?array
     {
-        return $this->matchedEvaluationRule;
+        return $this->matchedTargetingRule;
     }
 
     /**
-     * @return null|mixed[] the percentage rule the evaluation was based on
+     * @return null|array<string, mixed> the percentage option (if any) that was used to select the evaluated value
      */
-    public function getMatchedEvaluationPercentageRule(): ?array
+    public function getMatchedPercentageOption(): ?array
     {
-        return $this->matchedEvaluationPercentageRule;
+        return $this->matchedPercentageOption;
     }
 }

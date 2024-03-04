@@ -14,7 +14,7 @@ use Stringable;
  *
  * @internal
  */
-class InternalLogger implements LoggerInterface
+final class InternalLogger implements LoggerInterface
 {
     /**
      * @param string[] $exceptionsToIgnore
@@ -114,7 +114,7 @@ class InternalLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    private function shouldLog(int $currentLevel, array $context): bool
+    public function shouldLog(int $currentLevel, array $context): bool
     {
         return $currentLevel >= $this->globalLevel && !$this->hasAnythingToIgnore($context);
     }

@@ -1,0 +1,21 @@
+{
+  // List of extensions which should be recommended for users of this workspace.
+  "recommendations": [
+    // For intellisense and navigation in code:
+    "bmewburn.vscode-intelephense-client",
+
+    // For formatting and linting:
+    "junstyle.php-cs-fixer",
+    "SanderRonde.phpstan-vscode",
+
+    // For exploring and running tests:
+    "hbenl.vscode-test-explorer",
+    "recca0120.vscode-phpunit",
+
+    // For debugging:
+    "xdebug.php-debug" // to make this work, you need xdebug installed - see the description of the extension
+  ],
+
+  // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+  "unwantedRecommendations": []
+}

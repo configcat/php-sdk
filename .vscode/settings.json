@@ -1,0 +1,16 @@
+{
+  "intelephense.environment.phpVersion": "8.1.0",
+  // On Linux, replace "phpdebug.bat" with "XDEBUG_MODE=debug php".
+  // To make debugging work, you also need xdebug.start_with_request=yes in php.ini!
+  "phpunit.php": "phpdebug.bat",
+  "phpunit.args": [
+    "-c",
+    "phpunit.xml"
+  ],
+  "php-cs-fixer.executablePath": "php-cs-fixer",
+  "php-cs-fixer.executablePathWindows": "${workspaceFolder}/vendor/bin/php-cs-fixer.bat",
+  "[php]": {
+    "editor.defaultFormatter": "junstyle.php-cs-fixer"
+  },
+  "phpstan.configFile": "phpstan.neon"
+}

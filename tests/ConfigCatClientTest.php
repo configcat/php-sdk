@@ -11,6 +11,7 @@ use ConfigCat\EvaluationDetails;
 use ConfigCat\Http\GuzzleFetchClient;
 use ConfigCat\Log\InternalLogger;
 use ConfigCat\Log\LogLevel;
+use ConfigCat\Tests\Helpers\Utils;
 use ConfigCat\User;
 use Exception;
 use GuzzleHttp\Exception\ConnectException;
@@ -25,7 +26,7 @@ use ReflectionException;
 
 class ConfigCatClientTest extends TestCase
 {
-    private const TEST_JSON = '{ "f" : { "first": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "second": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';
+    private const TEST_JSON = '{"f":{"first":{"t":0,"v":{"b":false},"i":"fakeIdFirst"},"second":{"t":0,"v":{"b":true},"i":"fakeIdSecond"}}}';
 
     public function testConstructEmptySdkKey()
     {
@@ -38,7 +39,7 @@ class ConfigCatClientTest extends TestCase
      */
     public function testConstructDefaults()
     {
-        $client = new ConfigCatClient('testConstructDefaults');
+        $client = new ConfigCatClient('testConstructDefaults-/1234567890123456789012');
 
         $logger = $this->getReflectedValue($client, 'logger');
         $this->assertInstanceOf(InternalLogger::class, $logger);
@@ -56,7 +57,7 @@ class ConfigCatClientTest extends TestCase
     public function testConstructLoggerOption()
     {
         $logger = Utils::getNullLogger();
-        $client = new ConfigCatClient('testConstructLoggerOption', [
+        $client = new ConfigCatClient('testConstructLoggerOpt/ion-567890123456789012', [
             ClientOptions::LOGGER => $logger,
             ClientOptions::LOG_LEVEL => LogLevel::ERROR,
             ClientOptions::EXCEPTIONS_TO_IGNORE => [InvalidArgumentException::class],
@@ -78,7 +79,7 @@ class ConfigCatClientTest extends TestCase
     public function testConstructCacheOption()
     {
         $cache = new ArrayCache();
-        $client = new ConfigCatClient('testConstructCacheOption', [ClientOptions::CACHE => $cache]);
+        $client = new ConfigCatClient('testConstructCacheOpti/on-4567890123456789012', [ClientOptions::CACHE => $cache]);
         $propCache = $this->getReflectedValue($client, 'cache');
         $this->assertSame($cache, $propCache);
     }
@@ -88,14 +89,57 @@ class ConfigCatClientTest extends TestCase
      */
     public function testConstructCacheRefreshIntervalOption()
     {
-        $client = new ConfigCatClient('testConstructCacheRefreshIntervalOption', [ClientOptions::CACHE_REFRESH_INTERVAL => 20]);
+        $client = new ConfigCatClient('testConstructCacheRefr/eshIntervalOption-9012', [ClientOptions::CACHE_REFRESH_INTERVAL => 20]);
         $propInterval = $this->getReflectedValue($client, 'cacheRefreshInterval');
         $this->assertSame(20, $propInterval);
     }
 
+    public function provideTestDataForSdkKeyFormat_ShouldBeValidated()
+    {
+        return Utils::withDescription([
+            ['sdk-key-90123456789012', false, false],
+            ['sdk-key-9012345678901/1234567890123456789012', false, false],
+            ['sdk-key-90123456789012/123456789012345678901', false, false],
+            ['sdk-key-90123456789012/12345678901234567890123', false, false],
+            ['sdk-key-901234567890123/1234567890123456789012', false, false],
+            ['sdk-key-90123456789012/1234567890123456789012', false, true],
+            ['configcat-sdk-1/sdk-key-90123456789012', false, false],
+            ['configcat-sdk-1/sdk-key-9012345678901/1234567890123456789012', false, false],
+            ['configcat-sdk-1/sdk-key-90123456789012/123456789012345678901', false, false],
+            ['configcat-sdk-1/sdk-key-90123456789012/12345678901234567890123', false, false],
+            ['configcat-sdk-1/sdk-key-901234567890123/1234567890123456789012', false, false],
+            ['configcat-sdk-1/sdk-key-90123456789012/1234567890123456789012', false, true],
+            ['configcat-sdk-2/sdk-key-90123456789012/1234567890123456789012', false, false],
+            ['configcat-proxy/', false, false],
+            ['configcat-proxy/', true, false],
+            ['configcat-proxy/sdk-key-90123456789012', false, false],
+            ['configcat-proxy/sdk-key-90123456789012', true, true],
+        ], function ($testCase) {
+            return "sdkKey: {$testCase[0]} | customBaseUrl: {$testCase[1]}";
+        });
+    }
+
+    /**
+     * @dataProvider provideTestDataForSdkKeyFormat_ShouldBeValidated
+     */
+    public function testSdkKeyFormatShouldBeValidated(string $sdkKey, bool $customBaseUrl, bool $isValid)
+    {
+        $clientOptions = $customBaseUrl
+            ? [ClientOptions::BASE_URL => 'https://my-configcat-proxy']
+            : [];
+
+        if (!$isValid) {
+            $this->expectException(InvalidArgumentException::class);
+        } else {
+            $this->expectNotToPerformAssertions();
+        }
+
+        $client = new ConfigCatClient($sdkKey, $clientOptions);
+    }
+
     public function testGetValueFailedFetch()
     {
-        $client = new ConfigCatClient('testGetValueFailedFetch', [ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
+        $client = new ConfigCatClient('testGetValueFailedFetc/h-34567890123456789012', [ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
             'handler' => new MockHandler(
                 [new Response(400)]
             ),
@@ -107,7 +151,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllKeysFailedFetch()
     {
-        $client = new ConfigCatClient('testGetAllKeysFailedFetch', [ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
+        $client = new ConfigCatClient('testGetAllKeysFailedFe/tch-567890123456789012', [ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
             'handler' => new MockHandler(
                 [new Response(400)]
             ),
@@ -147,7 +191,7 @@ class ConfigCatClientTest extends TestCase
         $mockHandler = new MockHandler(
             [new Response(200, [], self::TEST_JSON)]
         );
-        $client = new ConfigCatClient('testCacheExpiration', [
+        $client = new ConfigCatClient('testCacheExpiration-12/1234567890123456789012', [
             ClientOptions::CACHE => $cache,
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => $mockHandler,
@@ -175,7 +219,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetVariationId()
     {
-        $client = new ConfigCatClient('testGetVariationId', [
+        $client = new ConfigCatClient('testGetVariationId-012/1234567890123456789012', [
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => new MockHandler([new Response(200, [], self::TEST_JSON)]),
             ]),
@@ -187,7 +231,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllVariationIds()
     {
-        $client = new ConfigCatClient('testGetAllVariationIds', [
+        $client = new ConfigCatClient('testGetAllVariationIds/1234567890123456789012', [
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => new MockHandler([new Response(200, [], self::TEST_JSON)]),
             ]),
@@ -199,7 +243,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllVariationIdsEmpty()
     {
-        $client = new ConfigCatClient('testGetAllVariationIdsEmpty', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+        $client = new ConfigCatClient('testGetAllVariationIds/Empty-7890123456789012', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(400),
         ])]);
         $value = $client->getAllValueDetails();
@@ -209,7 +253,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetKeyAndValue()
     {
-        $client = new ConfigCatClient('testGetKeyAndValue', [
+        $client = new ConfigCatClient('testGetKeyAndValue-012/1234567890123456789012', [
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => new MockHandler([new Response(200, [], self::TEST_JSON)]),
             ]),
@@ -222,7 +266,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetKeyAndValueNull()
     {
-        $client = new ConfigCatClient('testGetKeyAndValueNull', [
+        $client = new ConfigCatClient('testGetKeyAndValueNull/1234567890123456789012', [
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => new MockHandler([new Response(200, [], self::TEST_JSON)]),
             ]),
@@ -234,7 +278,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllValues()
     {
-        $client = new ConfigCatClient('testGetAllValues', [
+        $client = new ConfigCatClient('testGetAllValues-89012/1234567890123456789012', [
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => new MockHandler([new Response(200, [], self::TEST_JSON)]),
             ]),
@@ -246,7 +290,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGetAllValueDetails()
     {
-        $client = new ConfigCatClient('testGetAllValueDetails', [
+        $client = new ConfigCatClient('testGetAllValueDetails/1234567890123456789012', [
             ClientOptions::FETCH_CLIENT => GuzzleFetchClient::create([
                 'handler' => new MockHandler([new Response(200, [], self::TEST_JSON)]),
             ]),
@@ -259,7 +303,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testDefaultUser()
     {
-        $client = new ConfigCatClient('testDefaultUser', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+        $client = new ConfigCatClient('testDefaultUser-789012/1234567890123456789012', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(200, [], Utils::formatConfigWithRules()),
         ])]);
 
@@ -283,7 +327,7 @@ class ConfigCatClientTest extends TestCase
     public function testInitDefaultUser()
     {
         $client = new ConfigCatClient(
-            'testInitDefaultUser',
+            'testInitDefaultUser-12/1234567890123456789012',
             [
                 ClientOptions::CUSTOM_HANDLER => new MockHandler([new Response(200, [], Utils::formatConfigWithRules())]),
                 ClientOptions::DEFAULT_USER => new User('test@test1.com'),
@@ -306,7 +350,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testDefaultUserVariationId()
     {
-        $client = new ConfigCatClient('testDefaultUserVariationId', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+        $client = new ConfigCatClient('testDefaultUserVariati/onId-67890123456789012', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(200, [], Utils::formatConfigWithRules()),
         ])]);
 
@@ -337,7 +381,7 @@ class ConfigCatClientTest extends TestCase
             ]
         );
 
-        $client = new ConfigCatClient('testOfflineOnline', [
+        $client = new ConfigCatClient('testOfflineOnline-9012/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => $handler,
         ]);
 
@@ -370,7 +414,7 @@ class ConfigCatClientTest extends TestCase
             ]
         );
 
-        $client = new ConfigCatClient('testInitOfflineOnline', [
+        $client = new ConfigCatClient('testInitOfflineOnline-/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => $handler,
             ClientOptions::OFFLINE => true,
         ]);
@@ -391,7 +435,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testHooks()
     {
-        $client = new ConfigCatClient('getTestClientWithError', [
+        $client = new ConfigCatClient('getTestClientWithError/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => new MockHandler(
                 [
                     new Response(200, [], self::TEST_JSON),
@@ -429,7 +473,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testEvalDetails()
     {
-        $client = new ConfigCatClient('testEvalDetails', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+        $client = new ConfigCatClient('testEvalDetails-789012/1234567890123456789012', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(200, [], Utils::formatConfigWithRules()),
         ])]);
 
@@ -437,20 +481,21 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertEquals('fake1', $details->getValue());
         $this->assertEquals('id1', $details->getVariationId());
-        $this->assertNull($details->getError());
+        $this->assertNull($details->getErrorMessage());
         $this->assertEquals('key', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-        $this->assertEquals('Identifier', $details->getMatchedEvaluationRule()['a']);
-        $this->assertEquals('@test1.com', $details->getMatchedEvaluationRule()['c']);
-        $this->assertEquals(2, $details->getMatchedEvaluationRule()['t']);
-        $this->assertNull($details->getMatchedEvaluationPercentageRule());
+        $condition = $details->getMatchedTargetingRule()['c'][0]['u'];
+        $this->assertEquals('Identifier', $condition['a']);
+        $this->assertEquals('@test1.com', $condition['l'][0]);
+        $this->assertEquals(2, $condition['c']);
+        $this->assertNull($details->getMatchedPercentageOption());
         $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
         $this->assertFalse($details->isDefaultValue());
     }
 
     public function testEvalDetailsNonExistentFlag()
     {
-        $client = new ConfigCatClient('testEvalDetails', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+        $client = new ConfigCatClient('testEvalDetails-789012/1234567890123456789012', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(200, [], Utils::formatConfigWithRules()),
         ])]);
 
@@ -458,17 +503,17 @@ class ConfigCatClientTest extends TestCase
 
         $this->assertEquals('', $details->getValue());
         $this->assertEquals('', $details->getVariationId());
-        $this->assertNotNull($details->getError());
+        $this->assertNotNull($details->getErrorMessage());
         $this->assertEquals('non-existent', $details->getKey());
         $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-        $this->assertNull($details->getMatchedEvaluationRule());
-        $this->assertNull($details->getMatchedEvaluationPercentageRule());
+        $this->assertNull($details->getMatchedTargetingRule());
+        $this->assertNull($details->getMatchedPercentageOption());
         $this->assertTrue($details->isDefaultValue());
     }
 
     public function testEvalDetailsHook()
     {
-        $client = new ConfigCatClient('testEvalDetailsHook', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
+        $client = new ConfigCatClient('testEvalDetailsHook-12/1234567890123456789012', [ClientOptions::CUSTOM_HANDLER => new MockHandler([
             new Response(200, [], Utils::formatConfigWithRules()),
         ])]);
 
@@ -476,13 +521,14 @@ class ConfigCatClientTest extends TestCase
         $client->hooks()->addOnFlagEvaluated(function (EvaluationDetails $details) use (&$called) {
             $this->assertEquals('fake1', $details->getValue());
             $this->assertEquals('id1', $details->getVariationId());
-            $this->assertNull($details->getError());
+            $this->assertNull($details->getErrorMessage());
             $this->assertEquals('key', $details->getKey());
             $this->assertEquals('test@test1.com', $details->getUser()->getIdentifier());
-            $this->assertEquals('Identifier', $details->getMatchedEvaluationRule()['a']);
-            $this->assertEquals('@test1.com', $details->getMatchedEvaluationRule()['c']);
-            $this->assertEquals(2, $details->getMatchedEvaluationRule()['t']);
-            $this->assertNull($details->getMatchedEvaluationPercentageRule());
+            $condition = $details->getMatchedTargetingRule()['c'][0]['u'];
+            $this->assertEquals('Identifier', $condition['a']);
+            $this->assertEquals('@test1.com', $condition['l'][0]);
+            $this->assertEquals(2, $condition['c']);
+            $this->assertNull($details->getMatchedPercentageOption());
             $this->assertFalse($details->isDefaultValue());
             $this->assertTrue($details->getFetchTimeUnixMilliseconds() > 0);
             $called = true;
@@ -495,7 +541,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testTimeout()
     {
-        $client = new ConfigCatClient('testTimout', [
+        $client = new ConfigCatClient('testTimeout-3456789012/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => new MockHandler([
                 new ConnectException('timeout', new Request('GET', 'test')),
             ]),
@@ -507,7 +553,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testHttpException()
     {
-        $client = new ConfigCatClient('testHttpException', [
+        $client = new ConfigCatClient('testHttpException-9012/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => new MockHandler([
                 new RequestException('failed', new Request('GET', 'test')),
             ]),
@@ -519,7 +565,7 @@ class ConfigCatClientTest extends TestCase
 
     public function testGeneralException()
     {
-        $client = new ConfigCatClient('testGeneralException', [
+        $client = new ConfigCatClient('testGeneralException-2/1234567890123456789012', [
             ClientOptions::CUSTOM_HANDLER => new MockHandler([
                 new Exception('failed'),
             ]),

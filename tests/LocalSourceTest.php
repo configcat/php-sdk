@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 class LocalSourceTest extends TestCase
 {
-    const TEST_JSON_BODY = '{ "f" : { "disabled": { "v": false, "p": [], "r": [], "i":"fakeIdFirst" }, "enabled": { "v": true, "p": [], "r": [], "i":"fakeIdSecond" }}}';
+    const TEST_JSON_BODY = '{"f":{"disabled":{"t":0,"v":{"b":false},"i":"fakeIdFirst"},"enabled":{"t":0,"v":{"b":true},"i":"fakeIdSecond"}}}';
 
     public function testWithNonExistingFile()
     {
@@ -36,7 +36,7 @@ class LocalSourceTest extends TestCase
     public function testWithFile()
     {
         $client = new ConfigCatClient('testWithFile', [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/test.json'), OverrideBehaviour::LOCAL_ONLY),
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/data/test.json'), OverrideBehaviour::LOCAL_ONLY),
         ]);
 
         $this->assertTrue($client->getValue('enabledFeature', false));
@@ -49,7 +49,7 @@ class LocalSourceTest extends TestCase
     public function testWithFileRules()
     {
         $client = new ConfigCatClient('testWithFile_Rules', [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/test-rules.json'), OverrideBehaviour::LOCAL_ONLY),
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/data/test-rules.json'), OverrideBehaviour::LOCAL_ONLY),
         ]);
 
         // without user
@@ -65,7 +65,7 @@ class LocalSourceTest extends TestCase
     public function testWithSimpleFile()
     {
         $client = new ConfigCatClient('testWithSimpleFile', [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/test-simple.json'), OverrideBehaviour::LOCAL_ONLY),
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localFile('tests/data/test-simple.json'), OverrideBehaviour::LOCAL_ONLY),
         ]);
 
         $this->assertTrue($client->getValue('enabledFeature', false));
@@ -96,7 +96,7 @@ class LocalSourceTest extends TestCase
 
     public function testLocalOverRemote()
     {
-        $client = new ConfigCatClient('testLocalOverRemote', [
+        $client = new ConfigCatClient('testLocalOverRemote-12/1234567890123456789012', [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localArray([
                 'enabled' => false,
                 'nonexisting' => true,
@@ -112,7 +112,7 @@ class LocalSourceTest extends TestCase
 
     public function testRemoteOverLocal()
     {
-        $client = new ConfigCatClient('testRemoteOverLocal', [
+        $client = new ConfigCatClient('testRemoteOverLocal-12/1234567890123456789012', [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(OverrideDataSource::localArray([
                 'enabled' => false,
                 'nonexisting' => true,
