@@ -142,6 +142,6 @@ final class InternalLogger implements LoggerInterface
             $context['event_id'] = 0;
         }
 
-        return "$message";
+        return "{$message}";
     }
 }

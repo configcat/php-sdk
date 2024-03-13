@@ -38,7 +38,7 @@ class RefreshResult
 
     /**
      * Returns the `Throwable` object related to the error in case the operation failed (if any).
-     * 
+     *
      * @return ?Throwable the `Throwable` object related to the error
      */
     public function getErrorException(): ?Throwable

@@ -390,6 +390,7 @@ final class ConfigCatClient implements ClientInterface
             $messageCtx = [
                 'event_id' => 1003, 'exception' => $exception,
             ];
+
             return new RefreshResult(InternalLogger::format($message, $messageCtx), $exception);
         }
     }

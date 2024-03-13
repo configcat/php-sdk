@@ -33,8 +33,8 @@ final class FetchResponse
     /**
      * Creates a new response with FAILED status.
      *
-     * @param string $errorMessage the reason of the failure
-     * @param string $errorException the related error exception (if any)
+     * @param string     $errorMessage   the reason of the failure
+     * @param ?Throwable $errorException the related error exception (if any)
      *
      * @return FetchResponse the response
      */
