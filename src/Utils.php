@@ -98,7 +98,7 @@ abstract class Utils
         return floor(microtime(true) * 1000);
     }
 
-    public static function dateTimeToUnixSeconds(DateTimeInterface $dateTime): ?float
+    public static function dateTimeToUnixTimeSeconds(DateTimeInterface $dateTime): ?float
     {
         $timestamp = (float) $dateTime->format('U\.v');
 
@@ -106,7 +106,7 @@ abstract class Utils
         return $timestamp < -62135596800 || 253402300800 <= $timestamp ? null : $timestamp;
     }
 
-    public static function dateTimeFromUnixSeconds(float $timestamp): ?DateTimeInterface
+    public static function dateTimeFromUnixTimeSeconds(float $timestamp): ?DateTimeInterface
     {
         // Allow values only between 0001-01-01T00:00:00.000Z and 9999-12-31T23:59:59.999
         if ($timestamp < -62135596800 || 253402300800 <= $timestamp) {

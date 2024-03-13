@@ -1068,7 +1068,7 @@ final class RolloutEvaluator
             return Utils::numberToString($attributeValue);
         }
         if ($attributeValue instanceof DateTimeInterface) {
-            if (is_double($unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue))) {
+            if (is_double($unixTimeSeconds = Utils::dateTimeToUnixTimeSeconds($attributeValue))) {
                 return Utils::numberToString($unixTimeSeconds);
             }
         } elseif (Utils::isStringList($attributeValue)
@@ -1137,7 +1137,7 @@ final class RolloutEvaluator
     private function getUserAttributeValueAsUnixTimeSeconds(string $attributeName, mixed $attributeValue, array $condition, string $key): float|string
     {
         if ($attributeValue instanceof DateTimeInterface) {
-            $unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue);
+            $unixTimeSeconds = Utils::dateTimeToUnixTimeSeconds($attributeValue);
             if (is_double($unixTimeSeconds)) {
                 return $unixTimeSeconds;
             }

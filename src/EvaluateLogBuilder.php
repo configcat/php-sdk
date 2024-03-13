@@ -401,7 +401,7 @@ final class EvaluateLogBuilder
 
         $comparatorFormatted = self::formatUserComparator($comparator);
 
-        if ($isDateTime && ($dateTime = Utils::dateTimeFromUnixSeconds($comparisonValue))) {
+        if ($isDateTime && ($dateTime = Utils::dateTimeFromUnixTimeSeconds($comparisonValue))) {
             $dateIsoString = $dateTime->format('Y-m-d\\TH:i:s.vp');
 
             return $this->append("User.{$comparisonAttribute} {$comparatorFormatted} '{$comparisonValue}' ({$dateIsoString} UTC)");
