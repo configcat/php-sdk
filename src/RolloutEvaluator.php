@@ -317,7 +317,7 @@ final class RolloutEvaluator
             return new EvaluateResult($percentageOption, $matchedTargetingRule, $percentageOption);
         }
 
-        throw new UnexpectedValueException('Sum of percentage option percentages are less than 100.');
+        throw new UnexpectedValueException('Sum of percentage option percentages is less than 100.');
     }
 
     /**
