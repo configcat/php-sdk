@@ -693,6 +693,7 @@ final class RolloutEvaluator
 
             if (false === $index
                 || false === ($sliceLength = filter_var(substr($item, 0, $index), FILTER_VALIDATE_INT))
+                || $sliceLength < 0
                 || '' === ($hash2 = substr($item, $index + 1))) {
                 self::ensureStringComparisonValue(null);
 
