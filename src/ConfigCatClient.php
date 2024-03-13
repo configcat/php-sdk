@@ -359,30 +359,39 @@ final class ConfigCatClient implements ClientInterface
      */
     public function forceRefresh(): RefreshResult
     {
-        if (null !== $this->overrides && OverrideBehaviour::LOCAL_ONLY == $this->overrides->getBehaviour()) {
-            $message = 'Client is configured to use the `LOCAL_ONLY` override behavior, thus `forceRefresh()` has no effect.';
+        try {
+            if (null !== $this->overrides && OverrideBehaviour::LOCAL_ONLY == $this->overrides->getBehaviour()) {
+                $message = 'Client is configured to use the `LOCAL_ONLY` override behavior, thus `forceRefresh()` has no effect.';
+                $messageCtx = [
+                    'event_id' => 3202,
+                ];
+                $this->logger->warning($message, $messageCtx);
+
+                return new RefreshResult(InternalLogger::format($message, $messageCtx));
+            }
+
+            if ($this->offline) {
+                $message = 'Client is in offline mode, it cannot initiate HTTP calls.';
+                $messageCtx = [
+                    'event_id' => 3200,
+                ];
+                $this->logger->warning($message, $messageCtx);
+
+                return new RefreshResult(InternalLogger::format($message, $messageCtx));
+            }
+
+            $cacheEntry = $this->cache->load($this->cacheKey);
+            $response = $this->fetcher->fetch($cacheEntry->getEtag());
+            $this->handleResponse($response, $cacheEntry);
+
+            return new RefreshResult($response->getErrorMessage(), $response->getErrorException());
+        } catch (Throwable $exception) {
+            $message = 'Error occurred in the `forceRefresh` method.';
             $messageCtx = [
-                'event_id' => 3202,
+                'event_id' => 1003, 'exception' => $exception,
             ];
-            $this->logger->warning($message, $messageCtx);
-
-            return new RefreshResult(false, InternalLogger::format($message, $messageCtx));
+            return new RefreshResult(InternalLogger::format($message, $messageCtx), $exception);
         }
-
-        if ($this->offline) {
-            $message = 'Client is in offline mode, it cannot initiate HTTP calls.';
-            $this->logger->warning($message, [
-                'event_id' => 3200,
-            ]);
-
-            return new RefreshResult(false, $message);
-        }
-
-        $cacheEntry = $this->cache->load($this->cacheKey);
-        $response = $this->fetcher->fetch($cacheEntry->getEtag());
-        $this->handleResponse($response, $cacheEntry);
-
-        return new RefreshResult(!$response->isFailed(), $response->getError());
     }
 
     /**

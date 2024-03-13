@@ -28,7 +28,7 @@ final class InternalLogger implements LoggerInterface
 
     public function emergency($message, array $context = []): void
     {
-        $this->hooks->fireOnError(self::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::EMERGENCY, $context)) {
             $enriched = $this->enrichMessage($message, $context);
             $this->logger->emergency($enriched, $context);
@@ -37,7 +37,7 @@ final class InternalLogger implements LoggerInterface
 
     public function alert($message, array $context = []): void
     {
-        $this->hooks->fireOnError(self::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::ALERT, $context)) {
             $enriched = $this->enrichMessage($message, $context);
             $this->logger->alert($enriched, $context);
@@ -46,7 +46,7 @@ final class InternalLogger implements LoggerInterface
 
     public function critical($message, array $context = []): void
     {
-        $this->hooks->fireOnError(self::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::CRITICAL, $context)) {
             $enriched = $this->enrichMessage($message, $context);
             $this->logger->critical($enriched, $context);
@@ -55,7 +55,7 @@ final class InternalLogger implements LoggerInterface
 
     public function error($message, array $context = []): void
     {
-        $this->hooks->fireOnError(self::format($message, $context));
+        $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::ERROR, $context)) {
             $enriched = $this->enrichMessage($message, $context);
             $this->logger->error($enriched, $context);
