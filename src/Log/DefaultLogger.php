@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ConfigCat\Log;
 
+use ConfigCat\Utils;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Stringable;
@@ -64,7 +65,7 @@ class DefaultLogger implements LoggerInterface
         $context['timestamp'] = $date->format('Y-m-d\\TH:i:sP');
         $context['level'] = LogLevel::asString($level);
 
-        $final = self::interpolate('[{timestamp}] ConfigCat.{level}: '.$message, $context);
+        $final = self::interpolate('[{timestamp}] ConfigCat.{level}: [{event_id}] '.$message, $context);
 
         if (isset($context['exception'])) {
             $final .= PHP_EOL.$context['exception'];
@@ -80,9 +81,7 @@ class DefaultLogger implements LoggerInterface
     {
         $replace = [];
         foreach ($context as $key => $val) {
-            if (!is_array($val) && (!is_object($val) || method_exists($val, '__toString'))) {
-                $replace['{'.$key.'}'] = $val;
-            }
+            $replace['{'.$key.'}'] = Utils::getStringRepresentation($val);
         }
 
         return strtr((string) $message, $replace);
