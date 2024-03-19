@@ -31,7 +31,12 @@ abstract class Utils
         try {
             return (string) $value;
         } catch (Throwable) { // @phpstan-ignore-line
-            return str_replace(["\r\n", "\r", "\n"], ' ', var_export($value, true));
+            try {
+                return str_replace(["\r\n", "\r", "\n"], ' ', var_export($value, true));
+            }
+            catch (Throwable) {
+                return "<inconvertible value>";
+            }
         }
     }
 
@@ -125,7 +130,7 @@ abstract class Utils
     {
         $timeOffset = $dateTime->getOffset();
 
-        return $dateTime->format($timeOffset ? 'Y-m-d\\TH:i:s.uP' : 'Y-m-d\\TH:i:s.u\Z');
+        return $dateTime->format($timeOffset ? 'Y-m-d\\TH:i:s.vP' : 'Y-m-d\\TH:i:s.v\Z');
     }
 
     public static function isStringList(mixed $value): bool
@@ -137,7 +142,7 @@ abstract class Utils
 
     /**
      * @param list<string>               $items
-     * @param null|callable(int): string $getOmittedItemsText
+     * @param ?callable(int): string $getOmittedItemsText
      */
     public static function formatStringList(array $items, int $maxCount = 0, ?callable $getOmittedItemsText = null, string $separator = ', '): string
     {

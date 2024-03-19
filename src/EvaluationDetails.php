@@ -9,8 +9,8 @@ use Throwable;
 class EvaluationDetails
 {
     /**
-     * @param null|array<string, mixed> $matchedTargetingRule
-     * @param null|array<string, mixed> $matchedPercentageOption
+     * @param ?array<string, mixed> $matchedTargetingRule
+     * @param ?array<string, mixed> $matchedPercentageOption
      *
      * @internal
      */
@@ -111,7 +111,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return null|array<string, mixed> the targeting rule (if any) that matched during the evaluation and was used to return the evaluated value
+     * @return ?array<string, mixed> the targeting rule (if any) that matched during the evaluation and was used to return the evaluated value
      */
     public function getMatchedTargetingRule(): ?array
     {
@@ -119,7 +119,7 @@ class EvaluationDetails
     }
 
     /**
-     * @return null|array<string, mixed> the percentage option (if any) that was used to select the evaluated value
+     * @return ?array<string, mixed> the percentage option (if any) that was used to select the evaluated value
      */
     public function getMatchedPercentageOption(): ?array
     {

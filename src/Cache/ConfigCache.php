@@ -45,7 +45,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      *
      * @param string $key identifier for the cached value
      *
-     * @return ConfigEntry cached value for the given key, or null if it's missing
+     * @return ConfigEntry cached value for the given key, or `ConfigEntry::empty()` if it's missing
      *
      * @throws InvalidArgumentException
      *                                  If the $key is not a legal value
@@ -85,7 +85,7 @@ abstract class ConfigCache implements LoggerAwareInterface
      *
      * @param string $key identifier for the cached value
      *
-     * @return null|string cached value for the given key, or null if it's missing
+     * @return ?string cached value for the given key, or null if it's missing
      */
     abstract protected function get(string $key): ?string;
 

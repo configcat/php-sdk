@@ -91,8 +91,8 @@ final class EvaluateResult
 {
     /**
      * @param array<string, mixed>      $selectedValue
-     * @param null|array<string, mixed> $matchedTargetingRule
-     * @param null|array<string, mixed> $matchedPercentageOption
+     * @param ?array<string, mixed> $matchedTargetingRule
+     * @param ?array<string, mixed> $matchedPercentageOption
      */
     public function __construct(
         public readonly array $selectedValue,
@@ -1159,7 +1159,7 @@ final class RolloutEvaluator
     /**
      * @param array<string, mixed> $condition
      *
-     * @return list<string>
+     * @return string|list<string>
      */
     private function getUserAttributeValueAsStringArray(string $attributeName, mixed $attributeValue, array $condition, string $key): array|string
     {

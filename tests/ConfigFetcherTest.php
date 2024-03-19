@@ -43,7 +43,7 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch('');
 
         $this->assertTrue($response->isNotModified());
-        $this->assertEmpty($response->getConfigEntry()->getETag());
+        $this->assertEmpty($response->getConfigEntry()->getEtag());
         $this->assertEmpty($response->getConfigEntry()->getConfig());
     }
 
@@ -55,7 +55,7 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch('');
 
         $this->assertTrue($response->isFailed());
-        $this->assertEmpty($response->getConfigEntry()->getETag());
+        $this->assertEmpty($response->getConfigEntry()->getEtag());
         $this->assertEmpty($response->getConfigEntry()->getConfig());
     }
 
@@ -68,7 +68,7 @@ class ConfigFetcherTest extends TestCase
         $response = $fetcher->fetch('');
 
         $this->assertTrue($response->isFailed());
-        $this->assertEmpty($response->getConfigEntry()->getETag());
+        $this->assertEmpty($response->getConfigEntry()->getEtag());
         $this->assertEmpty($response->getConfigEntry()->getConfig());
         $this->assertNotEmpty($mockHandler->getLastRequest()->getHeader('X-ConfigCat-UserAgent'));
     }

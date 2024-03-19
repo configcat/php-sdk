@@ -136,12 +136,12 @@ final class InternalLogger implements LoggerInterface
     /**
      * @param mixed[] $context
      */
-    private function enrichMessage(string|Stringable $message, array &$context): string
+    private function enrichMessage(string|Stringable $message, array &$context): string|Stringable
     {
         if (!array_key_exists('event_id', $context)) {
             $context['event_id'] = 0;
         }
 
-        return "{$message}";
+        return $message;
     }
 }
