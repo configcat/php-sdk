@@ -491,7 +491,7 @@ final class ConfigCatClient implements ClientInterface
     /**
      * @return mixed[]
      */
-    private function parseValues(SettingsResult $settingsResult, User $user = null): array
+    private function parseValues(SettingsResult $settingsResult, ?User $user = null): array
     {
         if (empty($settingsResult->settings)) {
             return [];

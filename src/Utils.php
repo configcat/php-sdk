@@ -33,9 +33,8 @@ abstract class Utils
         } catch (Throwable) { // @phpstan-ignore-line
             try {
                 return str_replace(["\r\n", "\r", "\n"], ' ', var_export($value, true));
-            }
-            catch (Throwable) {
-                return "<inconvertible value>";
+            } catch (Throwable) {
+                return '<inconvertible value>';
             }
         }
     }
@@ -141,7 +140,7 @@ abstract class Utils
     }
 
     /**
-     * @param list<string>               $items
+     * @param list<string>           $items
      * @param ?callable(int): string $getOmittedItemsText
      */
     public static function formatStringList(array $items, int $maxCount = 0, ?callable $getOmittedItemsText = null, string $separator = ', '): string
