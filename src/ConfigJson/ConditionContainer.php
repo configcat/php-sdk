@@ -9,11 +9,13 @@ use UnexpectedValueException;
 /**
  * Represents the JSON keys of a condition.
  */
-abstract class ConditionContainer
+final class ConditionContainer
 {
     public const USER_CONDITION = 'u';
     public const PREREQUISITE_FLAG_CONDITION = 'p';
     public const SEGMENT_CONDITION = 's';
+
+    private function __construct() {}
 
     /**
      * @return list<array<string, mixed>>

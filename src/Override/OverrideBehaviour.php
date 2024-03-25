@@ -32,7 +32,7 @@ class OverrideBehaviour
     /**
      * Checks whether a given value is a valid behaviour.
      *
-     * @param $behaviour int The behaviour value to check
+     * @param int $behaviour the behaviour value to check
      *
      * @return bool true when the given value is a valid override behaviour
      */

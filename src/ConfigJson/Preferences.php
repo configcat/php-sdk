@@ -7,7 +7,7 @@ namespace ConfigCat\ConfigJson;
 /**
  * Represents the JSON keys of the Preferences section in the ConfigCat config_v6.json file.
  */
-abstract class Preferences
+final class Preferences
 {
     /**
      * The base url from where the config.json is intended to be downloaded.
@@ -23,4 +23,6 @@ abstract class Preferences
      * The salt that, combined with the feature flag key or segment name, is used to hash values for sensitive text comparisons.
      */
     public const SALT = 's';
+
+    private function __construct() {}
 }

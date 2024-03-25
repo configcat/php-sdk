@@ -9,9 +9,9 @@ namespace ConfigCat\ConfigJson;
  */
 enum PrerequisiteFlagComparator: int
 {
-    /** EQUALS - It matches when the evaluated value of the specified prerequisite flag is equal to the comparison value. */
+    /** EQUALS - Checks whether the evaluated value of the specified prerequisite flag is equal to the comparison value. */
     case EQUALS = 0;
 
-    /** NOT EQUALS - It matches when the evaluated value of the specified prerequisite flag is not equal to the comparison value. */
+    /** NOT EQUALS - Checks whether the evaluated value of the specified prerequisite flag is not equal to the comparison value. */
     case NOT_EQUALS = 1;
 }

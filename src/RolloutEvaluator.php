@@ -90,9 +90,9 @@ final class EvaluateContext
 final class EvaluateResult
 {
     /**
-     * @param array<string, mixed>      $selectedValue
-     * @param null|array<string, mixed> $matchedTargetingRule
-     * @param null|array<string, mixed> $matchedPercentageOption
+     * @param array<string, mixed>  $selectedValue
+     * @param ?array<string, mixed> $matchedTargetingRule
+     * @param ?array<string, mixed> $matchedPercentageOption
      */
     public function __construct(
         public readonly array $selectedValue,
@@ -317,7 +317,7 @@ final class RolloutEvaluator
             return new EvaluateResult($percentageOption, $matchedTargetingRule, $percentageOption);
         }
 
-        throw new UnexpectedValueException('Sum of percentage option percentages are less than 100.');
+        throw new UnexpectedValueException('Sum of percentage option percentages is less than 100.');
     }
 
     /**
@@ -693,6 +693,7 @@ final class RolloutEvaluator
 
             if (false === $index
                 || false === ($sliceLength = filter_var(substr($item, 0, $index), FILTER_VALIDATE_INT))
+                || $sliceLength < 0
                 || '' === ($hash2 = substr($item, $index + 1))) {
                 self::ensureStringComparisonValue(null);
 
@@ -1068,7 +1069,7 @@ final class RolloutEvaluator
             return Utils::numberToString($attributeValue);
         }
         if ($attributeValue instanceof DateTimeInterface) {
-            if (is_double($unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue))) {
+            if (is_double($unixTimeSeconds = Utils::dateTimeToUnixTimeSeconds($attributeValue))) {
                 return Utils::numberToString($unixTimeSeconds);
             }
         } elseif (Utils::isStringList($attributeValue)
@@ -1137,7 +1138,7 @@ final class RolloutEvaluator
     private function getUserAttributeValueAsUnixTimeSeconds(string $attributeName, mixed $attributeValue, array $condition, string $key): float|string
     {
         if ($attributeValue instanceof DateTimeInterface) {
-            $unixTimeSeconds = Utils::dateTimeToUnixSeconds($attributeValue);
+            $unixTimeSeconds = Utils::dateTimeToUnixTimeSeconds($attributeValue);
             if (is_double($unixTimeSeconds)) {
                 return $unixTimeSeconds;
             }
@@ -1158,7 +1159,7 @@ final class RolloutEvaluator
     /**
      * @param array<string, mixed> $condition
      *
-     * @return list<string>
+     * @return list<string>|string
      */
     private function getUserAttributeValueAsStringArray(string $attributeName, mixed $attributeValue, array $condition, string $key): array|string
     {

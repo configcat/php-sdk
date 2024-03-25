@@ -13,8 +13,10 @@ use Throwable;
  *
  * @internal
  */
-abstract class Utils
+final class Utils
 {
+    private function __construct() {}
+
     /**
      * Returns the string representation of a value.
      *
@@ -31,7 +33,11 @@ abstract class Utils
         try {
             return (string) $value;
         } catch (Throwable) { // @phpstan-ignore-line
-            return str_replace(["\r\n", "\r", "\n"], ' ', var_export($value, true));
+            try {
+                return str_replace(["\r\n", "\r", "\n"], ' ', var_export($value, true));
+            } catch (Throwable) {
+                return '<inconvertible value>';
+            }
         }
     }
 
@@ -98,7 +104,7 @@ abstract class Utils
         return floor(microtime(true) * 1000);
     }
 
-    public static function dateTimeToUnixSeconds(DateTimeInterface $dateTime): ?float
+    public static function dateTimeToUnixTimeSeconds(DateTimeInterface $dateTime): ?float
     {
         $timestamp = (float) $dateTime->format('U\.v');
 
@@ -106,7 +112,7 @@ abstract class Utils
         return $timestamp < -62135596800 || 253402300800 <= $timestamp ? null : $timestamp;
     }
 
-    public static function dateTimeFromUnixSeconds(float $timestamp): ?DateTimeInterface
+    public static function dateTimeFromUnixTimeSeconds(float $timestamp): ?DateTimeInterface
     {
         // Allow values only between 0001-01-01T00:00:00.000Z and 9999-12-31T23:59:59.999
         if ($timestamp < -62135596800 || 253402300800 <= $timestamp) {
@@ -125,7 +131,7 @@ abstract class Utils
     {
         $timeOffset = $dateTime->getOffset();
 
-        return $dateTime->format($timeOffset ? 'Y-m-d\\TH:i:s.uP' : 'Y-m-d\\TH:i:s.u\Z');
+        return $dateTime->format($timeOffset ? 'Y-m-d\\TH:i:s.vP' : 'Y-m-d\\TH:i:s.v\Z');
     }
 
     public static function isStringList(mixed $value): bool
@@ -136,8 +142,8 @@ abstract class Utils
     }
 
     /**
-     * @param list<string>               $items
-     * @param null|callable(int): string $getOmittedItemsText
+     * @param list<string>           $items
+     * @param ?callable(int): string $getOmittedItemsText
      */
     public static function formatStringList(array $items, int $maxCount = 0, ?callable $getOmittedItemsText = null, string $separator = ', '): string
     {

@@ -11,4 +11,9 @@ abstract class SettingValueContainer
 {
     public const VALUE = 'v';
     public const VARIATION_ID = 'i';
+
+    /**
+     * @internal
+     */
+    protected function __construct() {}
 }

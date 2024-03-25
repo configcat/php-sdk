@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ConfigCat;
 
 use ConfigCat\Cache\ConfigEntry;
+use Throwable;
 
 /**
  * Represents a fetch response, including its state and body.
@@ -25,19 +26,21 @@ final class FetchResponse
     private function __construct(
         private readonly int $status,
         private readonly ConfigEntry $cacheEntry,
-        private readonly ?string $error = null
+        private readonly ?string $errorMessage = null,
+        private readonly ?Throwable $errorException = null
     ) {}
 
     /**
      * Creates a new response with FAILED status.
      *
-     * @param string $error the reason of the failure
+     * @param string     $errorMessage   the reason of the failure
+     * @param ?Throwable $errorException the related error exception (if any)
      *
      * @return FetchResponse the response
      */
-    public static function failure(string $error): FetchResponse
+    public static function failure(string $errorMessage, ?Throwable $errorException = null): FetchResponse
     {
-        return new FetchResponse(self::FAILED, ConfigEntry::empty(), $error);
+        return new FetchResponse(self::FAILED, ConfigEntry::empty(), $errorMessage, $errorException);
     }
 
     /**
@@ -47,7 +50,7 @@ final class FetchResponse
      */
     public static function notModified(): FetchResponse
     {
-        return new FetchResponse(self::NOT_MODIFIED, ConfigEntry::empty(), null);
+        return new FetchResponse(self::NOT_MODIFIED, ConfigEntry::empty());
     }
 
     /**
@@ -59,7 +62,7 @@ final class FetchResponse
      */
     public static function success(ConfigEntry $entry): FetchResponse
     {
-        return new FetchResponse(self::FETCHED, $entry, null);
+        return new FetchResponse(self::FETCHED, $entry);
     }
 
     /**
@@ -103,12 +106,22 @@ final class FetchResponse
     }
 
     /**
-     * Returns the error if the fetch failed.
+     * Returns the error message if the fetch failed.
      *
-     * @return ?string the error
+     * @return ?string the error message
      */
-    public function getError(): ?string
+    public function getErrorMessage(): ?string
     {
-        return $this->error;
+        return $this->errorMessage;
+    }
+
+    /**
+     * Returns the `Throwable` object related to the error in case of failure (if any).
+     *
+     * @return ?Throwable the error exception
+     */
+    public function getErrorException(): ?Throwable
+    {
+        return $this->errorException;
     }
 }

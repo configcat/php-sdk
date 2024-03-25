@@ -167,7 +167,7 @@ final class ConfigFetcher
                     ];
                     $this->logger->error($message, $messageCtx);
 
-                    return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
+                    return FetchResponse::failure(InternalLogger::format($message, $messageCtx), $ex);
                 }
 
                 return FetchResponse::success($entry);
@@ -193,7 +193,7 @@ final class ConfigFetcher
             $messageCtx = ['event_id' => 1103, 'exception' => $exception];
             $this->logger->error($message, $messageCtx);
 
-            return FetchResponse::failure($message);
+            return FetchResponse::failure($message, $exception);
         }
     }
 }

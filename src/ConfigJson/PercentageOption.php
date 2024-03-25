@@ -9,9 +9,11 @@ use UnexpectedValueException;
 /**
  * Represents the JSON keys of a percentage option.
  */
-abstract class PercentageOption extends SettingValueContainer
+final class PercentageOption extends SettingValueContainer
 {
     public const PERCENTAGE = 'p';
+
+    private function __construct() {}
 
     /**
      * @return list<array<string, mixed>>

@@ -161,7 +161,7 @@ class ConfigCatClientTest extends TestCase
         $this->assertEmpty($keys);
     }
 
-    public function testForceRefresh()
+    public function testForceRefreshSuccess()
     {
         $cache = $this->getMockBuilder(ConfigCache::class)->getMock();
         $client = new ConfigCatClient(
@@ -174,7 +174,33 @@ class ConfigCatClientTest extends TestCase
             ->method('store')
         ;
 
-        $client->forceRefresh();
+        $refreshResult = $client->forceRefresh();
+        $this->assertTrue($refreshResult->isSuccess());
+        $this->assertNull($refreshResult->getErrorMessage());
+        $this->assertNull($refreshResult->getErrorException());
+    }
+
+    public function testForceRefreshFailure()
+    {
+        $cache = $this->getMockBuilder(ConfigCache::class)->getMock();
+
+        $client = new ConfigCatClient(
+            'PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA',
+            [ClientOptions::CACHE => $cache]
+        );
+
+        $exception = new InvalidArgumentException('key cannot be empty');
+
+        $cache
+            ->expects(self::once())
+            ->method('store')
+            ->willThrowException($exception)
+        ;
+
+        $refreshResult = $client->forceRefresh();
+        $this->assertFalse($refreshResult->isSuccess());
+        $this->assertEquals('Error occurred in the `forceRefresh` method.'.PHP_EOL.$exception->getMessage(), $refreshResult->getErrorMessage());
+        $this->assertEquals($exception, $refreshResult->getErrorException());
     }
 
     public function testKeyNotExist()
@@ -468,7 +494,8 @@ class ConfigCatClientTest extends TestCase
         $this->assertTrue($changed);
 
         $this->assertFalse($result->isSuccess());
-        $this->assertEquals('Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400', $result->getError());
+        $this->assertEquals('Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: 400', $result->getErrorMessage());
+        $this->assertNull($result->getErrorException());
     }
 
     public function testEvalDetails()

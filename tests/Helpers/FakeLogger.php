@@ -15,7 +15,7 @@ class FakeLogger implements LoggerInterface
         $context = $event['context'];
         $context['level'] = LogLevel::asString($event['level']);
 
-        $final = self::interpolate('{level} '.$event['message'], $context);
+        $final = self::interpolate('{level} [{event_id}] '.$event['message'], $context);
 
         if (isset($context['exception'])) {
             $final .= PHP_EOL.$context['exception'];
@@ -74,6 +74,7 @@ class FakeLogger implements LoggerInterface
      */
     private function logMsg(int $level, string|Stringable $message, array $context = []): void
     {
+        $context['event_id'] ??= 0;
         $this->events[] = [
             'level' => $level,
             'message' => $message,

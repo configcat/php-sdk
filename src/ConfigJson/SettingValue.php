@@ -11,12 +11,14 @@ use UnexpectedValueException;
 /**
  * Represents the JSON keys of a setting value.
  */
-abstract class SettingValue
+final class SettingValue
 {
     public const BOOLEAN = 'b';
     public const STRING = 's';
     public const INT = 'i';
     public const DOUBLE = 'd';
+
+    private function __construct() {}
 
     /**
      * @throws UnexpectedValueException

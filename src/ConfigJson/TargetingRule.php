@@ -9,11 +9,13 @@ use UnexpectedValueException;
 /**
  * Represents the JSON keys of a targeting rule.
  */
-abstract class TargetingRule
+final class TargetingRule
 {
     public const CONDITIONS = 'c';
     public const SIMPLE_VALUE = 's';
     public const PERCENTAGE_OPTIONS = 'p';
+
+    private function __construct() {}
 
     /**
      * @return list<array<string, mixed>>
