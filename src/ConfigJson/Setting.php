@@ -10,7 +10,7 @@ use UnexpectedValueException;
 /**
  * Represents the JSON keys of a setting.
  */
-abstract class Setting extends SettingValueContainer
+final class Setting extends SettingValueContainer
 {
     public const TYPE = 't';
     public const PERCENTAGE_OPTIONS_ATTRIBUTE = 'a';
@@ -26,6 +26,8 @@ abstract class Setting extends SettingValueContainer
      * @internal
      */
     public const CONFIG_SEGMENTS = '__configSegments';
+
+    private function __construct() {}
 
     /**
      * @return array<string, mixed>

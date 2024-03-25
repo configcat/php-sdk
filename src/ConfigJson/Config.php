@@ -9,7 +9,7 @@ use UnexpectedValueException;
 /**
  * Represents the root JSON keys of a ConfigCat config_v6.json file.
  */
-abstract class Config
+final class Config
 {
     /**
      * Preferences of the config.json, mostly for controlling the redirection behaviour of the SDK.
@@ -25,6 +25,8 @@ abstract class Config
      * Setting definitions.
      */
     public const SETTINGS = 'f';
+
+    private function __construct() {}
 
     /**
      * @param array<string, mixed> $config

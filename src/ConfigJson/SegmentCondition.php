@@ -7,8 +7,10 @@ namespace ConfigCat\ConfigJson;
 /**
  * Represents the JSON keys of a segment condition.
  */
-abstract class SegmentCondition
+final class SegmentCondition
 {
     public const SEGMENT_INDEX = 's';
     public const COMPARATOR = 'c';
+
+    private function __construct() {}
 }
