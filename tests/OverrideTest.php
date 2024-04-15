@@ -16,7 +16,7 @@ use stdClass;
 
 class OverrideTest extends TestCase
 {
-    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_Dictionary()
+    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_Dictionary(): array
     {
         return Utils::withDescription([
             [true, false, true],
@@ -82,23 +82,23 @@ class OverrideTest extends TestCase
             $this->assertNull($evaluationDetails->getErrorMessage());
             $this->assertNull($evaluationDetails->getErrorException());
 
-            $this->assertEquals(Utils::areCompatibleValues($overrideValue, $defaultValue) ? 0 : 1, count($warnings));
+            $this->assertCount(Utils::areCompatibleValues($overrideValue, $defaultValue) ? 0 : 1, $warnings);
         } else {
             $this->assertTrue($evaluationDetails->isDefaultValue());
             $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
             $this->assertNotNull($evaluationDetails->getErrorMessage());
             $this->assertNotNull($evaluationDetails->getErrorException());
 
-            $this->assertEquals(0, count($warnings));
+            $this->assertCount(0, $warnings);
 
             $errors = array_filter($fakeLogger->events, function ($event) {
                 return LogLevel::ERROR === $event['level'] && 1002 === ($event['context']['event_id'] ?? null);
             });
-            $this->assertEquals(1, count($errors));
+            $this->assertCount(1, $errors);
         }
     }
 
-    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_SimplifiedConfig()
+    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_SimplifiedConfig(): array
     {
         return Utils::withDescription([
             ['true', false, true],
@@ -167,19 +167,19 @@ class OverrideTest extends TestCase
                 $this->assertNull($evaluationDetails->getErrorMessage());
                 $this->assertNull($evaluationDetails->getErrorException());
 
-                $this->assertEquals(Utils::areCompatibleValues($overrideValue, $defaultValue) ? 0 : 1, count($warnings));
+                $this->assertCount(Utils::areCompatibleValues($overrideValue, $defaultValue) ? 0 : 1, $warnings);
             } else {
                 $this->assertTrue($evaluationDetails->isDefaultValue());
                 $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
                 $this->assertNotNull($evaluationDetails->getErrorMessage());
                 $this->assertNotNull($evaluationDetails->getErrorException());
 
-                $this->assertEquals(0, count($warnings));
+                $this->assertCount(0, $warnings);
 
                 $errors = array_filter($fakeLogger->events, function ($event) {
                     return LogLevel::ERROR === $event['level'] && 1002 === ($event['context']['event_id'] ?? null);
                 });
-                $this->assertEquals(1, count($errors));
+                $this->assertCount(1, $errors);
             }
         } finally {
             fclose($tempFile);

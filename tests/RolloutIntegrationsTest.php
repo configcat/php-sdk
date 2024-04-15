@@ -16,12 +16,8 @@ class RolloutIntegrationsTest extends TestCase
 
     /**
      * @dataProvider rolloutTestData
-     *
-     * @param mixed $file
-     * @param mixed $sdkKey
-     * @param mixed $kind
      */
-    public function testRolloutIntegration($file, $sdkKey, $kind)
+    public function testRolloutIntegration(mixed $file, mixed $sdkKey, mixed $kind)
     {
         $rows = self::readCsv('tests/data/'.$file);
         $settingKeys = array_slice($rows[0], 4);
@@ -91,7 +87,7 @@ class RolloutIntegrationsTest extends TestCase
             }
         }
 
-        $this->assertEquals(0, count($errors));
+        $this->assertCount(0, $errors);
     }
 
     public function rolloutTestData(): array
@@ -141,7 +137,7 @@ class RolloutIntegrationsTest extends TestCase
         ];
     }
 
-    public function provideTestDataForSpecialCharactersWorks()
+    public function provideTestDataForSpecialCharactersWorks(): array
     {
         return Utils::withDescription([
             ['specialCharacters', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],

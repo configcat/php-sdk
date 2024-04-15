@@ -33,7 +33,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(1, count($requests));
+        $this->assertCount(1, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(Config::deserialize($body), $response->getConfigEntry()->getConfig());
     }
@@ -54,7 +54,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(1, count($requests));
+        $this->assertCount(1, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(Config::deserialize($body), $response->getConfigEntry()->getConfig());
     }
@@ -75,7 +75,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(1, count($requests));
+        $this->assertCount(1, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(Config::deserialize($body), $response->getConfigEntry()->getConfig());
     }
@@ -98,7 +98,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(2, count($requests));
+        $this->assertCount(2, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertEquals(Config::deserialize($secondBody), $response->getConfigEntry()->getConfig());
@@ -122,7 +122,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(2, count($requests));
+        $this->assertCount(2, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertEquals(Config::deserialize($secondBody), $response->getConfigEntry()->getConfig());
@@ -147,7 +147,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(3, count($requests));
+        $this->assertCount(3, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertStringContainsString($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
@@ -173,7 +173,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(3, count($requests));
+        $this->assertCount(3, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::EU_ONLY_URL);
         $this->assertStringContainsString($requests[2]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
@@ -197,7 +197,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(1, count($requests));
+        $this->assertCount(1, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertEquals(Config::deserialize($firstBody), $response->getConfigEntry()->getConfig());
 
@@ -205,7 +205,7 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(2, count($requests));
+        $this->assertCount(2, $requests);
         $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertEquals(Config::deserialize($firstBody), $response->getConfigEntry()->getConfig());
     }
@@ -228,13 +228,13 @@ class DataGovernanceTest extends TestCase
         $response = $fetcher->fetch('');
 
         // Assert
-        $this->assertEquals(2, count($requests));
+        $this->assertCount(2, $requests);
         $this->assertStringContainsString($requests[0]['request']->getUri()->getHost(), self::CUSTOM_CDN_URL);
         $this->assertStringContainsString($requests[1]['request']->getUri()->getHost(), ConfigFetcher::GLOBAL_URL);
         $this->assertEquals(Config::deserialize($secondBody), $response->getConfigEntry()->getConfig());
     }
 
-    private function getHandlerStack(array $responses, array &$container = [])
+    private function getHandlerStack(array $responses, array &$container = []): HandlerStack
     {
         $history = Middleware::history($container);
         $stack = HandlerStack::create(new MockHandler($responses));
@@ -243,7 +243,7 @@ class DataGovernanceTest extends TestCase
         return $stack;
     }
 
-    private function getFetcher($handler, $customUrl = '')
+    private function getFetcher($handler, $customUrl = ''): ConfigFetcher
     {
         return new ConfigFetcher('fakeKey', Utils::getTestLogger(), [
             ClientOptions::CUSTOM_HANDLER => $handler,

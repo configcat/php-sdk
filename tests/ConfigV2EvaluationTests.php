@@ -19,7 +19,7 @@ class ConfigV2EvaluationTests extends TestCase
 {
     private const TEST_DATA_ROOT_PATH = 'tests/data';
 
-    public function provideTestDataForComparisonAttributeConversionToCanonicalStringRepresentation()
+    public function provideTestDataForComparisonAttributeConversionToCanonicalStringRepresentation(): array
     {
         return Utils::withDescription([
             ['numberToStringConversion', .12345, '1'],
@@ -70,7 +70,7 @@ class ConfigV2EvaluationTests extends TestCase
         $this->assertSame($expectedReturnValue, $actualReturnValue);
     }
 
-    public function provideTestDataForComparisonAttributeTrimming()
+    public function provideTestDataForComparisonAttributeTrimming(): array
     {
         return Utils::withDescription([
             ['isoneof', 'no trim'],
@@ -181,7 +181,7 @@ class ConfigV2EvaluationTests extends TestCase
     }
 
     /**
-     * @dataProvider provideTestDataForComparisonValueTrimming_Test
+     * @dataProvider provideTestDataForComparisonValueTrimming
      */
     public function testComparisonValueTrimming(string $key, string $expectedReturnValue)
     {
