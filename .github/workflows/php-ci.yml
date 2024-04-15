@@ -44,7 +44,7 @@ jobs:
     - name: Execute tests
       run: vendor/bin/phpunit
 
-  coverage:
+  analysis:
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -76,13 +76,14 @@ jobs:
         composer install --prefer-dist --no-progress --no-suggest --no-plugins
 
     - name: Execute coverage
-      run: vendor/bin/phpunit --coverage-clover clover.xml
+      run: vendor/bin/phpunit --coverage-clover=coverage.xml --log-junit=tests.xml
+      env:
+        XDEBUG_MODE: coverage
       
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-      with:
-        fail_ci_if_error: true
-        files: ./clover.xml
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   php-cs-fixer:
     runs-on: ubuntu-latest
