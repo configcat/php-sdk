@@ -43,20 +43,17 @@ class CacheTest extends TestCase
     public function testCustomCacheKeepsCurrentInMemory()
     {
         $cache = new NotCachingConfigCache();
-        $cache->store("key", ConfigEntry::fromConfigJson(self::TEST_JSON, "etag", 1234567));
+        $cache->store('key', ConfigEntry::fromConfigJson(self::TEST_JSON, 'etag', 1234567));
 
-        $cached = $cache->load("key");
+        $cached = $cache->load('key');
 
         $this->assertEquals(self::TEST_JSON, $cached->getConfigJson());
-        $this->assertEquals("etag", $cached->getEtag());
+        $this->assertEquals('etag', $cached->getEtag());
         $this->assertEquals(1234567, $cached->getFetchTime());
     }
 
     /**
      * @dataProvider cacheKeyTestData
-     *
-     * @param mixed $sdkKey
-     * @param mixed $cacheKey
      */
     public function testCacheKeyGeneration(mixed $sdkKey, mixed $cacheKey)
     {
@@ -94,8 +91,8 @@ class CacheTest extends TestCase
     }
 }
 
-class NotCachingConfigCache extends ConfigCache {
-
+class NotCachingConfigCache extends ConfigCache
+{
     protected function get(string $key): ?string
     {
         return null;

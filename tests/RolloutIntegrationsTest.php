@@ -16,10 +16,6 @@ class RolloutIntegrationsTest extends TestCase
 
     /**
      * @dataProvider rolloutTestData
-     *
-     * @param mixed $file
-     * @param mixed $sdkKey
-     * @param mixed $kind
      */
     public function testRolloutIntegration(mixed $file, mixed $sdkKey, mixed $kind)
     {

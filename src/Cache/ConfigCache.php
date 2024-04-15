@@ -86,11 +86,6 @@ abstract class ConfigCache implements LoggerAwareInterface
         $this->logger = $logger;
     }
 
-    private function readFromMemory(string $key): ConfigEntry
-    {
-        return self::$inMemoryCache[$key] ?? ConfigEntry::empty();
-    }
-
     /**
      * Reads the value identified by the given $key from the underlying cache.
      *
@@ -107,4 +102,9 @@ abstract class ConfigCache implements LoggerAwareInterface
      * @param string $value the value to cache
      */
     abstract protected function set(string $key, string $value): void;
+
+    private function readFromMemory(string $key): ConfigEntry
+    {
+        return self::$inMemoryCache[$key] ?? ConfigEntry::empty();
+    }
 }
