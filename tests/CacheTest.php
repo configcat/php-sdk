@@ -44,7 +44,7 @@ class CacheTest extends TestCase
 
     public function testCustomCacheKeepsCurrentInMemory()
     {
-        $cache = new NotCachingConfigCache();
+        $cache = new TestCache();
         $cache->store('key', ConfigEntry::fromConfigJson(self::TEST_JSON, 'etag', 1234567));
 
         $cached = $cache->load('key');
@@ -56,7 +56,7 @@ class CacheTest extends TestCase
 
     public function testThrowingCacheKeepsCurrentInMemory()
     {
-        $cache = new ThrowingConfigCache();
+        $cache = new TestCache(true);
         $cache->setLogger(new NullLogger());
         $cache->store('key', ConfigEntry::fromConfigJson(self::TEST_JSON, 'etag', 1234567));
 
@@ -65,6 +65,37 @@ class CacheTest extends TestCase
         $this->assertEquals(self::TEST_JSON, $cached->getConfigJson());
         $this->assertEquals('etag', $cached->getEtag());
         $this->assertEquals(1234567, $cached->getFetchTime());
+    }
+
+    public function testCacheLoadValueFromCacheInMemory()
+    {
+        $secondValue = '{"f":{"testKey":{"t":1,"v":{"s":"testValue"}}}}';
+
+        $cache = new TestCache();
+        $cache->setLogger(new NullLogger());
+        $cache->store('key', ConfigEntry::fromConfigJson(self::TEST_JSON, 'etag', 1234567));
+
+        $cached = $cache->load('key');
+
+        $this->assertEquals(self::TEST_JSON, $cached->getConfigJson());
+        $this->assertEquals('etag', $cached->getEtag());
+        $this->assertEquals(1234567, $cached->getFetchTime());
+
+        $cache->setDefaultValue(ConfigEntry::fromConfigJson($secondValue, 'etag2', 12345678)->serialize());
+
+        $cached = $cache->load('key');
+
+        $this->assertEquals($secondValue, $cached->getConfigJson());
+        $this->assertEquals('etag2', $cached->getEtag());
+        $this->assertEquals(12345678, $cached->getFetchTime());
+
+        $cache->setThrowException(true);
+
+        $cached = $cache->load('key');
+
+        $this->assertEquals($secondValue, $cached->getConfigJson());
+        $this->assertEquals('etag2', $cached->getEtag());
+        $this->assertEquals(12345678, $cached->getFetchTime());
     }
 
     /**
@@ -106,27 +137,34 @@ class CacheTest extends TestCase
     }
 }
 
-class NotCachingConfigCache extends ConfigCache
+class TestCache extends ConfigCache
 {
-    protected function get(string $key): ?string
+    private bool $throwException;
+
+    private ?string $defaultValue;
+
+    public function __construct($throwException = false, $defaultValue = null)
     {
-        return null;
+        $this->throwException = $throwException;
+        $this->defaultValue = $defaultValue;
     }
 
-    protected function set(string $key, string $value): void
+    public function setDefaultValue(string $value): void
     {
-        // do nothing
+        $this->defaultValue = $value;
     }
-}
 
-class ThrowingConfigCache extends ConfigCache
-{
+    public function setThrowException(bool $throw): void
+    {
+        $this->throwException = $throw;
+    }
+
     /**
      * @throws Exception
      */
     protected function get(string $key): ?string
     {
-        throw new Exception();
+        return $this->throwException ? throw new Exception() : $this->defaultValue;
     }
 
     /**
@@ -134,6 +172,8 @@ class ThrowingConfigCache extends ConfigCache
      */
     protected function set(string $key, string $value): void
     {
-        throw new Exception();
+        if ($this->throwException) {
+            throw new Exception();
+        }
     }
 }

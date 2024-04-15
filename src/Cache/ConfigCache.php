@@ -68,7 +68,10 @@ abstract class ConfigCache implements LoggerAwareInterface
                 return self::readFromMemory($key);
             }
 
-            return ConfigEntry::fromCached($cached);
+            $fromCache = ConfigEntry::fromCached($cached);
+            self::$inMemoryCache[$key] = $fromCache;
+
+            return $fromCache;
         } catch (Throwable $exception) {
             $this->logger->error('Error occurred while reading the cache.', [
                 'event_id' => 2200, 'exception' => $exception,

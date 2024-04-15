@@ -40,7 +40,7 @@ final class ConfigFetcher
      *
      * @param string         $sdkKey  the SDK Key used to communicate with the ConfigCat services
      * @param InternalLogger $logger  the logger instance
-     * @param array<mixed>   $options additional configuration options
+     * @param mixed[]        $options additional configuration options
      *
      * @throws InvalidArgumentException if the $sdkKey, the $logger or the $cache is not legal
      */
