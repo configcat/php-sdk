@@ -8,9 +8,11 @@ use ConfigCat\ClientOptions;
 use ConfigCat\ConfigCatClient;
 use ConfigCat\Http\GuzzleFetchClient;
 use DateTime;
+use Exception;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 class CacheTest extends TestCase
 {
@@ -43,6 +45,19 @@ class CacheTest extends TestCase
     public function testCustomCacheKeepsCurrentInMemory()
     {
         $cache = new NotCachingConfigCache();
+        $cache->store('key', ConfigEntry::fromConfigJson(self::TEST_JSON, 'etag', 1234567));
+
+        $cached = $cache->load('key');
+
+        $this->assertEquals(self::TEST_JSON, $cached->getConfigJson());
+        $this->assertEquals('etag', $cached->getEtag());
+        $this->assertEquals(1234567, $cached->getFetchTime());
+    }
+
+    public function testThrowingCacheKeepsCurrentInMemory()
+    {
+        $cache = new ThrowingConfigCache();
+        $cache->setLogger(new NullLogger());
         $cache->store('key', ConfigEntry::fromConfigJson(self::TEST_JSON, 'etag', 1234567));
 
         $cached = $cache->load('key');
@@ -101,5 +116,24 @@ class NotCachingConfigCache extends ConfigCache
     protected function set(string $key, string $value): void
     {
         // do nothing
+    }
+}
+
+class ThrowingConfigCache extends ConfigCache
+{
+    /**
+     * @throws Exception
+     */
+    protected function get(string $key): ?string
+    {
+        throw new Exception();
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function set(string $key, string $value): void
+    {
+        throw new Exception();
     }
 }
