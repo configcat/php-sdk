@@ -119,7 +119,7 @@ final class Utils
             return null;
         }
 
-        $dateTime = DateTimeImmutable::createFromFormat('U\\.v', sprintf('%1.3F', $timestamp));
+        $dateTime = DateTimeImmutable::createFromFormat('U\.v', sprintf('%1.3F', $timestamp));
         if (!$dateTime) {
             return null;
         }
@@ -131,7 +131,7 @@ final class Utils
     {
         $timeOffset = $dateTime->getOffset();
 
-        return $dateTime->format($timeOffset ? 'Y-m-d\\TH:i:s.vP' : 'Y-m-d\\TH:i:s.v\Z');
+        return $dateTime->format($timeOffset ? 'Y-m-d\TH:i:s.vP' : 'Y-m-d\TH:i:s.v\Z');
     }
 
     public static function isStringList(mixed $value): bool

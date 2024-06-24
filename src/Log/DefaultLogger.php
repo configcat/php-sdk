@@ -62,7 +62,7 @@ class DefaultLogger implements LoggerInterface
     private static function logMsg(int $level, string|Stringable $message, array $context = []): void
     {
         $date = new DateTimeImmutable();
-        $context['timestamp'] = $date->format('Y-m-d\\TH:i:sP');
+        $context['timestamp'] = $date->format('Y-m-d\TH:i:sP');
         $context['level'] = LogLevel::asString($level);
 
         $final = self::interpolate('[{timestamp}] ConfigCat.{level}: [{event_id}] '.$message, $context);
