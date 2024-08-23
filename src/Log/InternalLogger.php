@@ -26,7 +26,7 @@ final class InternalLogger implements LoggerInterface
         private readonly Hooks $hooks
     ) {}
 
-    public function emergency($message, array $context = []): void
+    public function emergency(string|Stringable $message, array $context = []): void
     {
         $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::EMERGENCY, $context)) {
@@ -35,7 +35,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function alert($message, array $context = []): void
+    public function alert(string|Stringable $message, array $context = []): void
     {
         $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::ALERT, $context)) {
@@ -44,7 +44,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function critical($message, array $context = []): void
+    public function critical(string|Stringable $message, array $context = []): void
     {
         $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::CRITICAL, $context)) {
@@ -53,7 +53,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function error($message, array $context = []): void
+    public function error(string|Stringable $message, array $context = []): void
     {
         $this->hooks->fireOnError(self::format($message, $context), $context['exception'] ?? null);
         if ($this->shouldLog(LogLevel::ERROR, $context)) {
@@ -62,7 +62,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function warning($message, array $context = []): void
+    public function warning(string|Stringable $message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::WARNING, $context)) {
             $enriched = $this->enrichMessage($message, $context);
@@ -70,7 +70,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function notice($message, array $context = []): void
+    public function notice(string|Stringable $message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::NOTICE, $context)) {
             $enriched = $this->enrichMessage($message, $context);
@@ -78,7 +78,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function info($message, array $context = []): void
+    public function info(string|Stringable $message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::INFO, $context)) {
             $enriched = $this->enrichMessage($message, $context);
@@ -86,7 +86,7 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function debug($message, array $context = []): void
+    public function debug(string|Stringable $message, array $context = []): void
     {
         if ($this->shouldLog(LogLevel::DEBUG, $context)) {
             $enriched = $this->enrichMessage($message, $context);
@@ -94,7 +94,8 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    public function log($level, $message, array $context = []): void
+    /** @phpstan-ignore-next-line  */
+    public function log($level, string|Stringable $message, array $context = []): void
     {
         // Do nothing, only the leveled methods should be used.
     }
