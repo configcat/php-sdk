@@ -94,7 +94,6 @@ final class InternalLogger implements LoggerInterface
         }
     }
 
-    /** @phpstan-ignore-next-line  */
     public function log($level, string|Stringable $message, array $context = []): void
     {
         // Do nothing, only the leveled methods should be used.

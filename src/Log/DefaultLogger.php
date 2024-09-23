@@ -51,7 +51,6 @@ class DefaultLogger implements LoggerInterface
         self::logMsg(LogLevel::DEBUG, $message, $context);
     }
 
-    /** @phpstan-ignore-next-line  */
     public function log($level, string|Stringable $message, array $context = []): void
     {
         // Do nothing, only the leveled methods should be used.
