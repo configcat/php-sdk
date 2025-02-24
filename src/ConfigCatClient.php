@@ -181,9 +181,9 @@ final class ConfigCatClient implements ClientInterface
                 $settingsResult->fetchTime
             )->getValue();
         } catch (Throwable $exception) {
-            $message = "Error occurred in the `getValue` method while evaluating setting '".$key."'. ".
-                'Returning the `defaultValue` parameter that you specified '.
-                "in your application: '".Utils::getStringRepresentation($defaultValue)."'.";
+            $message = "Error occurred in the `getValue` method while evaluating setting '".$key."'. "
+                .'Returning the `defaultValue` parameter that you specified '
+                ."in your application: '".Utils::getStringRepresentation($defaultValue)."'.";
             $messageCtx = [
                 'event_id' => 1002, 'exception' => $exception,
             ];
@@ -228,9 +228,9 @@ final class ConfigCatClient implements ClientInterface
 
             return $this->evaluate($key, $settingsResult->settings, $defaultValue, $user, $settingsResult->fetchTime);
         } catch (Throwable $exception) {
-            $message = "Error occurred in the `getValueDetails` method while evaluating setting '".$key."'. ".
-                'Returning the `defaultValue` parameter that you specified in '.
-                "your application: '".Utils::getStringRepresentation($defaultValue)."'.";
+            $message = "Error occurred in the `getValueDetails` method while evaluating setting '".$key."'. "
+                .'Returning the `defaultValue` parameter that you specified in '
+                ."your application: '".Utils::getStringRepresentation($defaultValue)."'.";
             $messageCtx = [
                 'event_id' => 1002, 'exception' => $exception,
             ];
@@ -461,9 +461,9 @@ final class ConfigCatClient implements ClientInterface
     private function checkSettingAvailable(SettingsResult $settingsResult, string $key, mixed $defaultValue): ?string
     {
         if (!$settingsResult->hasConfigJson) {
-            $message = "Config JSON is not present when evaluating setting '".$key."'. ".
-                'Returning the `defaultValue` parameter that you specified in '.
-                "your application: '".Utils::getStringRepresentation($defaultValue)."'.";
+            $message = "Config JSON is not present when evaluating setting '".$key."'. "
+                .'Returning the `defaultValue` parameter that you specified in '
+                ."your application: '".Utils::getStringRepresentation($defaultValue)."'.";
             $messageCtx = [
                 'event_id' => 1000,
             ];
@@ -473,10 +473,10 @@ final class ConfigCatClient implements ClientInterface
         }
 
         if (!array_key_exists($key, $settingsResult->settings)) {
-            $message = "Failed to evaluate setting '".$key."' (the key was not found in config JSON). ".
-                'Returning the `defaultValue` parameter that you specified in your '.
-                "application: '".Utils::getStringRepresentation($defaultValue)."'. ".
-                'Available keys: ['.(!empty($settingsResult->settings) ? "'".implode("', '", array_keys($settingsResult->settings))."'" : '').'].';
+            $message = "Failed to evaluate setting '".$key."' (the key was not found in config JSON). "
+                .'Returning the `defaultValue` parameter that you specified in your '
+                ."application: '".Utils::getStringRepresentation($defaultValue)."'. "
+                .'Available keys: ['.(!empty($settingsResult->settings) ? "'".implode("', '", array_keys($settingsResult->settings))."'" : '').'].';
             $messageCtx = [
                 'event_id' => 1001,
             ];

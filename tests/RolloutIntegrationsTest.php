@@ -137,16 +137,6 @@ class RolloutIntegrationsTest extends TestCase
         ];
     }
 
-    public function provideTestDataForSpecialCharactersWorks(): array
-    {
-        return Utils::withDescription([
-            ['specialCharacters', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],
-            ['specialCharactersHashed', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],
-        ], function ($testCase) {
-            return "settingKey: {$testCase[0]} | userId: {$testCase[1]}";
-        });
-    }
-
     /**
      * @dataProvider provideTestDataForSpecialCharactersWorks
      */
@@ -162,6 +152,16 @@ class RolloutIntegrationsTest extends TestCase
         $actualReturnValue = $client->getValue($settingKey, null, $user);
 
         $this->assertSame($expectedReturnValue, $actualReturnValue);
+    }
+
+    public function provideTestDataForSpecialCharactersWorks(): array
+    {
+        return Utils::withDescription([
+            ['specialCharacters', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],
+            ['specialCharactersHashed', 'äöüÄÖÜçéèñışğâ¢™✓😀', 'äöüÄÖÜçéèñışğâ¢™✓😀'],
+        ], function ($testCase) {
+            return "settingKey: {$testCase[0]} | userId: {$testCase[1]}";
+        });
     }
 
     private static function readCsv($file): array

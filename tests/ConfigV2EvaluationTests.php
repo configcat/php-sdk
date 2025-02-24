@@ -19,6 +19,30 @@ class ConfigV2EvaluationTests extends TestCase
 {
     private const TEST_DATA_ROOT_PATH = 'tests/data';
 
+    /**
+     * @dataProvider provideTestDataForComparisonAttributeConversionToCanonicalStringRepresentation
+     */
+    public function testComparisonAttributeConversionToCanonicalStringRepresentation(string $key, mixed $customAttributeValue, string $expectedReturnValue)
+    {
+        $clientOptions = [
+            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
+                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_attribute_conversion.json'),
+                OverrideBehaviour::LOCAL_ONLY
+            ),
+        ];
+
+        $client = new ConfigCatClient('local-only', $clientOptions);
+
+        $user = new User('12345', null, null, [
+            'Custom1' => $customAttributeValue,
+        ]);
+
+        $defaultValue = 'default';
+        $actualReturnValue = $client->getValue($key, $defaultValue, $user);
+
+        $this->assertSame($expectedReturnValue, $actualReturnValue);
+    }
+
     public function provideTestDataForComparisonAttributeConversionToCanonicalStringRepresentation(): array
     {
         return Utils::withDescription([
@@ -47,21 +71,23 @@ class ConfigV2EvaluationTests extends TestCase
     }
 
     /**
-     * @dataProvider provideTestDataForComparisonAttributeConversionToCanonicalStringRepresentation
+     * @dataProvider provideTestDataForComparisonAttributeTrimming
      */
-    public function testComparisonAttributeConversionToCanonicalStringRepresentation(string $key, mixed $customAttributeValue, string $expectedReturnValue)
+    public function testComparisonAttributeTrimming(string $key, string $expectedReturnValue)
     {
         $clientOptions = [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
-                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_attribute_conversion.json'),
+                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_attribute_trimming.json'),
                 OverrideBehaviour::LOCAL_ONLY
             ),
         ];
 
         $client = new ConfigCatClient('local-only', $clientOptions);
 
-        $user = new User('12345', null, null, [
-            'Custom1' => $customAttributeValue,
+        $user = new User(' 12345 ', null, '[" USA "]', [
+            'Version' => ' 1.0.0 ',
+            'Number' => ' 3 ',
+            'Date' => ' 1705253400 ',
         ]);
 
         $defaultValue = 'default';
@@ -118,23 +144,23 @@ class ConfigV2EvaluationTests extends TestCase
     }
 
     /**
-     * @dataProvider provideTestDataForComparisonAttributeTrimming
+     * @dataProvider provideTestDataForComparisonValueTrimming
      */
-    public function testComparisonAttributeTrimming(string $key, string $expectedReturnValue)
+    public function testComparisonValueTrimming(string $key, string $expectedReturnValue)
     {
         $clientOptions = [
             ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
-                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_attribute_trimming.json'),
+                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_value_trimming.json'),
                 OverrideBehaviour::LOCAL_ONLY
             ),
         ];
 
         $client = new ConfigCatClient('local-only', $clientOptions);
 
-        $user = new User(' 12345 ', null, '[" USA "]', [
-            'Version' => ' 1.0.0 ',
-            'Number' => ' 3 ',
-            'Date' => ' 1705253400 ',
+        $user = new User('12345', null, '["USA"]', [
+            'Version' => '1.0.0',
+            'Number' => '3',
+            'Date' => '1705253400',
         ]);
 
         $defaultValue = 'default';
@@ -180,32 +206,6 @@ class ConfigV2EvaluationTests extends TestCase
         });
     }
 
-    /**
-     * @dataProvider provideTestDataForComparisonValueTrimming
-     */
-    public function testComparisonValueTrimming(string $key, string $expectedReturnValue)
-    {
-        $clientOptions = [
-            ClientOptions::FLAG_OVERRIDES => new FlagOverrides(
-                OverrideDataSource::localFile(self::TEST_DATA_ROOT_PATH.'/comparison_value_trimming.json'),
-                OverrideBehaviour::LOCAL_ONLY
-            ),
-        ];
-
-        $client = new ConfigCatClient('local-only', $clientOptions);
-
-        $user = new User('12345', null, '["USA"]', [
-            'Version' => '1.0.0',
-            'Number' => '3',
-            'Date' => '1705253400',
-        ]);
-
-        $defaultValue = 'default';
-        $actualReturnValue = $client->getValue($key, $defaultValue, $user);
-
-        $this->assertSame($expectedReturnValue, $actualReturnValue);
-    }
-
     public function testUserObjectAttributeValueConversionTextComparisons()
     {
         $fakeLogger = new FakeLogger();
@@ -234,6 +234,30 @@ class ConfigV2EvaluationTests extends TestCase
         $message = FakeLogger::formatMessage($event);
         $expectedAttributeValueText = '42';
         $this->assertSame("WARNING [3005] Evaluation of condition (User.{$customAttributeName} EQUALS '{$expectedAttributeValueText}') for setting '{$key}' may not produce the expected result (the User.{$customAttributeName} attribute is not a string value, thus it was automatically converted to the string value '{$expectedAttributeValueText}'). Please make sure that using a non-string value was intended.", $message);
+    }
+
+    /**
+     * @dataProvider provideTestDataForUserObjectAttributeValueConversion_NonTextComparisons
+     */
+    public function testUserObjectAttributeValueConversionNonTextComparisons(
+        string $sdkKey,
+        string $key,
+        ?string $userId,
+        string $customAttributeName,
+        mixed $customAttributeValue,
+        mixed $expectedReturnValue
+    ) {
+        $client = new ConfigCatClient($sdkKey);
+
+        $user = isset($userId)
+            ? new User($userId, null, null, [
+                $customAttributeName => $customAttributeValue,
+            ])
+            : null;
+
+        $evaluationDetails = $client->getValueDetails($key, null, $user);
+
+        $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
     }
 
     public function provideTestDataForUserObjectAttributeValueConversion_NonTextComparisons()
@@ -329,41 +353,6 @@ class ConfigV2EvaluationTests extends TestCase
     }
 
     /**
-     * @dataProvider provideTestDataForUserObjectAttributeValueConversion_NonTextComparisons
-     */
-    public function testUserObjectAttributeValueConversionNonTextComparisons(
-        string $sdkKey,
-        string $key,
-        ?string $userId,
-        string $customAttributeName,
-        mixed $customAttributeValue,
-        mixed $expectedReturnValue
-    ) {
-        $client = new ConfigCatClient($sdkKey);
-
-        $user = isset($userId)
-            ? new User($userId, null, null, [
-                $customAttributeName => $customAttributeValue,
-            ])
-            : null;
-
-        $evaluationDetails = $client->getValueDetails($key, null, $user);
-
-        $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
-    }
-
-    public function provideTestDataForPrerequisiteFlagCircularDependency()
-    {
-        return Utils::withDescription([
-            ['key1', "'key1' -> 'key1'"],
-            ['key2', "'key2' -> 'key3' -> 'key2'"],
-            ['key4', "'key4' -> 'key3' -> 'key2' -> 'key3'"],
-        ], function ($testCase) {
-            return "key: {$testCase[0]} | dependencyCycle: {$testCase[1]}";
-        });
-    }
-
-    /**
      * @dataProvider provideTestDataForPrerequisiteFlagCircularDependency
      */
     public function testPrerequisiteFlagCircularDependency(string $key, string $dependencyCycle)
@@ -387,40 +376,14 @@ class ConfigV2EvaluationTests extends TestCase
         $this->assertStringContainsString($dependencyCycle, $exception->getMessage());
     }
 
-    public function provideTestDataForPrerequisiteFlagComparisonValueTypeMismatch()
+    public function provideTestDataForPrerequisiteFlagCircularDependency()
     {
-        // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
         return Utils::withDescription([
-            ['stringDependsOnBool', 'mainBoolFlag', true, 'Dog'],
-            ['stringDependsOnBool', 'mainBoolFlag', false, 'Cat'],
-            ['stringDependsOnBool', 'mainBoolFlag', '1', null],
-            ['stringDependsOnBool', 'mainBoolFlag', 1, null],
-            ['stringDependsOnBool', 'mainBoolFlag', 1.0, null],
-            ['stringDependsOnBool', 'mainBoolFlag', [true], null],
-            ['stringDependsOnBool', 'mainBoolFlag', null, null],
-            ['stringDependsOnString', 'mainStringFlag', 'private', 'Dog'],
-            ['stringDependsOnString', 'mainStringFlag', 'Private', 'Cat'],
-            ['stringDependsOnString', 'mainStringFlag', true, null],
-            ['stringDependsOnString', 'mainStringFlag', 1, null],
-            ['stringDependsOnString', 'mainStringFlag', 1.0, null],
-            ['stringDependsOnString', 'mainStringFlag', ['private'], null],
-            ['stringDependsOnString', 'mainStringFlag', null, null],
-            ['stringDependsOnInt', 'mainIntFlag', 2, 'Dog'],
-            ['stringDependsOnInt', 'mainIntFlag', 1, 'Cat'],
-            ['stringDependsOnInt', 'mainIntFlag', '2', null],
-            ['stringDependsOnInt', 'mainIntFlag', true, null],
-            ['stringDependsOnInt', 'mainIntFlag', 2.0, null],
-            ['stringDependsOnInt', 'mainIntFlag', [2], null],
-            ['stringDependsOnInt', 'mainIntFlag', null, null],
-            ['stringDependsOnDouble', 'mainDoubleFlag', 0.1, 'Dog'],
-            ['stringDependsOnDouble', 'mainDoubleFlag', 0.11, 'Cat'],
-            ['stringDependsOnDouble', 'mainDoubleFlag', '0.1', null],
-            ['stringDependsOnDouble', 'mainDoubleFlag', true, null],
-            ['stringDependsOnDouble', 'mainDoubleFlag', 1, null],
-            ['stringDependsOnDouble', 'mainDoubleFlag', [0.1], null],
-            ['stringDependsOnDouble', 'mainDoubleFlag', null, null],
+            ['key1', "'key1' -> 'key1'"],
+            ['key2', "'key2' -> 'key3' -> 'key2'"],
+            ['key4', "'key4' -> 'key3' -> 'key2' -> 'key3'"],
         ], function ($testCase) {
-            return "key: {$testCase[0]} | prerequisiteFlagKey: {$testCase[1]} | prerequisiteFlagValue: {$testCase[2]}";
+            return "key: {$testCase[0]} | dependencyCycle: {$testCase[1]}";
         });
     }
 
@@ -462,28 +425,40 @@ class ConfigV2EvaluationTests extends TestCase
         }
     }
 
-    public function provideTestDataForPrerequisiteFlagOverride()
+    public function provideTestDataForPrerequisiteFlagComparisonValueTypeMismatch()
     {
         // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
         return Utils::withDescription([
-            ['stringDependsOnString', '1', 'john@sensitivecompany.com', null, 'Dog'],
-            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
-            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
-            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
-            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', null, 'Cat'],
-            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
-            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
-            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
-            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', null, 'Dog'],
-            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
-            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Cat'],
-            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
-            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', null, 'Cat'],
-            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
-            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
-            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnBool', 'mainBoolFlag', true, 'Dog'],
+            ['stringDependsOnBool', 'mainBoolFlag', false, 'Cat'],
+            ['stringDependsOnBool', 'mainBoolFlag', '1', null],
+            ['stringDependsOnBool', 'mainBoolFlag', 1, null],
+            ['stringDependsOnBool', 'mainBoolFlag', 1.0, null],
+            ['stringDependsOnBool', 'mainBoolFlag', [true], null],
+            ['stringDependsOnBool', 'mainBoolFlag', null, null],
+            ['stringDependsOnString', 'mainStringFlag', 'private', 'Dog'],
+            ['stringDependsOnString', 'mainStringFlag', 'Private', 'Cat'],
+            ['stringDependsOnString', 'mainStringFlag', true, null],
+            ['stringDependsOnString', 'mainStringFlag', 1, null],
+            ['stringDependsOnString', 'mainStringFlag', 1.0, null],
+            ['stringDependsOnString', 'mainStringFlag', ['private'], null],
+            ['stringDependsOnString', 'mainStringFlag', null, null],
+            ['stringDependsOnInt', 'mainIntFlag', 2, 'Dog'],
+            ['stringDependsOnInt', 'mainIntFlag', 1, 'Cat'],
+            ['stringDependsOnInt', 'mainIntFlag', '2', null],
+            ['stringDependsOnInt', 'mainIntFlag', true, null],
+            ['stringDependsOnInt', 'mainIntFlag', 2.0, null],
+            ['stringDependsOnInt', 'mainIntFlag', [2], null],
+            ['stringDependsOnInt', 'mainIntFlag', null, null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', 0.1, 'Dog'],
+            ['stringDependsOnDouble', 'mainDoubleFlag', 0.11, 'Cat'],
+            ['stringDependsOnDouble', 'mainDoubleFlag', '0.1', null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', true, null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', 1, null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', [0.1], null],
+            ['stringDependsOnDouble', 'mainDoubleFlag', null, null],
         ], function ($testCase) {
-            return "key: {$testCase[0]} | userId: {$testCase[1]} | email: {$testCase[2]} | overrideBehaviour: {$testCase[3]}";
+            return "key: {$testCase[0]} | prerequisiteFlagKey: {$testCase[1]} | prerequisiteFlagValue: {$testCase[2]}";
         });
     }
 
@@ -522,18 +497,26 @@ class ConfigV2EvaluationTests extends TestCase
         }
     }
 
-    public function provideTestDataForConfigSaltAndSegmentsOverride()
+    public function provideTestDataForPrerequisiteFlagOverride()
     {
         // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
         return Utils::withDescription([
-            ['developerAndBetaUserSegment', '1', 'john@example.com', null, false],
-            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, false],
-            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
-            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_ONLY, true],
-            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', null, true],
-            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, true],
-            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
-            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', null, 'Dog'],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+            ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', null, 'Cat'],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+            ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', null, 'Dog'],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Cat'],
+            ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', null, 'Cat'],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+            ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, null],
         ], function ($testCase) {
             return "key: {$testCase[0]} | userId: {$testCase[1]} | email: {$testCase[2]} | overrideBehaviour: {$testCase[3]}";
         });
@@ -574,21 +557,20 @@ class ConfigV2EvaluationTests extends TestCase
         }
     }
 
-    public function provideTestDataForEvaluationDetailsMatchedEvaluationRuleAndPercantageOption()
+    public function provideTestDataForConfigSaltAndSegmentsOverride()
     {
         // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
         return Utils::withDescription([
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', null, null, null, 'Cat', false, false],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', null, null, 'Cat', false, false],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@example.com', null, 'Dog', true, false],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', null, 'Cat', false, false],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', '', 'Frog', true, true],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', 'US', 'Fish', true, true],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', null, 'Cat', false, false],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', '', 'Falcon', false, true],
-            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', 'US', 'Spider', false, true],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', null, false],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, false],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
+            ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_ONLY, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', null, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
+            ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_ONLY, null],
         ], function ($testCase) {
-            return "sdkKey: {$testCase[0]} | key: {$testCase[1]} | userId: {$testCase[2]} | email: {$testCase[3]} | percentageBase: {$testCase[4]}";
+            return "key: {$testCase[0]} | userId: {$testCase[1]} | email: {$testCase[2]} | overrideBehaviour: {$testCase[3]}";
         });
     }
 
@@ -618,5 +600,23 @@ class ConfigV2EvaluationTests extends TestCase
         $this->assertSame($expectedReturnValue, $evaluationDetails->getValue());
         $this->assertSame($expectedIsExpectedMatchedTargetingRuleSet, null != $evaluationDetails->getMatchedTargetingRule());
         $this->assertSame($expectedIsExpectedMatchedPercentageOptionSet, null != $evaluationDetails->getMatchedPercentageOption());
+    }
+
+    public function provideTestDataForEvaluationDetailsMatchedEvaluationRuleAndPercantageOption()
+    {
+        // https://app.configcat.com/v2/e7a75611-4256-49a5-9320-ce158755e3ba/08dbc325-7f69-4fd4-8af4-cf9f24ec8ac9/08dbc325-9e4e-4f59-86b2-5da50924b6ca/08dbc325-9ebd-4587-8171-88f76a3004cb
+        return Utils::withDescription([
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', null, null, null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', null, null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@example.com', null, 'Dog', true, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', '', 'Frog', true, true],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'a@configcat.com', 'US', 'Fish', true, true],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', null, 'Cat', false, false],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', '', 'Falcon', false, true],
+            ['configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/P4e3fAz_1ky2-Zg2e4cbkw', 'stringMatchedTargetingRuleAndOrPercentageOption', '12345', 'b@configcat.com', 'US', 'Spider', false, true],
+        ], function ($testCase) {
+            return "sdkKey: {$testCase[0]} | key: {$testCase[1]} | userId: {$testCase[2]} | email: {$testCase[3]} | percentageBase: {$testCase[4]}";
+        });
     }
 }

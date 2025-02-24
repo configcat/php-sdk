@@ -16,40 +16,6 @@ use stdClass;
 
 class OverrideTest extends TestCase
 {
-    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_Dictionary(): array
-    {
-        return Utils::withDescription([
-            [true, false, true],
-            [true, '', true],
-            [true, 0, true],
-            [true, 0.0, true],
-            ['text', false, 'text'],
-            ['text', '', 'text'],
-            ['text', 0, 'text'],
-            ['text', 0.0, 'text'],
-            [42, false, 42],
-            [42, '', 42],
-            [42, 0, 42],
-            [42, 0.0, 42],
-            [42.0, false, 42.0],
-            [42.0, '', 42.0],
-            [42.0, 0, 42.0],
-            [42.0, 0.0, 42.0],
-            [3.14, false, 3.14],
-            [3.14, '', 3.14],
-            [3.14, 0, 3.14],
-            [3.14, 0.0, 3.14],
-            [null, false, false],
-            [[], false, false],
-            [new stdClass(), false, false],
-            [new DateTimeImmutable(), false, false],
-        ], function ($testCase) {
-            $overrideValue = \ConfigCat\Utils::getStringRepresentation($testCase[0]);
-
-            return "overrideValue: {$overrideValue} | defaultValue: {$testCase[1]}";
-        });
-    }
-
     /**
      * @dataProvider provideOverrideValueTypeMismatchShouldBeHandledCorrectly_Dictionary
      */
@@ -98,34 +64,37 @@ class OverrideTest extends TestCase
         }
     }
 
-    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_SimplifiedConfig(): array
+    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_Dictionary(): array
     {
         return Utils::withDescription([
-            ['true', false, true],
-            ['true', '', true],
-            ['true', 0, true],
-            ['true', 0.0, true],
-            ['"text"', false, 'text'],
-            ['"text"', '', 'text'],
-            ['"text"', 0, 'text'],
-            ['"text"', 0.0, 'text'],
-            ['42', false, 42],
-            ['42', '', 42],
-            ['42', 0, 42],
-            ['42', 0.0, 42],
-            ['42.0', false, 42.0],
-            ['42.0', '', 42.0],
-            ['42.0', 0, 42.0],
-            ['42.0', 0.0, 42.0],
-            ['3.14', false, 3.14],
-            ['3.14', '', 3.14],
-            ['3.14', 0, 3.14],
-            ['3.14', 0.0, 3.14],
-            ['null', false, false],
-            ['[]', false, false],
-            ['{}', false, false],
+            [true, false, true],
+            [true, '', true],
+            [true, 0, true],
+            [true, 0.0, true],
+            ['text', false, 'text'],
+            ['text', '', 'text'],
+            ['text', 0, 'text'],
+            ['text', 0.0, 'text'],
+            [42, false, 42],
+            [42, '', 42],
+            [42, 0, 42],
+            [42, 0.0, 42],
+            [42.0, false, 42.0],
+            [42.0, '', 42.0],
+            [42.0, 0, 42.0],
+            [42.0, 0.0, 42.0],
+            [3.14, false, 3.14],
+            [3.14, '', 3.14],
+            [3.14, 0, 3.14],
+            [3.14, 0.0, 3.14],
+            [null, false, false],
+            [[], false, false],
+            [new stdClass(), false, false],
+            [new DateTimeImmutable(), false, false],
         ], function ($testCase) {
-            return "overrideValueJson: {$testCase[0]} | defaultValue: {$testCase[1]}";
+            $overrideValue = \ConfigCat\Utils::getStringRepresentation($testCase[0]);
+
+            return "overrideValue: {$overrideValue} | defaultValue: {$testCase[1]}";
         });
     }
 
@@ -184,5 +153,36 @@ class OverrideTest extends TestCase
         } finally {
             fclose($tempFile);
         }
+    }
+
+    public function provideOverrideValueTypeMismatchShouldBeHandledCorrectly_SimplifiedConfig(): array
+    {
+        return Utils::withDescription([
+            ['true', false, true],
+            ['true', '', true],
+            ['true', 0, true],
+            ['true', 0.0, true],
+            ['"text"', false, 'text'],
+            ['"text"', '', 'text'],
+            ['"text"', 0, 'text'],
+            ['"text"', 0.0, 'text'],
+            ['42', false, 42],
+            ['42', '', 42],
+            ['42', 0, 42],
+            ['42', 0.0, 42],
+            ['42.0', false, 42.0],
+            ['42.0', '', 42.0],
+            ['42.0', 0, 42.0],
+            ['42.0', 0.0, 42.0],
+            ['3.14', false, 3.14],
+            ['3.14', '', 3.14],
+            ['3.14', 0, 3.14],
+            ['3.14', 0.0, 3.14],
+            ['null', false, false],
+            ['[]', false, false],
+            ['{}', false, false],
+        ], function ($testCase) {
+            return "overrideValueJson: {$testCase[0]} | defaultValue: {$testCase[1]}";
+        });
     }
 }

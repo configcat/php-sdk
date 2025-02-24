@@ -7,6 +7,14 @@ use PHPUnit\Framework\TestCase;
 
 class UtilsTest extends TestCase
 {
+    /**
+     * @dataProvider provideTestDataForNumberToString
+     */
+    public function testNumberToString(float|int $number, string $expectedReturnValue)
+    {
+        $this->assertSame($expectedReturnValue, \ConfigCat\Utils::numberToString($number));
+    }
+
     public function provideTestDataForNumberToString(): array
     {
         return Utils::withDescription([
@@ -45,13 +53,5 @@ class UtilsTest extends TestCase
         ], function ($testCase) {
             return "number: {$testCase[0]}";
         });
-    }
-
-    /**
-     * @dataProvider provideTestDataForNumberToString
-     */
-    public function testNumberToString(float|int $number, string $expectedReturnValue)
-    {
-        $this->assertSame($expectedReturnValue, \ConfigCat\Utils::numberToString($number));
     }
 }

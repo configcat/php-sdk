@@ -1181,44 +1181,44 @@ final class RolloutEvaluator
 
     private function logUserObjectIsMissing(string $key): void
     {
-        $this->logger->warning("Cannot evaluate targeting rules and % options for setting '{$key}' (User Object is missing). ".
-            'You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. '.
-            'Read more: https://configcat.com/docs/advanced/user-object/', [
+        $this->logger->warning("Cannot evaluate targeting rules and % options for setting '{$key}' (User Object is missing). "
+            .'You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. '
+            .'Read more: https://configcat.com/docs/advanced/user-object/', [
                 'event_id' => 3001,
             ]);
     }
 
     private function logUserObjectAttributeIsMissingPercentage(string $key, string $attributeName): void
     {
-        $this->logger->warning("Cannot evaluate % options for setting '{$key}' (the User.{$attributeName} attribute is missing). ".
-            "You should set the User.{$attributeName} attribute in order to make targeting work properly. ".
-            'Read more: https://configcat.com/docs/advanced/user-object/', [
+        $this->logger->warning("Cannot evaluate % options for setting '{$key}' (the User.{$attributeName} attribute is missing). "
+            ."You should set the User.{$attributeName} attribute in order to make targeting work properly. "
+            .'Read more: https://configcat.com/docs/advanced/user-object/', [
                 'event_id' => 3003,
             ]);
     }
 
     private function logUserObjectAttributeIsMissingCondition(string $condition, string $key, string $attributeName): void
     {
-        $this->logger->warning("Cannot evaluate condition ({$condition}) for setting '{$key}' (the User.{$attributeName} attribute is missing). ".
-            "You should set the User.{$attributeName} attribute in order to make targeting work properly. ".
-            'Read more: https://configcat.com/docs/advanced/user-object/', [
+        $this->logger->warning("Cannot evaluate condition ({$condition}) for setting '{$key}' (the User.{$attributeName} attribute is missing). "
+            ."You should set the User.{$attributeName} attribute in order to make targeting work properly. "
+            .'Read more: https://configcat.com/docs/advanced/user-object/', [
                 'event_id' => 3003,
             ]);
     }
 
     private function logUserObjectAttributeIsInvalid(string $condition, string $key, string $reason, string $attributeName): void
     {
-        $this->logger->warning("Cannot evaluate condition ({$condition}) for setting '{$key}' ({$reason}). ".
-            "Please check the User.{$attributeName} attribute and make sure that its value corresponds to the comparison operator.", [
+        $this->logger->warning("Cannot evaluate condition ({$condition}) for setting '{$key}' ({$reason}). "
+            ."Please check the User.{$attributeName} attribute and make sure that its value corresponds to the comparison operator.", [
                 'event_id' => 3004,
             ]);
     }
 
     private function logUserObjectAttributeIsAutoConverted(string $condition, string $key, string $attributeName, string $attributeValue): void
     {
-        $this->logger->warning("Evaluation of condition ({$condition}) for setting '{$key}' may not produce the expected result ".
-            "(the User.{$attributeName} attribute is not a string value, thus it was automatically converted to the string value '{$attributeValue}'). ".
-            'Please make sure that using a non-string value was intended.', [
+        $this->logger->warning("Evaluation of condition ({$condition}) for setting '{$key}' may not produce the expected result "
+            ."(the User.{$attributeName} attribute is not a string value, thus it was automatically converted to the string value '{$attributeValue}'). "
+            .'Please make sure that using a non-string value was intended.', [
                 'event_id' => 3005,
             ]);
     }
@@ -1255,9 +1255,9 @@ final class RolloutEvaluator
         $settingTypeName = $settingType->name;
         $defaultValueType = gettype($defaultValue);
 
-        $this->logger->warning("The type of a setting does not match the type of the specified default value ({$defaultValue}). ".
-            "Setting's type was {$settingTypeName} but the default value's type was {$defaultValueType}. ".
-            "Please make sure that using a default value not matching the setting's type was intended.", [
+        $this->logger->warning("The type of a setting does not match the type of the specified default value ({$defaultValue}). "
+            ."Setting's type was {$settingTypeName} but the default value's type was {$defaultValueType}. "
+            ."Please make sure that using a default value not matching the setting's type was intended.", [
                 'event_id' => 4002,
             ]);
     }
