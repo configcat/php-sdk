@@ -94,6 +94,24 @@ class ConfigCatClientTest extends TestCase
         $this->assertSame(20, $propInterval);
     }
 
+    /**
+     * @dataProvider provideTestDataForSdkKeyFormat_ShouldBeValidated
+     */
+    public function testSdkKeyFormatShouldBeValidated(string $sdkKey, bool $customBaseUrl, bool $isValid)
+    {
+        $clientOptions = $customBaseUrl
+            ? [ClientOptions::BASE_URL => 'https://my-configcat-proxy']
+            : [];
+
+        if (!$isValid) {
+            $this->expectException(InvalidArgumentException::class);
+        } else {
+            $this->expectNotToPerformAssertions();
+        }
+
+        $client = new ConfigCatClient($sdkKey, $clientOptions);
+    }
+
     public function provideTestDataForSdkKeyFormat_ShouldBeValidated()
     {
         return Utils::withDescription([
@@ -117,24 +135,6 @@ class ConfigCatClientTest extends TestCase
         ], function ($testCase) {
             return "sdkKey: {$testCase[0]} | customBaseUrl: {$testCase[1]}";
         });
-    }
-
-    /**
-     * @dataProvider provideTestDataForSdkKeyFormat_ShouldBeValidated
-     */
-    public function testSdkKeyFormatShouldBeValidated(string $sdkKey, bool $customBaseUrl, bool $isValid)
-    {
-        $clientOptions = $customBaseUrl
-            ? [ClientOptions::BASE_URL => 'https://my-configcat-proxy']
-            : [];
-
-        if (!$isValid) {
-            $this->expectException(InvalidArgumentException::class);
-        } else {
-            $this->expectNotToPerformAssertions();
-        }
-
-        $client = new ConfigCatClient($sdkKey, $clientOptions);
     }
 
     public function testGetValueFailedFetch()

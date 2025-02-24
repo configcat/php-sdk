@@ -114,9 +114,9 @@ final class ConfigFetcher
 
         if (RedirectMode::SHOULD == $redirect) {
             $this->logger->warning(
-                'The `dataGovernance` parameter specified at the client initialization is '.
-                'not in sync with the preferences on the ConfigCat Dashboard. '.
-                'Read more: https://configcat.com/docs/advanced/data-governance/',
+                'The `dataGovernance` parameter specified at the client initialization is '
+                .'not in sync with the preferences on the ConfigCat Dashboard. '
+                .'Read more: https://configcat.com/docs/advanced/data-governance/',
                 [
                     'event_id' => 3002,
                 ]
@@ -178,8 +178,8 @@ final class ConfigFetcher
                 return FetchResponse::notModified();
             }
 
-            $message = 'Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. '.
-                "Received unexpected response: {$statusCode}";
+            $message = 'Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. '
+                ."Received unexpected response: {$statusCode}";
             $messageCtx = [
                 'event_id' => 1100,
             ];
@@ -187,9 +187,9 @@ final class ConfigFetcher
 
             return FetchResponse::failure(InternalLogger::format($message, $messageCtx));
         } catch (ClientExceptionInterface $exception) {
-            $message = 'Unexpected error occurred while trying to fetch config JSON. '.
-                'It is most likely due to a local network issue. '.
-                'Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP.';
+            $message = 'Unexpected error occurred while trying to fetch config JSON. '
+                .'It is most likely due to a local network issue. '
+                .'Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP.';
             $messageCtx = ['event_id' => 1103, 'exception' => $exception];
             $this->logger->error($message, $messageCtx);
 

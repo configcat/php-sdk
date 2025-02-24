@@ -34,41 +34,6 @@ class EvaluationLogTest extends TestCase
         'list_truncation',
     ];
 
-    public function provideTestData(): array
-    {
-        $testCaseDataArray = [];
-
-        foreach (self::TEST_SETS as $testSetName) {
-            $filePath = self::TEST_DATA_ROOT_PATH.'/'.$testSetName.'.json';
-            $fileContent = file_get_contents($filePath);
-            $testSet = json_decode($fileContent, true);
-
-            $sdkKey = $testSet['sdkKey'];
-            $baseUrlOrOverrideFileName = is_string($sdkKey) && '' !== $sdkKey
-                ? $testSet['baseUrl'] ?? null
-                : $testSet['jsonOverride'];
-
-            $testCases = $testSet['tests'] ?? [];
-
-            foreach ($testCases as $i => $testCase) {
-                $expectedLogFileName = $testCase['expectedLog'];
-                $testName = $testSetName.'['.$i.'] - '.$expectedLogFileName;
-                $testCaseDataArray[$testName] = [
-                    $testSetName,
-                    $sdkKey,
-                    $baseUrlOrOverrideFileName,
-                    $testCase['key'],
-                    $testCase['defaultValue'] ?? null,
-                    $testCase['user'] ?? null,
-                    $testCase['returnValue'] ?? null,
-                    $expectedLogFileName,
-                ];
-            }
-        }
-
-        return $testCaseDataArray;
-    }
-
     /**
      * @dataProvider provideTestData
      */
@@ -133,5 +98,40 @@ class EvaluationLogTest extends TestCase
         }
 
         $this->assertEquals($expectedLogText, $actualLogText);
+    }
+
+    public function provideTestData(): array
+    {
+        $testCaseDataArray = [];
+
+        foreach (self::TEST_SETS as $testSetName) {
+            $filePath = self::TEST_DATA_ROOT_PATH.'/'.$testSetName.'.json';
+            $fileContent = file_get_contents($filePath);
+            $testSet = json_decode($fileContent, true);
+
+            $sdkKey = $testSet['sdkKey'];
+            $baseUrlOrOverrideFileName = is_string($sdkKey) && '' !== $sdkKey
+                ? $testSet['baseUrl'] ?? null
+                : $testSet['jsonOverride'];
+
+            $testCases = $testSet['tests'] ?? [];
+
+            foreach ($testCases as $i => $testCase) {
+                $expectedLogFileName = $testCase['expectedLog'];
+                $testName = $testSetName.'['.$i.'] - '.$expectedLogFileName;
+                $testCaseDataArray[$testName] = [
+                    $testSetName,
+                    $sdkKey,
+                    $baseUrlOrOverrideFileName,
+                    $testCase['key'],
+                    $testCase['defaultValue'] ?? null,
+                    $testCase['user'] ?? null,
+                    $testCase['returnValue'] ?? null,
+                    $expectedLogFileName,
+                ];
+            }
+        }
+
+        return $testCaseDataArray;
     }
 }

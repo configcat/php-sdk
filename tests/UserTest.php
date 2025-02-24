@@ -87,21 +87,6 @@ class UserTest extends TestCase
         $this->assertSame('myCustomAttributeValue', $user->getAttribute('myCustomAttribute'));
     }
 
-    public function provideTestDataForUseWellKnownAttributesAsCustomPropertiesWithDifferentNames_ShouldAppendAllAttributes(): array
-    {
-        return Utils::withDescription([
-            ['identifier', 'myId'],
-            ['IDENTIFIER', 'myId'],
-            ['email', 'theBoss@example.com'],
-            ['EMAIL', 'theBoss@example.com'],
-            ['eMail', 'theBoss@example.com'],
-            ['country', 'myHome'],
-            ['COUNTRY', 'myHome'],
-        ], function ($testCase) {
-            return "attributeName: {$testCase[0]} | attributeValue: {$testCase[1]}";
-        });
-    }
-
     /**
      * @dataProvider provideTestDataForUseWellKnownAttributesAsCustomPropertiesWithDifferentNames_ShouldAppendAllAttributes
      */
@@ -127,16 +112,18 @@ class UserTest extends TestCase
         $this->assertSame($attributeValue, $user->getAttribute($attributeName));
     }
 
-    public function provideTestDataForCreateUser_ShouldSetIdentifier()
+    public function provideTestDataForUseWellKnownAttributesAsCustomPropertiesWithDifferentNames_ShouldAppendAllAttributes(): array
     {
         return Utils::withDescription([
-            [null, ''],
-            ['', ''],
-            ['id', 'id'],
-            ["\t", "\t"],
-            ["\u{1F60}0", "\u{1F60}0"],
+            ['identifier', 'myId'],
+            ['IDENTIFIER', 'myId'],
+            ['email', 'theBoss@example.com'],
+            ['EMAIL', 'theBoss@example.com'],
+            ['eMail', 'theBoss@example.com'],
+            ['country', 'myHome'],
+            ['COUNTRY', 'myHome'],
         ], function ($testCase) {
-            return "identifier: {$testCase[0]}";
+            return "attributeName: {$testCase[0]} | attributeValue: {$testCase[1]}";
         });
     }
 
@@ -159,5 +146,18 @@ class UserTest extends TestCase
         $this->assertSame($expectedValue, $actualAttributes[User::IDENTIFIER_ATTRIBUTE]);
         $this->assertSame($expectedValue, $user->getAttribute(User::IDENTIFIER_ATTRIBUTE));
         $this->assertSame($expectedValue, $user->getIdentifier());
+    }
+
+    public function provideTestDataForCreateUser_ShouldSetIdentifier()
+    {
+        return Utils::withDescription([
+            [null, ''],
+            ['', ''],
+            ['id', 'id'],
+            ["\t", "\t"],
+            ["\u{1F60}0", "\u{1F60}0"],
+        ], function ($testCase) {
+            return "identifier: {$testCase[0]}";
+        });
     }
 }
