@@ -66,7 +66,7 @@ final class Setting extends SettingValueContainer
      *
      * @internal
      */
-    public static function getType(array $setting, bool $throwIfInvalid = true): null|SettingType|stdClass
+    public static function getType(array $setting, bool $throwIfInvalid = true): SettingType|stdClass|null
     {
         $settingType = $setting[self::TYPE] ?? null;
         if ($settingType === self::unsupportedTypeToken()) {
