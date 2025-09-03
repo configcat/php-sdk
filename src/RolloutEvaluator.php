@@ -37,7 +37,7 @@ final class EvaluateContext
 
     public ?EvaluateLogBuilder $logBuilder = null; // initialized by RolloutEvaluator.evaluate
 
-    private null|SettingType|stdClass $settingType = null;
+    private SettingType|stdClass|null $settingType = null;
 
     /**
      * @var null|list<string>

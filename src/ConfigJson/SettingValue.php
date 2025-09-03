@@ -25,7 +25,7 @@ final class SettingValue
      *
      * @internal
      */
-    public static function get(mixed $settingValue, SettingType|stdClass $settingType, bool $throwIfInvalid = true): null|bool|float|int|string
+    public static function get(mixed $settingValue, SettingType|stdClass $settingType, bool $throwIfInvalid = true): bool|float|int|string|null
     {
         if (SettingType::BOOLEAN === $settingType) {
             $value = $settingValue[self::BOOLEAN] ?? null;
