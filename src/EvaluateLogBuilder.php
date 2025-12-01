@@ -16,11 +16,12 @@ use ConfigCat\ConfigJson\TargetingRule;
 use ConfigCat\ConfigJson\UserComparator;
 use ConfigCat\ConfigJson\UserCondition;
 use stdClass;
+use Stringable;
 
 /**
  * @internal
  */
-final class EvaluateLogBuilder
+final class EvaluateLogBuilder implements Stringable
 {
     public const INVALID_NAME_PLACEHOLDER = '<invalid name>';
     public const INVALID_REFERENCE_PLACEHOLDER = '<invalid reference>';

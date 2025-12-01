@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace ConfigCat;
 
+use Stringable;
+
 /**
  * An object containing attributes to properly identify a given user for rollout evaluation.
  */
-final class User
+final class User implements Stringable
 {
     public const IDENTIFIER_ATTRIBUTE = 'Identifier';
     public const EMAIL_ATTRIBUTE = 'Email';
