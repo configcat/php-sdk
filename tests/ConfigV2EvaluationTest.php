@@ -15,7 +15,7 @@ use DateTime;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
-class ConfigV2EvaluationTests extends TestCase
+class ConfigV2EvaluationTest extends TestCase
 {
     private const TEST_DATA_ROOT_PATH = 'tests/data';
 
