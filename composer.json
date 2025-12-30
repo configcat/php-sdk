@@ -17,7 +17,7 @@
     "guzzlehttp/guzzle": "^7.0",
     "psr/log": "^2.0|^3.0",
     "ext-json": "*",
-    "z4kn4fein/php-semver": "^2.0",
+    "z4kn4fein/php-semver": "^2.0|^3.0",
     "psr/http-client": "^1.0"
   },
   "require-dev": {
